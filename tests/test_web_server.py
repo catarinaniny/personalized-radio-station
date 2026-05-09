@@ -193,6 +193,70 @@ tts:
                 server.shutdown()
                 server.server_close()
 
+    def test_api_creates_vibe_and_uses_it_for_episode_payload(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            server = create_server(
+                host="127.0.0.1",
+                port=0,
+                output_dir=root / "episodes",
+                db_path=root / "vibes.sqlite3",
+                demo_delay=0,
+            )
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            base_url = f"http://127.0.0.1:{server.server_address[1]}"
+
+            try:
+                created = _post_json(
+                    f"{base_url}/api/vibes",
+                    {
+                        "name": "Builder Radio",
+                        "source_preset_ids": ["hacker_news"],
+                        "custom_rss_feeds": ["https://example.com/builders.xml"],
+                        "tone": "professional",
+                        "voice_gender": "male",
+                        "host_format": "duo",
+                    },
+                )
+                vibe = created["vibe"]
+                self.assertEqual(vibe["name"], "Builder Radio")
+                self.assertEqual(vibe["rss_feeds"][0], "https://hnrss.org/frontpage")
+
+                vibes = _get_json(f"{base_url}/api/vibes")
+                self.assertEqual(len(vibes["vibes"]), 1)
+                self.assertIn("Hacker News", [preset["label"] for preset in vibes["presets"]])
+
+                job = _post_json(
+                    f"{base_url}/api/episodes",
+                    {"vibe_id": vibe["id"], "duration_minutes": 1},
+                )
+                self.assertEqual(job["vibe"]["name"], "Builder Radio")
+                _read_events(f"{base_url}{job['events_url']}")
+
+                status = _get_json(f"{base_url}{job['status_url']}")
+                self.assertEqual(status["status"], "complete")
+                self.assertEqual(status["vibe"]["id"], vibe["id"])
+                self.assertEqual(status["title"], "Builder Radio Test Signal")
+                sources = json.loads(
+                    (root / "episodes" / job["episode_id"] / "sources.json").read_text()
+                )
+                self.assertEqual(
+                    sources["rss_feeds"],
+                    [
+                        "https://hnrss.org/frontpage",
+                        "https://example.com/builders.xml",
+                    ],
+                )
+                self.assertEqual(sources["vibe"]["host_format"], "duo")
+                episode = json.loads(
+                    (root / "episodes" / job["episode_id"] / "episode.json").read_text()
+                )
+                self.assertEqual(len(episode["segments"]), 3)
+            finally:
+                server.shutdown()
+                server.server_close()
+
     def test_audio_returns_accepted_before_generation_is_complete(self) -> None:
         with TemporaryDirectory() as temp_dir:
             server = create_server(

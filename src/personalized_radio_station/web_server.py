@@ -22,6 +22,7 @@ from .runtime import assert_runtime_ready
 from .script import generate_script, render_markdown
 from .timing import count_episode_words
 from .tts import synthesize_episode
+from .vibes import Vibe, VibeStore
 from .weather import fetch_weather
 
 
@@ -45,6 +46,8 @@ class EpisodeJob:
     started_at_monotonic: float = field(default_factory=time.perf_counter)
     mode: str = "mock"
     title: str = "VibeFM Test"
+    vibe_id: str | None = None
+    vibe_name: str | None = None
     error: str | None = None
     final_audio_path: Path | None = None
     segments: list[dict[str, Any]] = field(default_factory=list)
@@ -57,6 +60,11 @@ class EpisodeJob:
             "status": self.status,
             "mode": self.mode,
             "title": self.title,
+            "vibe": (
+                {"id": self.vibe_id, "name": self.vibe_name}
+                if self.vibe_id and self.vibe_name
+                else None
+            ),
             "created_at": self.created_at,
             "updated_at": self.updated_at,
             "elapsed_seconds": _elapsed_seconds(self),
@@ -83,16 +91,19 @@ class EpisodeService:
         output_dir: Path,
         config_path: Path,
         env_path: Path,
+        vibe_store: VibeStore | None = None,
         demo_delay: float = 0.35,
     ) -> None:
         self.output_dir = output_dir
         self.config_path = config_path
         self.env_path = env_path
+        self.vibe_store = vibe_store
         self.demo_delay = demo_delay
         self._jobs: dict[str, EpisodeJob] = {}
         self._lock = threading.Lock()
 
     def create_episode(self, payload: dict[str, Any]) -> EpisodeJob:
+        payload = self._apply_vibe_to_payload(payload)
         episode_id = _new_episode_id()
         now = _now()
         mode = "real" if payload.get("mode") == "real" else "mock"
@@ -103,6 +114,8 @@ class EpisodeService:
             created_at=now,
             updated_at=now,
             mode=mode,
+            vibe_id=_optional_string(payload.get("vibe_id")),
+            vibe_name=_optional_string(payload.get("station_name")),
         )
         job.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -122,6 +135,19 @@ class EpisodeService:
     def get_job(self, episode_id: str) -> EpisodeJob | None:
         with self._lock:
             return self._jobs.get(episode_id)
+
+    def _apply_vibe_to_payload(self, payload: dict[str, Any]) -> dict[str, Any]:
+        vibe_id = _optional_string(payload.get("vibe_id"))
+        if not vibe_id:
+            return payload
+        if self.vibe_store is None:
+            raise ValueError("Vibes are not configured for this server.")
+
+        vibe = self.vibe_store.get_vibe(vibe_id)
+        if vibe is None:
+            raise ValueError("Vibe not found.")
+
+        return _episode_payload_from_vibe(payload, vibe)
 
     def _generate_real_episode(self, job: EpisodeJob, payload: dict[str, Any]) -> None:
         try:
@@ -143,6 +169,7 @@ class EpisodeService:
                 json.dumps(
                     {
                         "mode": "real",
+                        "vibe": _vibe_summary(payload),
                         "weather": weather.to_dict(),
                         "news": [item.to_dict() for item in news_items],
                     },
@@ -209,17 +236,25 @@ class EpisodeService:
 
             station_name = _clean_string(payload.get("station_name"), "VibeFM")
             style = _clean_string(payload.get("style"), "warm, concise, already on air")
-            topics = _clean_topics(payload.get("topics"))
+            topics = _clean_topics(
+                payload.get("topics"),
+                [] if payload.get("replace_topics") else None,
+            )
             duration = _duration_from_payload(payload, "2 minutes")
             weather_name = _clean_string(payload.get("weather_name"), "Lisbon")
+            rss_feeds = _clean_rss_feeds(
+                payload.get("rss_feeds", payload.get("rss_urls", payload.get("rss")))
+            )
 
             sources = {
                 "mode": "mock",
+                "vibe": _vibe_summary(payload),
                 "weather": {
                     "location": weather_name,
                     "temperature_c": 21,
                     "summary": "Clear enough for a local demo.",
                 },
+                "rss_feeds": rss_feeds,
                 "news": [
                     {
                         "topic": topic,
@@ -368,12 +403,18 @@ def create_server(
     output_dir: Path | str = Path("episodes"),
     config_path: Path | str = Path("config.yaml"),
     env_path: Path | str = Path(".env"),
+    db_path: Path | str | None = None,
     demo_delay: float = 0.35,
 ) -> ThreadingHTTPServer:
+    output_path = Path(output_dir)
+    vibe_store = VibeStore(
+        Path(db_path) if db_path is not None else output_path.parent / "vibefm.sqlite3"
+    )
     service = EpisodeService(
-        Path(output_dir),
+        output_path,
         config_path=Path(config_path),
         env_path=Path(env_path),
+        vibe_store=vibe_store,
         demo_delay=demo_delay,
     )
 
@@ -381,6 +422,7 @@ def create_server(
         pass
 
     RadioRequestHandler.service = service
+    RadioRequestHandler.vibe_store = vibe_store
     return ThreadingHTTPServer((host, port), RadioRequestHandler)
 
 
@@ -390,6 +432,7 @@ def serve(
     output_dir: Path | str = Path("episodes"),
     config_path: Path | str = Path("config.yaml"),
     env_path: Path | str = Path(".env"),
+    db_path: Path | str | None = None,
 ) -> None:
     server = create_server(
         host=host,
@@ -397,6 +440,7 @@ def serve(
         output_dir=output_dir,
         config_path=config_path,
         env_path=env_path,
+        db_path=db_path,
     )
     address, actual_port = server.server_address
     print(f"[vibefm] API listening on http://{address}:{actual_port}", flush=True)
@@ -411,6 +455,7 @@ def serve(
 
 class _RadioRequestHandler(BaseHTTPRequestHandler):
     service: EpisodeService
+    vibe_store: VibeStore
     server_version = "VibeFMHTTP/0.1"
 
     def do_OPTIONS(self) -> None:
@@ -431,6 +476,12 @@ class _RadioRequestHandler(BaseHTTPRequestHandler):
             return
 
         parts = _path_parts(path)
+        if len(parts) == 2 and parts == ["api", "vibes"]:
+            self._send_vibes()
+            return
+        if len(parts) == 3 and parts[:2] == ["api", "vibes"]:
+            self._send_vibe(parts[2])
+            return
         if len(parts) == 3 and parts[:2] == ["api", "episodes"]:
             self._send_episode_status(parts[2])
             return
@@ -453,15 +504,34 @@ class _RadioRequestHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         path = urlparse(self.path).path
+        if path == "/api/vibes":
+            payload = self._read_json_body()
+            try:
+                vibe = self.vibe_store.create_vibe(payload)
+            except ValueError as exc:
+                self._send_json({"error": str(exc)}, status=HTTPStatus.BAD_REQUEST)
+                return
+            self._send_json({"vibe": vibe.to_dict()}, status=HTTPStatus.CREATED)
+            return
+
         if path != "/api/episodes":
             self._send_json({"error": "Not found"}, status=HTTPStatus.NOT_FOUND)
             return
 
         payload = self._read_json_body()
-        job = self.service.create_episode(payload)
+        try:
+            job = self.service.create_episode(payload)
+        except ValueError as exc:
+            self._send_json({"error": str(exc)}, status=HTTPStatus.BAD_REQUEST)
+            return
         self._send_json(
             {
                 "episode_id": job.id,
+                "vibe": (
+                    {"id": job.vibe_id, "name": job.vibe_name}
+                    if job.vibe_id and job.vibe_name
+                    else None
+                ),
                 "status_url": f"/api/episodes/{job.id}",
                 "events_url": f"/api/episodes/{job.id}/events",
                 "audio_url": f"/api/episodes/{job.id}/audio",
@@ -471,6 +541,21 @@ class _RadioRequestHandler(BaseHTTPRequestHandler):
 
     def log_message(self, format: str, *args: Any) -> None:
         return
+
+    def _send_vibes(self) -> None:
+        self._send_json(
+            {
+                "presets": self.vibe_store.preset_sources(),
+                "vibes": [vibe.to_dict() for vibe in self.vibe_store.list_vibes()],
+            }
+        )
+
+    def _send_vibe(self, vibe_id: str) -> None:
+        vibe = self.vibe_store.get_vibe(vibe_id)
+        if vibe is None:
+            self._send_json({"error": "Vibe not found"}, status=HTTPStatus.NOT_FOUND)
+            return
+        self._send_json({"vibe": vibe.to_dict()})
 
     def _send_episode_status(self, episode_id: str) -> None:
         job = self.service.get_job(episode_id)
@@ -709,11 +794,48 @@ def _clean_string(value: Any, fallback: str) -> str:
     return text or fallback
 
 
-def _clean_topics(value: Any) -> list[str]:
+def _clean_topics(value: Any, fallback: list[str] | None = None) -> list[str]:
+    default_topics = (
+        fallback
+        if fallback is not None
+        else ["artificial intelligence", "startups", "music technology"]
+    )
     if not isinstance(value, list):
-        return ["artificial intelligence", "startups", "music technology"]
+        return default_topics
     topics = [str(item).strip() for item in value if str(item).strip()]
-    return topics[:5] or ["artificial intelligence", "startups", "music technology"]
+    return topics[:5] or default_topics
+
+
+def _episode_payload_from_vibe(payload: dict[str, Any], vibe: Vibe) -> dict[str, Any]:
+    merged = dict(payload)
+    merged.update(
+        {
+            "vibe_id": vibe.id,
+            "station_name": vibe.name,
+            "style": vibe.style,
+            "rss_feeds": vibe.rss_feeds,
+            "replace_rss_feeds": True,
+            "topics": [],
+            "replace_topics": True,
+            "host_tone": vibe.tone,
+            "voice_gender": vibe.voice_gender,
+            "host_format": vibe.host_format,
+        }
+    )
+    return merged
+
+
+def _vibe_summary(payload: dict[str, Any]) -> dict[str, Any] | None:
+    vibe_id = _optional_string(payload.get("vibe_id"))
+    if not vibe_id:
+        return None
+    return {
+        "id": vibe_id,
+        "name": _optional_string(payload.get("station_name")),
+        "tone": _optional_string(payload.get("host_tone")),
+        "voice_gender": _optional_string(payload.get("voice_gender")),
+        "host_format": _optional_string(payload.get("host_format")),
+    }
 
 
 def _apply_payload_to_config(config: AppConfig, payload: dict[str, Any]) -> AppConfig:
@@ -730,11 +852,14 @@ def _apply_payload_to_config(config: AppConfig, payload: dict[str, Any]) -> AppC
 
     news = config.news
     if "topics" in payload:
-        news = replace(news, topics=_clean_topics(payload.get("topics")))
+        topic_fallback = [] if payload.get("replace_topics") else None
+        news = replace(news, topics=_clean_topics(payload.get("topics"), topic_fallback))
     rss_feeds = _clean_rss_feeds(
         payload.get("rss_feeds", payload.get("rss_urls", payload.get("rss")))
     )
-    if rss_feeds:
+    if payload.get("replace_rss_feeds"):
+        news = replace(news, rss_feeds=rss_feeds)
+    elif rss_feeds:
         news = replace(news, rss_feeds=_dedupe_strings([*news.rss_feeds, *rss_feeds]))
     language = _optional_string(payload.get("language"))
     country = _optional_string(payload.get("country"))

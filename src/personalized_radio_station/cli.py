@@ -20,6 +20,7 @@ DEFAULT_CONFIG = Path("config.yaml")
 DEFAULT_ENV = Path(".env")
 DEFAULT_OUTPUT_DIR = Path("episodes")
 DEFAULT_RUNS_DIR = Path("runs")
+DEFAULT_DB = Path("vibefm.sqlite3")
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -84,6 +85,12 @@ def _build_parser() -> ArgumentParser:
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
         help="Directory where API-generated episode artifacts are saved.",
+    )
+    web.add_argument(
+        "--db",
+        type=Path,
+        default=DEFAULT_DB,
+        help="SQLite database path for saved vibes.",
     )
     web.set_defaults(handler=_handle_web)
 
@@ -215,6 +222,7 @@ def _handle_web(args: Namespace) -> None:
         output_dir=args.output_dir,
         config_path=args.config,
         env_path=args.env,
+        db_path=args.db,
     )
 
 

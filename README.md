@@ -152,7 +152,7 @@ The CLI prints each stage as it runs:
 [vibefm] Fetching news RSS sources: Google News (artificial intelligence, startups, music technology); 3 RSS feeds
 [vibefm] Fetching weather: Lisbon
 [vibefm] Creating script targeting 18 minutes with LiteLLM model: openrouter/openai/gpt-oss-20b:nitro
-[vibefm] Rendering TTS with elevenlabs: elevenlabs/eleven_multilingual_v2
+[vibefm] Rendering TTS with elevenlabs: elevenlabs/eleven_turbo_v2_5
 [vibefm] Audio: episodes/2026-05-09-120000/episode.mp3
 ```
 
@@ -196,6 +196,34 @@ selected by default, creates an episode through `POST /api/episodes`, listens to
 generated audio segment through Web Audio as soon as that segment is ready. Demo
 mode writes normal episode artifacts under `episodes/{episode_id}/`, but does
 not call LLM, TTS, news, or weather APIs.
+
+The file page can also save reusable vibes, which are radio-station presets
+stored in SQLite. A vibe includes a name, preset RSS sources such as Hacker News,
+optional custom RSS feeds, and host metadata for tone, voice gender, and
+solo/duo format. The backend exposes:
+
+```text
+GET  /api/vibes
+POST /api/vibes
+GET  /api/vibes/{id}
+```
+
+Create an episode from a saved vibe by passing its id:
+
+```json
+{
+  "mode": "mock",
+  "vibe_id": "builder-radio-a1b2c3",
+  "duration_minutes": 2
+}
+```
+
+The web server stores vibes in `vibefm.sqlite3` by default. Override that path
+when needed:
+
+```bash
+uv run vibefm web --db data/vibefm.sqlite3
+```
 
 The file page also shows a debug timing log from the event stream. Each status,
 script-ready, segment-ready, completion, or failure event includes
@@ -252,7 +280,7 @@ creates a script, and renders speech.
 tts:
   enabled: true
   provider: "elevenlabs"
-  model: "elevenlabs/eleven_multilingual_v2"
+  model: "elevenlabs/eleven_turbo_v2_5"
   response_format: "mp3"
   api_key_env: "ELEVENLABS_API_KEY"
   single_voice: true

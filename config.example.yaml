@@ -37,7 +37,7 @@ voices:
 tts:
   enabled: true
   provider: "elevenlabs"
-  model: "elevenlabs/eleven_multilingual_v2"
+  model: "elevenlabs/eleven_turbo_v2_5"
   response_format: "mp3"
   api_key_env: "ELEVENLABS_API_KEY"
   single_voice: true
