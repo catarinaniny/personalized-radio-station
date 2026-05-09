@@ -320,6 +320,27 @@ body {
   100% { filter: brightness(1)   blur(0); }
 }
 
+/* Reduced-motion swap mode — used when OS has prefers-reduced-motion: reduce */
+.ticker.ticker--swap .ticker-track {
+  transform: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  white-space: normal;
+  padding: 0 48px;
+  font-size: 30px;
+  line-height: 1.25;
+}
+.ticker.ticker--swap .ticker-track .swap-headline {
+  display: block;
+  opacity: 0;
+  transition: opacity 600ms ease;
+}
+.ticker.ticker--swap .ticker-track .swap-headline.shown {
+  opacity: 1;
+}
+
 /* Status bar */
 .status {
   display: flex;
@@ -576,24 +597,52 @@ body {
     const TICKER_PX_PER_SEC = 60;  // ~30s for a long headline to cross
     const ticker = {
       track: document.getElementById('ticker-track'),
+      panel: document.querySelector('.ticker'),
       copyWidth: 0,
       offset: 0,
       lastTs: 0,
-      reduced: false,  // wired up in task 9
+      reduced: false,
+      swapTimer: null,
+      swapIdx: 0,
     };
 
     function renderTicker() {
       const station = STATIONS[state.activeStationId];
-      // Render the headline list twice for seamless looping
-      const oneCopy = station.headlines.map(h =>
-        `<span class="src">${h.source}</span>${h.title}<span class="age"> · ${h.age}</span>`
-      ).join('<span class="gap">·</span>');
-      ticker.track.innerHTML = oneCopy + '<span class="gap">·</span>' + oneCopy;
-      ticker.offset = 0;
-      ticker.track.style.transform = 'translateX(0)';
-      // Measure one copy's width after layout
+      if (ticker.reduced) {
+        // Swap mode: render one headline at a time, fade between them.
+        ticker.panel.classList.add('ticker--swap');
+        ticker.swapIdx = 0;
+        showSwapHeadline();
+        if (ticker.swapTimer) clearInterval(ticker.swapTimer);
+        ticker.swapTimer = setInterval(() => {
+          ticker.swapIdx = (ticker.swapIdx + 1) % station.headlines.length;
+          showSwapHeadline();
+        }, 10000);
+      } else {
+        // Scroll mode: render twice for seamless looping.
+        ticker.panel.classList.remove('ticker--swap');
+        if (ticker.swapTimer) { clearInterval(ticker.swapTimer); ticker.swapTimer = null; }
+        const oneCopy = station.headlines.map(h =>
+          `<span class="src">${h.source}</span>${h.title}<span class="age"> · ${h.age}</span>`
+        ).join('<span class="gap">·</span>');
+        ticker.track.innerHTML = oneCopy + '<span class="gap">·</span>' + oneCopy;
+        ticker.offset = 0;
+        ticker.track.style.transform = 'translateX(0)';
+        requestAnimationFrame(() => {
+          ticker.copyWidth = ticker.track.scrollWidth / 2;
+        });
+      }
+    }
+
+    function showSwapHeadline() {
+      const station = STATIONS[state.activeStationId];
+      const h = station.headlines[ticker.swapIdx];
+      const html = `<span class="swap-headline"><span class="src">${h.source}</span>${h.title}<span class="age"> · ${h.age}</span></span>`;
+      ticker.track.innerHTML = html;
+      // Fade in on next frame
       requestAnimationFrame(() => {
-        ticker.copyWidth = ticker.track.scrollWidth / 2;
+        const el = ticker.track.querySelector('.swap-headline');
+        if (el) el.classList.add('shown');
       });
     }
 
@@ -609,7 +658,14 @@ body {
       requestAnimationFrame(tickerStep);
     }
 
-    renderTicker();
+    // Detect reduced-motion preference and re-render on changes
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    function syncMotionPref() {
+      ticker.reduced = motionQuery.matches;
+      renderTicker();
+    }
+    syncMotionPref();
+    motionQuery.addEventListener('change', syncMotionPref);
     requestAnimationFrame(tickerStep);
 
     // ───── Tuning band — visual positioning only (interactions in task 6) ─────
