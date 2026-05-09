@@ -76,8 +76,8 @@ body {
   margin: 0 auto;
 }
 
-/* Shared placeholder (still used by ticker / band / meta until their tasks) */
-.ticker, .band, .meta {
+/* Shared placeholder (still used by band / meta until their tasks) */
+.band, .meta {
   border: 1px dashed rgba(255,179,71,0.18);
   min-height: 32px;
   color: var(--crt-amber-dim);
@@ -86,8 +86,82 @@ body {
   text-transform: uppercase;
   padding: 8px 12px;
 }
-.ticker { min-height: 200px; }
-.band   { min-height: 110px; }
+.band { min-height: 110px; }
+
+/* Ticker — amber CRT panel */
+.ticker {
+  position: relative;
+  border-radius: 6px;
+  padding: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 30%, var(--crt-bg-2) 0%, var(--crt-bg) 65%, #0a0502 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.65),
+    inset 0 6px 20px rgba(0,0,0,0.7),
+    inset 0 -6px 20px rgba(0,0,0,0.6),
+    0 12px 40px -10px rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  min-height: 200px;
+}
+/* Scan lines */
+.ticker::before {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(0,0,0,0.0) 0px,
+    rgba(0,0,0,0.0) 2px,
+    rgba(0,0,0,0.22) 3px,
+    rgba(0,0,0,0.0) 4px
+  );
+  mix-blend-mode: multiply;
+}
+/* Vignette + amber glow halo */
+.ticker::after {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(255,179,71,0.08), transparent 60%),
+    radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(0,0,0,0.55) 100%);
+}
+
+.ticker-track {
+  white-space: nowrap;
+  font-size: 38px;
+  line-height: 1;
+  font-weight: 500;
+  color: var(--crt-amber);
+  text-shadow:
+    0 0 6px rgba(255,179,71,0.55),
+    0 0 18px rgba(255,140,40,0.25);
+  padding: 0 32px;
+  letter-spacing: 0.04em;
+  will-change: transform;
+}
+.ticker-track .src {
+  color: var(--crt-amber-dim);
+  font-size: 24px;
+  margin-left: 14px;
+  margin-right: 8px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.ticker-track .age {
+  color: var(--crt-amber-dim);
+  font-size: 22px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+.ticker-track .gap {
+  color: var(--crt-amber-dim);
+  margin: 0 22px;
+  opacity: 0.6;
+}
 
 /* Status bar */
 .status {
@@ -150,7 +224,13 @@ body {
         <span class="clock" id="status-clock">00:00 UTC</span>
       </span>
     </header>
-    <section class="ticker">[ ticker — task 3 / 4 ]</section>
+    <section class="ticker" aria-label="Now broadcasting">
+      <div class="ticker-track" id="ticker-track">
+        <span class="src">Reuters</span>OpenAI ships GPT-5.5 with 2M-token context<span class="age"> · 14m</span>
+        <span class="gap">·</span>
+        <span class="src">AP</span>Apple unveils on-device agent runtime at WWDC<span class="age"> · 1h</span>
+      </div>
+    </section>
     <section class="band">[ tuning band — task 5 / 6 ]</section>
     <footer class="meta">[ meta strip — task 7 ]</footer>
   </main>
