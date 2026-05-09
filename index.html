@@ -53,14 +53,12 @@
     img, svg { display: block; max-width: 100%; }
     button { font-family: inherit; cursor: pointer; }
 
-    /* ========== DOT-MATRIX PAGE BACKGROUND ==========
-       Faithful to <CanvasRevealEffect> from sign-in-flow-1.tsx — a grid of
-       white dots with randomized opacity from the bucket
-       [0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.8, 0.8, 0.8, 1.0] (intro animation removed).
-       In React port: drop in the React-three-fiber CanvasRevealEffect with
-       colors=[[255,255,255]], dotSize=6, totalSize=20.
-       Here: a fixed-position div with a JS-generated 200×200 canvas tile
-       set as background-image (one-time render, then CSS repeats it). */
+    /* ========== BEAMS PAGE BACKGROUND ==========
+       Port of <BeamsBackground> from beams-background.tsx — animated aurora-style
+       beams in cyan/violet on black. Each beam: long blurred linear gradient
+       moving upward at a slight angle, with a sine-wave pulse on opacity.
+       Plus a 35px canvas-filter blur for the dreamy glow + 15px CSS-level blur.
+       In React port: drop in <BeamsBackground intensity="strong"/> directly. */
     #dot-bg {
       position: fixed;
       inset: 0;
@@ -69,6 +67,18 @@
       width: 100vw;
       height: 100vh;
       display: block;
+      filter: blur(15px);
+      background: #0a0a0a;
+    }
+    /* Soft top-of-page vignette overlay so beams don't fight with hero text */
+    #beams-veil {
+      position: fixed;
+      inset: 0;
+      z-index: -9;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 1200px 600px at 50% 0%, rgba(10, 10, 12, 0.65) 0%, transparent 60%),
+        linear-gradient(to bottom, rgba(10, 10, 12, 0.45) 0%, transparent 18%, transparent 82%, rgba(10, 10, 12, 0.55) 100%);
     }
 
     /* ========== FLOATING MINI-NAV ==========
@@ -2494,8 +2504,49 @@
       background: rgba(255, 255, 255, 0.07);
       border: 1px solid rgba(255, 255, 255, 0.14);
       border-radius: 18px;
-      padding: 28px;
+      padding: 24px 28px 28px;
       backdrop-filter: blur(12px);
+    }
+
+    /* Sign up / Log in mode toggle */
+    .cta-mode-toggle {
+      display: flex;
+      gap: 4px;
+      background: rgba(0, 0, 0, 0.42);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      padding: 4px;
+      margin-bottom: 22px;
+    }
+    .cta-mode-btn {
+      flex: 1;
+      padding: 8px 12px;
+      background: transparent;
+      border: 0;
+      border-radius: 999px;
+      color: rgba(255, 255, 255, 0.55);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background .2s ease, color .2s ease;
+    }
+    .cta-mode-btn:hover { color: rgba(255, 255, 255, 0.85); }
+    .cta-mode-btn.cta-mode-active {
+      background: #ffffff;
+      color: #0a0a0a;
+    }
+    .cta-pane[hidden] { display: none; }
+    .cta-pane h3 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 4px;
+    }
+    .cta-pane > p.cta-pane-lede {
+      color: rgba(255, 240, 220, 0.7);
+      font-size: 13px;
+      margin-bottom: 18px;
     }
     .cta-form-wrap h3 {
       font-size: 20px;
@@ -2627,8 +2678,9 @@
 </head>
 <body>
 
-<!-- DOT-MATRIX page background — animated canvas (intro + 5s opacity twinkle) -->
+<!-- BEAMS page background — aurora-style animated beams on black -->
 <canvas id="dot-bg" aria-hidden="true"></canvas>
+<div id="beams-veil" aria-hidden="true"></div>
 
 <!-- SVG filter for liquid-glass button refraction (used by .liquid-btn-distort) -->
 <svg class="defs-only" aria-hidden="true" focusable="false">
@@ -2657,9 +2709,9 @@
     <a class="mini-link" href="#faq"><span class="layer"><span>FAQ</span><span>FAQ</span></span></a>
   </div>
   <div class="mini-actions">
-    <button type="button" class="mini-login">LogIn</button>
+    <button type="button" class="mini-login cta-trigger" data-mode="login">LogIn</button>
     <span class="mini-signup-wrap">
-      <button type="button" class="mini-signup cta-trigger">Signup</button>
+      <button type="button" class="mini-signup cta-trigger" data-mode="signup">Signup</button>
     </span>
   </div>
 </nav>
@@ -3243,24 +3295,51 @@
     </div>
 
     <div class="cta-modal-right">
-      <form class="cta-form-wrap cta-form" id="ctaForm">
-        <h3>Get your preview</h3>
-        <p class="form-lede">Two fields. We'll email your first show within an hour.</p>
-        <label>
-          <span class="lbl">Email</span>
-          <input type="email" name="email" placeholder="your@email.com" required>
-        </label>
-        <label>
-          <span class="lbl">X Handle <span style="color: rgba(255,240,220,0.4); font-weight: 500; letter-spacing: 0.04em; text-transform: none;">(optional)</span></span>
-          <input type="text" name="x_handle" placeholder="@your-handle">
-        </label>
-        <button type="submit" class="cta-form-submit">Get my preview →</button>
-        <p class="cta-form-terms">By submitting, you agree to our Terms of Service and Privacy Policy.</p>
-      </form>
+      <div class="cta-form-wrap" id="ctaPanel">
+        <!-- Mode toggle -->
+        <div class="cta-mode-toggle" role="tablist">
+          <button type="button" class="cta-mode-btn cta-mode-active" data-set-mode="signup" role="tab">Sign up</button>
+          <button type="button" class="cta-mode-btn" data-set-mode="login" role="tab">Log in</button>
+        </div>
+
+        <!-- Sign up pane -->
+        <div class="cta-pane cta-pane-signup" data-pane="signup">
+          <h3>Get your preview</h3>
+          <p class="cta-pane-lede">Two fields. We'll email your first show within an hour.</p>
+          <form class="cta-form" id="ctaFormSignup" novalidate>
+            <label>
+              <span class="lbl">Email</span>
+              <input type="email" name="email" placeholder="your@email.com" required autocomplete="email">
+            </label>
+            <label>
+              <span class="lbl">X Handle <span style="color: rgba(255,240,220,0.4); font-weight: 500; letter-spacing: 0.04em; text-transform: none;">(optional)</span></span>
+              <input type="text" name="x_handle" placeholder="@your-handle" autocomplete="username">
+            </label>
+            <button type="submit" class="cta-form-submit">Get my preview →</button>
+            <p class="cta-form-terms">By submitting, you agree to our Terms of Service and Privacy Policy.</p>
+          </form>
+        </div>
+
+        <!-- Log in pane -->
+        <div class="cta-pane cta-pane-login" data-pane="login" hidden>
+          <h3>Welcome back</h3>
+          <p class="cta-pane-lede">Enter your email — we'll send you a magic link to sign back in.</p>
+          <form class="cta-form" id="ctaFormLogin" novalidate>
+            <label>
+              <span class="lbl">Email</span>
+              <input type="email" name="email" placeholder="your@email.com" required autocomplete="email">
+            </label>
+            <button type="submit" class="cta-form-submit">Send me a magic link →</button>
+            <p class="cta-form-terms">No password. We'll email you a one-time link.</p>
+          </form>
+        </div>
+      </div>
+
+      <!-- Shared success state — content is set by JS based on which mode submitted -->
       <div class="cta-success" id="ctaSuccess" hidden>
         <div class="check-big">✓</div>
-        <h3>Welcome to WAVE</h3>
-        <p>Your first preview will land in your inbox within an hour. Tell us what you want to hear less of by replying to that email.</p>
+        <h3 id="ctaSuccessTitle">Welcome to WAVE</h3>
+        <p id="ctaSuccessMsg">Your first preview will land in your inbox within an hour. Tell us what you want to hear less of by replying to that email.</p>
         <button type="button" class="cta-success-close" id="ctaSuccessClose">Close</button>
       </div>
     </div>
@@ -3283,35 +3362,49 @@
 </div>
 
 <script>
-  // Dot-matrix page background — animated canvas port of <CanvasRevealEffect>
-  // from sign-in-flow-1.tsx. Mirrors the shader's behavior:
-  //   • 20px grid; ~1.6px white dots
-  //   • per-cell opacity sampled from [0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.8, 0.8, 0.8, 1.0]
-  //   • opacities re-roll every FREQUENCY seconds (the "twinkle")
-  //   • intro reveal fades dots in radially from the center
-  //   • brief brighten flash at the moment a cell first becomes visible
-  // Throttled to 30fps to keep CPU usage modest.
+  // Beams page background — port of <BeamsBackground> from beams-background.tsx.
+  // 30 beams, hue 195–265 (cyan/blue/violet), each a long blurred gradient that
+  // moves upward at a slight angle with a sine-wave opacity pulse. canvas-filter
+  // blur(35px) + CSS blur(15px) gives the dreamy aurora look. Beams that scroll
+  // off the top get reset to the bottom in a 3-column rotation.
   (function () {
     const canvas = document.getElementById('dot-bg');
     if (!canvas || !canvas.getContext) return;
     const ctx = canvas.getContext('2d');
 
-    const STEP        = 20;
-    const DOT_R       = 1.6;
-    const FREQUENCY   = 5.0;
-    const ANIM_SPEED  = 0.5;
-    const OPACITIES   = [0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.8, 0.8, 0.8, 1.0];
-    const RGBA        = OPACITIES.map(o => 'rgba(255,255,255,' + o + ')');
-    const FRAME_MS    = 1000 / 30;
+    const TOTAL_BEAMS = 30;
+    const INTENSITY   = 1.0;        // strong
+    const HUE_BASE    = 195;
+    const HUE_SPAN    = 70;
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     let cssW = 0, cssH = 0;
-    let cells = [];
+    let beams = [];
 
-    // Pseudo-random hash, deterministic per (ix, iy, seed) — mirrors shader random()
-    function hash(ix, iy, seed) {
-      const v = Math.sin(ix * 12.9898 + iy * 78.233 + seed * 37.719) * 43758.5453;
-      return v - Math.floor(v);
+    function newBeam(w, h) {
+      return {
+        x: Math.random() * w * 1.5 - w * 0.25,
+        y: Math.random() * h * 1.5 - h * 0.25,
+        width: 30 + Math.random() * 60,
+        length: h * 2.5,
+        angle: -35 + Math.random() * 10,
+        speed: 0.6 + Math.random() * 1.2,
+        opacity: 0.12 + Math.random() * 0.16,
+        hue: HUE_BASE + Math.random() * HUE_SPAN,
+        pulse: Math.random() * Math.PI * 2,
+        pulseSpeed: 0.02 + Math.random() * 0.03,
+      };
+    }
+
+    function resetBeam(beam, index, total, w, h) {
+      const column = index % 3;
+      const spacing = w / 3;
+      beam.y = h + 100;
+      beam.x = column * spacing + spacing / 2 + (Math.random() - 0.5) * spacing * 0.5;
+      beam.width = 100 + Math.random() * 100;
+      beam.speed = 0.5 + Math.random() * 0.4;
+      beam.hue = HUE_BASE + (index * HUE_SPAN) / total;
+      beam.opacity = 0.2 + Math.random() * 0.1;
     }
 
     function build() {
@@ -3323,80 +3416,50 @@
       canvas.style.height = cssH + 'px';
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      const cols = Math.ceil(cssW / STEP) + 1;
-      const rows = Math.ceil(cssH / STEP) + 1;
-      const cx = cssW / 2;
-      const cy = cssH / 2;
-
-      cells = new Array(cols * rows);
-      let n = 0;
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          const x = c * STEP + STEP / 2;
-          const y = r * STEP + STEP / 2;
-          const dx = (x - cx) / STEP;
-          const dy = (y - cy) / STEP;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          cells[n++] = {
-            x: x,
-            y: y,
-            ix: c,
-            iy: r,
-            dist: dist,
-            ofs: hash(c * 7 + 1, r * 13 + 3, 1),
-          };
-        }
+      beams = new Array(TOTAL_BEAMS);
+      for (let i = 0; i < TOTAL_BEAMS; i++) {
+        beams[i] = newBeam(cssW, cssH);
       }
     }
 
-    const startMs = performance.now();
-    let lastFrame = 0;
+    function drawBeam(beam) {
+      ctx.save();
+      ctx.translate(beam.x, beam.y);
+      ctx.rotate(beam.angle * Math.PI / 180);
 
-    function draw(now) {
-      requestAnimationFrame(draw);
-      if (now - lastFrame < FRAME_MS) return;
-      lastFrame = now;
+      const pulsing = beam.opacity * (0.8 + Math.sin(beam.pulse) * 0.2) * INTENSITY;
+      const grad = ctx.createLinearGradient(0, 0, 0, beam.length);
+      const h = beam.hue;
+      grad.addColorStop(0,   'hsla(' + h + ',85%,65%,0)');
+      grad.addColorStop(0.1, 'hsla(' + h + ',85%,65%,' + (pulsing * 0.5) + ')');
+      grad.addColorStop(0.4, 'hsla(' + h + ',85%,65%,' + pulsing + ')');
+      grad.addColorStop(0.6, 'hsla(' + h + ',85%,65%,' + pulsing + ')');
+      grad.addColorStop(0.9, 'hsla(' + h + ',85%,65%,' + (pulsing * 0.5) + ')');
+      grad.addColorStop(1,   'hsla(' + h + ',85%,65%,0)');
 
-      const t = (now - startMs) / 1000;
-      const tAnim = t * ANIM_SPEED;
+      ctx.fillStyle = grad;
+      ctx.fillRect(-beam.width / 2, 0, beam.width, beam.length);
+      ctx.restore();
+    }
 
+    function animate() {
+      requestAnimationFrame(animate);
       ctx.clearRect(0, 0, cssW, cssH);
-
-      // Group fills by bucket index so we set fillStyle 10x not 3000x
-      const buckets = [[], [], [], [], [], [], [], [], [], []];
-
-      for (let i = 0; i < cells.length; i++) {
-        const cell = cells[i];
-
-        // Intro reveal — fade in based on distance from center + per-cell jitter
-        const introDelay = cell.dist * 0.025 + cell.ofs * 0.15;
-        if (tAnim < introDelay) continue; // not yet revealed
-
-        // Time-cycled opacity — re-rolls every FREQUENCY seconds
-        const cycle = Math.floor(t / FREQUENCY + cell.ofs + FREQUENCY);
-        const r = hash(cell.ix * 13 + 7, cell.iy * 17 + 11, cycle);
-        const idx = Math.min(Math.floor(r * 10), 9);
-
-        buckets[idx].push(cell);
-      }
-
-      for (let b = 0; b < 10; b++) {
-        const list = buckets[b];
-        if (!list.length) continue;
-        ctx.fillStyle = RGBA[b];
-        ctx.beginPath();
-        for (let j = 0; j < list.length; j++) {
-          const c = list[j];
-          ctx.moveTo(c.x + DOT_R, c.y);
-          ctx.arc(c.x, c.y, DOT_R, 0, Math.PI * 2);
+      ctx.filter = 'blur(35px)';
+      for (let i = 0; i < beams.length; i++) {
+        const beam = beams[i];
+        beam.y -= beam.speed;
+        beam.pulse += beam.pulseSpeed;
+        if (beam.y + beam.length < -100) {
+          resetBeam(beam, i, beams.length, cssW, cssH);
         }
-        ctx.fill();
+        drawBeam(beam);
       }
     }
 
     build();
     window.addEventListener('resize', build);
-    requestAnimationFrame(draw);
+    requestAnimationFrame(animate);
   })();
 
   // Cycling word at end of H1 — vertical translate spring (framer-motion equiv).
@@ -3417,47 +3480,152 @@
     }, 2200);
   })();
 
-  // Expandable CTA → modal (framer-motion layoutId equivalent)
+  // Expandable CTA → modal with Sign up / Log in modes.
+  // Submissions are persisted to localStorage as a stub. To wire up a real
+  // backend (Supabase / Formspree / a custom POST endpoint), replace the
+  // body of saveSubmission() with the appropriate fetch() call.
   (function () {
     const modal = document.getElementById('ctaModal');
     if (!modal) return;
-    const triggers = document.querySelectorAll('.cta-trigger');
-    const closeBtn = document.getElementById('ctaClose');
-    const successCloseBtn = document.getElementById('ctaSuccessClose');
-    const bg = modal.querySelector('.cta-modal-bg');
-    const form = document.getElementById('ctaForm');
-    const success = document.getElementById('ctaSuccess');
 
-    function open() {
+    const panel       = document.getElementById('ctaPanel');
+    const closeBtn    = document.getElementById('ctaClose');
+    const bg          = modal.querySelector('.cta-modal-bg');
+    const success     = document.getElementById('ctaSuccess');
+    const successClose= document.getElementById('ctaSuccessClose');
+    const successTitle= document.getElementById('ctaSuccessTitle');
+    const successMsg  = document.getElementById('ctaSuccessMsg');
+    const formSignup  = document.getElementById('ctaFormSignup');
+    const formLogin   = document.getElementById('ctaFormLogin');
+    const modeBtns    = modal.querySelectorAll('.cta-mode-btn');
+    const panes       = modal.querySelectorAll('.cta-pane');
+    const triggers    = document.querySelectorAll('.cta-trigger');
+
+    function setMode(mode) {
+      modal.dataset.mode = mode;
+      modeBtns.forEach(b => {
+        b.classList.toggle('cta-mode-active', b.dataset.setMode === mode);
+        b.setAttribute('aria-selected', String(b.dataset.setMode === mode));
+      });
+      panes.forEach(p => {
+        p.hidden = p.dataset.pane !== mode;
+      });
+    }
+
+    function open(mode) {
       modal.classList.add('open');
       modal.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
+      // Reset success + form visibility, set mode
+      success.hidden = true;
+      panel.style.display = '';
+      formSignup.reset();
+      formLogin.reset();
+      setMode(mode || 'signup');
     }
     function close() {
       modal.classList.remove('open');
       modal.setAttribute('aria-hidden', 'true');
       document.body.style.overflow = '';
-      setTimeout(() => {
-        if (form) form.hidden = false;
-        if (success) success.hidden = true;
-        if (form) form.reset();
-      }, 450);
     }
 
-    triggers.forEach(t => t.addEventListener('click', open));
-    if (closeBtn) closeBtn.addEventListener('click', close);
-    if (successCloseBtn) successCloseBtn.addEventListener('click', close);
-    if (bg) bg.addEventListener('click', close);
+    triggers.forEach(t => t.addEventListener('click', () => open(t.dataset.mode || 'signup')));
+    modeBtns.forEach(b => b.addEventListener('click', () => setMode(b.dataset.setMode)));
+    if (closeBtn)     closeBtn.addEventListener('click', close);
+    if (successClose) successClose.addEventListener('click', close);
+    if (bg)           bg.addEventListener('click', close);
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && modal.classList.contains('open')) close();
     });
-    if (form) {
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        form.hidden = true;
-        if (success) success.hidden = false;
-      });
+
+    // ============================================================
+    // saveSubmission() — REPLACE THIS WITH A REAL BACKEND CALL.
+    //
+    // For now, every signup/login is appended to localStorage so the
+    // UI flow works end-to-end during the design phase. Suggested
+    // production swap (open-source friendly):
+    //
+    //   • Supabase JS SDK:
+    //     await supabase.from('wave_signups').insert(payload);
+    //     await supabase.auth.signInWithOtp({ email });   // for login
+    //
+    //   • Formspree (no backend):
+    //     await fetch('https://formspree.io/f/YOUR_ID', {
+    //       method: 'POST', headers: {'Content-Type': 'application/json'},
+    //       body: JSON.stringify(payload)
+    //     });
+    //
+    //   • Custom serverless function:
+    //     await fetch('/api/signup', { method: 'POST', body: ... });
+    // ============================================================
+    function saveSubmission(payload) {
+      try {
+        const key = payload.mode === 'login' ? 'wave_logins' : 'wave_signups';
+        const list = JSON.parse(localStorage.getItem(key) || '[]');
+        list.push(payload);
+        localStorage.setItem(key, JSON.stringify(list));
+        if (window.console) console.log('[wave]', payload.mode, payload);
+      } catch (e) {
+        if (window.console) console.warn('[wave] save failed', e);
+      }
+      // Resolved promise so caller can await — when wired to real backend,
+      // return the actual fetch promise here.
+      return Promise.resolve(payload);
     }
+
+    function showSuccess(mode, email) {
+      panel.style.display = 'none';
+      if (mode === 'login') {
+        successTitle.textContent = 'Check your inbox';
+        successMsg.innerHTML = 'We sent a magic link to <strong>' +
+          (email || 'your email').replace(/[<>&]/g, '') +
+          '</strong>. Click it to sign back into WAVE.';
+      } else {
+        successTitle.textContent = 'Welcome to WAVE';
+        successMsg.textContent =
+          'Your first preview will land in your inbox within an hour. ' +
+          'Tell us what you want to hear less of by replying to that email.';
+      }
+      success.hidden = false;
+    }
+
+    function isValidEmail(s) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s || '');
+    }
+
+    formSignup.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const data = new FormData(formSignup);
+      const email = (data.get('email') || '').toString().trim();
+      const x_handle = (data.get('x_handle') || '').toString().trim();
+      if (!isValidEmail(email)) {
+        formSignup.email.focus();
+        return;
+      }
+      saveSubmission({
+        mode: 'signup',
+        email: email,
+        x_handle: x_handle,
+        ts: new Date().toISOString(),
+        ua: navigator.userAgent,
+      }).then(() => showSuccess('signup', email));
+    });
+
+    formLogin.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const data = new FormData(formLogin);
+      const email = (data.get('email') || '').toString().trim();
+      if (!isValidEmail(email)) {
+        formLogin.email.focus();
+        return;
+      }
+      saveSubmission({
+        mode: 'login',
+        email: email,
+        ts: new Date().toISOString(),
+        ua: navigator.userAgent,
+      }).then(() => showSuccess('login', email));
+    });
   })();
 </script>
 
