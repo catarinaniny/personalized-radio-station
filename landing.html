@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>CONSOLE-7 — Personal Broadcast Unit · Built in Public</title>
+<title>VibeFM — Curated Radio · Built in Public</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="A personal radio station that pulls from your X timeline, your podcasts, and the news. You tell it how long you've got. It writes a show that fits.">
+<meta name="description" content="A curated personal radio station that pulls from your X timeline, your podcasts, and the news. You tell it how long you've got. It writes a show that fits.">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -119,6 +119,8 @@ a:hover { color: var(--rust); }
   letter-spacing: 0.22em;
   text-transform: uppercase;
 }
+.brand-word { color: var(--ink); }
+.brand-fm { color: var(--rust); }
 .brand-mark .star { color: var(--rust); font-size: 17px; }
 .brand-mark .sub  {
   color: var(--ink-mid); font-weight: 500;
@@ -250,6 +252,83 @@ p { line-height: 1.55; color: var(--ink-2); }
   color: var(--ink-mid);
 }
 .device-meta b { color: var(--ink); }
+
+.hero-spectrum-wrap {
+  min-height: 520px;
+  display: grid;
+  place-items: center;
+}
+.hero-spectrum {
+  width: min(100%, 560px);
+  border-radius: 12px;
+  padding: 18px 18px 16px;
+  background:
+    linear-gradient(180deg, var(--cream-light), var(--cream-deep));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.56),
+    inset 0 -2px 0 rgba(60,40,15,0.28),
+    inset 0 0 0 1px rgba(60,40,15,0.18),
+    0 26px 54px rgba(0,0,0,0.22);
+}
+.hero-spectrum-head {
+  height: 28px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0 18px;
+  color: var(--rust);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+}
+.hero-spectrum-well {
+  height: 356px;
+  border-radius: 7px;
+  padding: 18px 14px;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 7px;
+  align-items: stretch;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 30%, #2c1808 0%, #150a02 75%, #090501 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.76),
+    inset 0 4px 10px rgba(0,0,0,0.72);
+  position: relative;
+}
+.hero-spectrum-well::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgba(0,0,0,0.24) 0 1px, transparent 1px 3px);
+  mix-blend-mode: multiply;
+}
+.hero-spectrum-col {
+  display: grid;
+  grid-template-rows: repeat(14, 1fr);
+  gap: 4px;
+  min-width: 0;
+}
+.hero-spectrum-cell {
+  border-radius: 1px;
+  background: rgba(60,30,8,0.68);
+}
+.hero-spectrum-cell.a {
+  background: var(--amber);
+  box-shadow: 0 0 4px rgba(255,179,71,0.62);
+}
+.hero-spectrum-cell.y {
+  background: #ffe18a;
+  box-shadow: 0 0 5px rgba(255,225,138,0.68);
+}
+.hero-spectrum-cell.r {
+  background: var(--rust);
+  box-shadow: 0 0 5px rgba(197,72,30,0.72);
+}
 
 /* ---------- MARQUEE ---------- */
 .marquee {
@@ -617,6 +696,7 @@ section.block {
   overflow: hidden;
 }
 .cta-strip h2 { color: var(--paper); }
+.cta-strip .brand-word { color: var(--paper); }
 .cta-strip p  { color: rgba(240,228,196,0.75); }
 .cta-strip .grid {
   display: grid;
@@ -646,39 +726,39 @@ section.block {
 .footer {
   background: var(--paper-deep);
   border-top: 1px solid var(--rule-strong);
-  padding: 56px 0 32px;
+  padding: 34px 0;
   font-size: 11px; letter-spacing: 0.22em;
   text-transform: uppercase;
 }
 .footer-top {
   display: grid;
-  grid-template-columns: 2fr repeat(3, 1fr);
-  gap: 40px;
-  padding-bottom: 40px;
-  border-bottom: 1px solid var(--rule);
+  grid-template-columns: 1fr auto;
+  gap: 28px;
+  align-items: center;
 }
-.footer-top h4 { font-size: 11px; letter-spacing: 0.3em; color: var(--ink-mid); margin-bottom: 16px; font-weight: 700; }
-.footer-top ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 18px 26px;
+}
 .footer-top a { color: var(--ink); font-weight: 600; font-size: 11px; }
 .footer-top a:hover { color: var(--rust); }
 .footer-tagline {
   font-family: var(--font-sans);
   font-style: italic;
   font-weight: 200;
-  font-size: 28px;
+  font-size: 24px;
   letter-spacing: -0.02em;
   text-transform: none;
   line-height: 1.2;
   color: var(--ink);
-  margin-top: 14px;
+  margin: 10px 0 0;
 }
 .footer-tagline b { font-style: normal; font-weight: 500; color: var(--rust); }
-.footer-bot {
-  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
-  padding-top: 20px;
-  font-size: 10px; color: var(--ink-mid);
-  letter-spacing: 0.3em;
-}
 
 /* ---------- responsive ---------- */
 @media (max-width: 1100px) {
@@ -695,6 +775,7 @@ section.block {
   .nav-links { display: none; }
   .station-grid, .steps, .instrument, .tiers { grid-template-columns: 1fr; }
   .footer-top { grid-template-columns: 1fr; }
+  .footer-links { justify-content: flex-start; }
   .live-banner .container { flex-direction: column; gap: 6px; align-items: flex-start; }
 }
 
@@ -722,8 +803,7 @@ section.block {
 <nav class="nav">
   <div class="container nav-inner">
     <a class="brand-mark" href="#top">
-      <span>CONSOLE-7</span>
-      <span class="sub">— PERSONAL BROADCAST UNIT</span>
+      <span>Vibe<span class="brand-fm">FM</span></span>
     </a>
     <div class="nav-links">
       <a href="#sources">Sources</a>
@@ -744,8 +824,8 @@ section.block {
 <header class="hero" id="top">
   <div class="container hero-grid">
     <div>
-      <div class="eyebrow"><span class="num">00</span>CONSOLE-7 · A LIVE EXPERIMENT</div>
-      <h1>Radio,<br>compiled<br>for <span class="accent">one&nbsp;listener</span>.</h1>
+      <div class="eyebrow"><span class="num">00</span><span class="brand-word">Vibe<span class="brand-fm">FM</span></span> · A LIVE EXPERIMENT</div>
+      <h1>Tune into<br><span class="brand-word">Vibe<span class="brand-fm">FM</span>:</span><br>Your Curated Radio</h1>
       <p class="lead">
         A personal broadcast unit. Pulls from your X timeline, the podcasts you actually
         follow, and the news. Tell it how long you've got — a 12-minute commute, a 45-minute
@@ -759,18 +839,14 @@ section.block {
       </div>
       <div class="hero-cta">
         <a class="btn btn-rust" href="#tiers">Request invite <span class="arrow">→</span></a>
-        <a class="btn btn-ghost" href="radio.html" target="_blank">Try the dial</a>
+        <a class="btn btn-ghost" href="#hero-spectrum">Watch signal</a>
       </div>
     </div>
-    <div>
-      <div class="device-frame">
-        <iframe class="device-iframe" src="radio.html" title="CONSOLE-7 device" loading="lazy"></iframe>
-        <div class="device-meta">
-          <span>UNIT <b>SN-7042</b></span>
-          <span>STATUS <b>LIVE</b></span>
-          <span>OUTPUT <b>2.0 STEREO</b></span>
-        </div>
-      </div>
+    <div class="hero-spectrum-wrap" id="hero-spectrum">
+      <section class="hero-spectrum" aria-label="Live VibeFM spectrum">
+        <div class="hero-spectrum-head">AVG · 0 DB</div>
+        <div class="hero-spectrum-well" id="hero-spectrum-eq"></div>
+      </section>
     </div>
   </div>
 </header>
@@ -1145,7 +1221,7 @@ section.block {
   <div class="container grid">
     <div>
       <div class="eyebrow" style="color: var(--rust);">THE INVITE</div>
-      <h2 style="margin-top: 14px;">CONSOLE-7 is being built<br>in public. Right now.</h2>
+      <h2 style="margin-top: 14px;"><span class="brand-word">Vibe<span class="brand-fm">FM</span></span> is being built<br>in public. Right now.</h2>
       <p class="lead" style="color: rgba(240,228,196,0.75); margin-top: 18px;">
         We started Saturday at 10 AM and we're admitting 200 operators per month while
         AURA-3 finishes training. Tell us how you'd use the band — we'll write back with
@@ -1165,49 +1241,71 @@ section.block {
     <div class="footer-top">
       <div>
         <a class="brand-mark" href="#top">
-          <span>CONSOLE-7</span>
-          <span class="sub">— PERSONAL BROADCAST UNIT</span>
+          <span>Vibe<span class="brand-fm">FM</span></span>
         </a>
-        <p class="footer-tagline">Where <b>human attention</b> meets <b>machine scale</b>.</p>
+        <p class="footer-tagline">Stop <b>doom scrolling</b> and <b>just vibe</b>.</p>
       </div>
-      <div>
-        <h4>Product</h4>
-        <ul>
-          <li><a href="#sources">Sources</a></li>
-          <li><a href="#how">How it works</a></li>
-          <li><a href="#instrument">Instrument</a></li>
-          <li><a href="#model">Model card</a></li>
-          <li><a href="radio.html" target="_blank">Live device</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>Build log</h4>
-        <ul>
-          <li><a href="https://github.com/zertyn-ai/personalized-radio-station" target="_blank" rel="noopener">GitHub</a></li>
-          <li><a href="#">Day-1 notes</a></li>
-          <li><a href="#">Studio sessions</a></li>
-          <li><a href="#">Press</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>Channels</h4>
-        <ul>
-          <li><a href="#">X / Twitter</a></li>
-          <li><a href="#">Substack</a></li>
-          <li><a href="#">RSS</a></li>
-          <li><a href="#">Contact</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bot">
-      <span>© CONSOLE-7 · 2026</span>
-      <span>SN-7042 · MK II · ROOM 7</span>
-      <span>TERMS · PRIVACY · STATUS</span>
+      <ul class="footer-links">
+        <li><a href="#sources">Sources</a></li>
+        <li><a href="#how">How it works</a></li>
+        <li><a href="https://github.com/zertyn-ai/personalized-radio-station" target="_blank" rel="noopener">GitHub</a></li>
+        <li><a href="#">X / Twitter</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
     </div>
   </div>
 </footer>
 
 <script>
+/* Animated spectrum panel for the hero. */
+(() => {
+  const eq = document.getElementById('hero-spectrum-eq');
+  if (!eq) return;
+  const BARS = 12, CELLS = 14;
+  for (let b = 0; b < BARS; b++) {
+    const col = document.createElement('div');
+    col.className = 'hero-spectrum-col';
+    for (let c = 0; c < CELLS; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'hero-spectrum-cell';
+      col.appendChild(cell);
+    }
+    eq.appendChild(col);
+  }
+  const cols = eq.querySelectorAll('.hero-spectrum-col');
+  const prev = [0.22, 0.12, 0.10, 0.34, 0.52, 0.50, 0.50, 0.60, 0.62, 0.70, 0.52, 0.30];
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function frame(t) {
+    for (let b = 0; b < BARS; b++) {
+      const base = [0.22, 0.12, 0.10, 0.36, 0.52, 0.50, 0.50, 0.60, 0.62, 0.70, 0.52, 0.30][b];
+      const target = reduceMotion
+        ? base
+        : Math.max(0.05, Math.min(0.92,
+            base
+            + Math.sin(t * 0.0017 + b * 0.7) * 0.08
+            + Math.sin(t * 0.004 + b * 1.3) * 0.05
+            + (Math.random() - 0.5) * 0.06
+          ));
+      prev[b] += (target - prev[b]) * 0.16;
+      const lit = Math.round(prev[b] * CELLS);
+      const cells = cols[b].children;
+      for (let c = 0; c < CELLS; c++) {
+        const fromBottom = (CELLS - 1) - c;
+        let cls = 'hero-spectrum-cell';
+        if (fromBottom < lit) {
+          if (fromBottom < 8) cls += ' a';
+          else if (fromBottom < 13) cls += ' y';
+          else cls += ' r';
+        }
+        cells[c].className = cls;
+      }
+    }
+    if (!reduceMotion) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
 /* Animated EQ panel for the Instrument section — matches the device's spectrum well. */
 (() => {
   const eq = document.getElementById('viz-eq');
