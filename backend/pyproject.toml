@@ -2,7 +2,7 @@
 name = "vibefm"
 version = "0.1.0"
 description = "VibeFM: a personal radio briefing generator powered by RSS, weather, and LiteLLM."
-readme = "README.md"
+readme = { text = "VibeFM backend package for the personalized radio station app.", content-type = "text/markdown" }
 requires-python = ">=3.11"
 dependencies = [
   "litellm>=1.0.0",

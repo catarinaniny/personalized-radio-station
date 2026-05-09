@@ -102,7 +102,7 @@ def _synthesize_litellm_speech(
         from litellm import speech
     except ImportError as exc:
         raise RuntimeError(
-            "LiteLLM is not installed. Install dependencies with `uv sync`."
+            "LiteLLM is not installed. From backend/, install dependencies with `uv sync`."
         ) from exc
 
     api_key = os.environ.get(config.tts.api_key_env) if config.tts.api_key_env else None

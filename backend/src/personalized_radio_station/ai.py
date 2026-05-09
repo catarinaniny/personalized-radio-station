@@ -18,7 +18,7 @@ def generate_text(messages: list[Message], config: AiConfig) -> str:
         from litellm import completion
     except ImportError as exc:
         raise RuntimeError(
-            "LiteLLM is not installed. Install dependencies with `pip install -e .`."
+            "LiteLLM is not installed. From backend/, install dependencies with `uv sync`."
         ) from exc
 
     kwargs: dict[str, Any] = {

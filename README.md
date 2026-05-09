@@ -15,13 +15,21 @@ episode.json + script.md + episode.mp3
 ```
 
 The important part is that the AI layer is isolated in
-`src/personalized_radio_station/ai.py`, so the project can switch between
+`backend/src/personalized_radio_station/ai.py`, so the project can switch between
 OpenRouter, OpenAI, Anthropic, Ollama, or anything else LiteLLM supports. TTS is
-isolated separately in `src/personalized_radio_station/tts.py`.
+isolated separately in `backend/src/personalized_radio_station/tts.py`.
+
+## Project Layout
+
+```text
+backend/   Python package, tests, config templates, lockfile, generated episodes
+frontend/  Console-7 static prototype, styles, scripts, and fonts
+```
 
 ## Setup
 
 ```bash
+cd backend
 uv sync
 cp config.example.yaml config.yaml
 cp .env.example .env
@@ -115,6 +123,7 @@ Provider API keys are read from environment variables such as
 Run the app server:
 
 ```bash
+cd backend
 uv run python -m personalized_radio_station.web_server
 ```
 
@@ -125,28 +134,28 @@ http://127.0.0.1:8765
 ```
 
 The backend serves the Console-7 radio UI at `/` and keeps API status JSON at
-`/api`. The older `radio_test.html` page still exists as a direct API test
-harness that can be opened with `file://`.
+`/api`. The older `frontend/radio_test.html` page still exists as a direct API
+test harness that can be opened with `file://`.
 
-If you serve the frontend separately, for example with `python -m http.server
-8000`, still keep the app server running on `http://127.0.0.1:8765`. The
-frontend first tries its own origin for `/api`, then falls back to
+If you serve the frontend separately from `frontend/`, for example with
+`python -m http.server 8000`, still keep the app server running on
+`http://127.0.0.1:8765`. The frontend first tries its own origin for `/api`, then falls back to
 `http://127.0.0.1:8765` when it detects a static file server.
 
 The frontend can create saved vibes through `POST /api/vibes`, start playback
 through `POST /api/episodes`, listen to `GET /api/episodes/{id}/events` with
 Server-Sent Events, and play generated audio segments through Web Audio as soon
 as each segment is ready. Demo mode is selected by default and writes normal
-episode artifacts under `episodes/{episode_id}/`, but does not call LLM, TTS,
+episode artifacts under `backend/episodes/{episode_id}/`, but does not call LLM, TTS,
 news, or weather APIs.
 
 The opening is intentionally written as if the station was already on air and
 you just tuned in. It should not start with a formal welcome.
 
-Outputs are saved under `episodes/`:
+Outputs are saved under `backend/episodes/`:
 
 ```text
-episodes/
+backend/episodes/
   ep_20260509145245_6dfcbe44/
     sources.json
     episode.json
@@ -177,7 +186,8 @@ Create an episode from a saved vibe by passing its id:
 }
 ```
 
-The web server stores vibes in `vibefm.sqlite3` by default. Override that path
+The web server stores vibes in `backend/vibefm.sqlite3` by default when run from
+`backend/`. Override that path
 by passing `db_path` to `personalized_radio_station.web_server.create_server()`
 when embedding the API in tests or another local runner.
 
@@ -310,6 +320,7 @@ provider. Sources: [OpenAI pricing](https://openai.com/api/pricing/),
 ## Tests
 
 ```bash
+cd backend
 uv run python -m unittest discover -s tests
 ```
 
@@ -353,8 +364,7 @@ Treat the HTML as the **source of truth for visuals and interactions** — extra
 ## Files in this bundle
 
 ```
-design_handoff_console7_radio/
-├── README.md                       ← this file
+frontend/
 ├── Console-7 Radio.html            ← entry HTML (loads React + radio.jsx via Babel)
 ├── radio.jsx                       ← all React components + main app
 ├── stations.js                     ← seeded station library (window.STATIONS)
