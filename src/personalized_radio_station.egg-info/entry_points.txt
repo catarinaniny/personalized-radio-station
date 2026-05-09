@@ -1,4 +1,2 @@
 [console_scripts]
-fetch-sources = personalized_radio_station.sources:main
-generate-episode = personalized_radio_station.pipeline:main
 radio = personalized_radio_station.cli:main

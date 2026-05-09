@@ -3,14 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from urllib.error import HTTPError
-from urllib.request import Request, urlopen
-import json
 import os
 import re
 import subprocess
 
-from .audio import concatenate_wavs, write_mock_wav
+from .audio import concatenate_audio_files, concatenate_wavs, write_mock_wav
 from .config import AppConfig, TtsVoiceConfig
 
 
@@ -36,13 +33,13 @@ def synthesize_episode(episode: dict[str, Any], config: AppConfig, episode_dir: 
 
         voice_name = _voice_name_for_segment(segment, config)
         voice = config.tts.voices.get(voice_name) or next(iter(config.tts.voices.values()))
-        extension = "wav" if provider in {"mock", "piper"} else config.tts.response_format
+        extension = _extension_for_provider(provider, config.tts.response_format)
         segment_path = audio_dir / f"{index:02d}-{_slug(segment.get('type', 'segment'))}.{extension}"
 
         if provider == "mock":
             _synthesize_mock(text, voice_name, segment_path)
-        elif provider == "openai":
-            _synthesize_openai(text, voice, config, segment_path)
+        elif provider in {"elevenlabs", "litellm", "openai"}:
+            _synthesize_litellm_speech(text, voice, config, segment_path)
         elif provider == "piper":
             _synthesize_piper(text, voice, config, segment_path)
         else:
@@ -54,6 +51,8 @@ def synthesize_episode(episode: dict[str, Any], config: AppConfig, episode_dir: 
     episode_file = None
     if segment_files and all(path.suffix == ".wav" for path in segment_files):
         episode_file = concatenate_wavs(segment_files, episode_dir / "episode.wav")
+    elif segment_files and all(path.suffix == ".mp3" for path in segment_files):
+        episode_file = concatenate_audio_files(segment_files, episode_dir / "episode.mp3")
 
     return TtsResult(segment_files=segment_files, episode_file=episode_file)
 
@@ -73,39 +72,35 @@ def _synthesize_mock(text: str, voice_name: str, output_path: Path) -> None:
     write_mock_wav(output_path, duration_seconds=duration, frequency_hz=frequency)
 
 
-def _synthesize_openai(
+def _synthesize_litellm_speech(
     text: str, voice: TtsVoiceConfig, config: AppConfig, output_path: Path
 ) -> None:
-    api_key = os.environ.get(config.tts.api_key_env)
-    if not api_key:
-        raise RuntimeError(f"Missing {config.tts.api_key_env} for OpenAI TTS.")
+    try:
+        from litellm import speech
+    except ImportError as exc:
+        raise RuntimeError(
+            "LiteLLM is not installed. Install dependencies with `uv sync`."
+        ) from exc
 
-    body: dict[str, Any] = {
-        "model": config.tts.model,
-        "voice": voice.voice,
+    api_key = os.environ.get(config.tts.api_key_env) if config.tts.api_key_env else None
+    if config.tts.api_key_env and not api_key:
+        raise RuntimeError(f"Missing {config.tts.api_key_env} for LiteLLM TTS.")
+
+    kwargs: dict[str, Any] = {
+        "model": _litellm_tts_model(config),
         "input": text,
+        "voice": voice.voice,
+        "api_key": api_key,
+        "api_base": config.tts.api_base,
         "response_format": config.tts.response_format,
         "speed": voice.speed,
+        "instructions": voice.instructions,
     }
-    if voice.instructions:
-        body["instructions"] = voice.instructions
+    if voice.settings:
+        kwargs["voice_settings"] = voice.settings
 
-    request = Request(
-        f"{config.tts.api_base.rstrip('/')}/audio/speech",
-        data=json.dumps(body).encode("utf-8"),
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        },
-        method="POST",
-    )
-
-    try:
-        with urlopen(request, timeout=60) as response:
-            output_path.write_bytes(response.read())
-    except HTTPError as exc:
-        details = exc.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"OpenAI TTS failed: {exc.code} {details}") from exc
+    response = speech(**kwargs)
+    _write_litellm_binary_response(response, output_path)
 
 
 def _synthesize_piper(
@@ -141,3 +136,40 @@ def _synthesize_piper(
 def _slug(value: Any) -> str:
     slug = re.sub(r"[^a-z0-9]+", "-", str(value).lower()).strip("-")
     return slug or "segment"
+
+
+def _extension_for_provider(provider: str, response_format: str) -> str:
+    provider = provider.lower()
+    if provider in {"mock", "piper"}:
+        return "wav"
+    if provider == "elevenlabs":
+        return response_format.split("_", 1)[0]
+    if response_format == "pcm":
+        return "pcm"
+    return response_format
+
+
+def _litellm_tts_model(config: AppConfig) -> str:
+    model = config.tts.model
+    if config.tts.provider.lower() == "elevenlabs" and not model.startswith("elevenlabs/"):
+        return f"elevenlabs/{model}"
+    if config.tts.provider.lower() == "openai" and "/" not in model:
+        return f"openai/{model}"
+    return model
+
+
+def _write_litellm_binary_response(response: Any, output_path: Path) -> None:
+    if hasattr(response, "stream_to_file"):
+        response.stream_to_file(output_path)
+        return
+    if hasattr(response, "read"):
+        output_path.write_bytes(response.read())
+        return
+    if isinstance(response, bytes):
+        output_path.write_bytes(response)
+        return
+    content = getattr(response, "content", None)
+    if isinstance(content, bytes):
+        output_path.write_bytes(content)
+        return
+    raise RuntimeError("LiteLLM TTS returned an unsupported response type.")

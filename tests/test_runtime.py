@@ -31,8 +31,8 @@ ai:
 
 tts:
   enabled: true
-  provider: "openai"
-  api_key_env: "OPENAI_API_KEY"
+  provider: "elevenlabs"
+  api_key_env: "ELEVENLABS_API_KEY"
 """.strip()
                 + "\n"
             )
@@ -42,7 +42,7 @@ tts:
             missing = missing_runtime_requirements(config)
 
         self.assertIn("OPENROUTER_API_KEY", missing[0])
-        self.assertIn("OPENAI_API_KEY", missing[1])
+        self.assertIn("ELEVENLABS_API_KEY", missing[1])
 
     def test_detects_provider_specific_litellm_keys(self) -> None:
         examples = [
@@ -181,6 +181,44 @@ tts:
 
         with patch.dict("os.environ", {}, clear=True):
             self.assertEqual(missing_runtime_requirements(config), [])
+
+    def test_detects_litellm_tts_key_when_enabled(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.yaml"
+            config_path.write_text(
+                """
+station_name: "Test"
+style: "brief"
+episode_minutes: 1
+
+news:
+  topics:
+    - "ai"
+
+weather:
+  name: "Lisbon"
+  latitude: 38.7
+  longitude: -9.1
+
+ai:
+  model: "ollama/llama3.1"
+
+tts:
+  enabled: true
+  provider: "litellm"
+  model: "openai/gpt-4o-mini-tts"
+""".strip()
+                + "\n"
+            )
+            config = load_config(config_path)
+
+        with patch.dict("os.environ", {}, clear=True):
+            missing = missing_runtime_requirements(config)
+
+        self.assertEqual(
+            missing,
+            ["OPENAI_API_KEY for LiteLLM TTS model `openai/gpt-4o-mini-tts`"],
+        )
 
 
 if __name__ == "__main__":

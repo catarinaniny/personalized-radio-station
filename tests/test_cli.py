@@ -14,10 +14,31 @@ class CliTests(unittest.TestCase):
 
             with patch.dict("os.environ", {}, clear=True), patch("builtins.print") as print_mock:
                 with self.assertRaises(SystemExit) as raised:
-                    main(["check", "--config", str(config_path)])
+                    main(["check", "--config", str(config_path), "--env", str(Path(temp_dir) / "missing.env")])
 
         self.assertEqual(raised.exception.code, 1)
         printed = "\n".join(call.args[0] for call in print_mock.call_args_list)
+        self.assertIn("OPENROUTER_API_KEY", printed)
+
+    def test_generate_reports_missing_requirements_before_work(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            config_path = _write_openrouter_config(Path(temp_dir))
+
+            with patch.dict("os.environ", {}, clear=True), patch("builtins.print") as print_mock:
+                with self.assertRaises(SystemExit) as raised:
+                    main(
+                        [
+                            "generate",
+                            "--config",
+                            str(config_path),
+                            "--env",
+                            str(Path(temp_dir) / "missing.env"),
+                        ]
+                    )
+
+        self.assertEqual(raised.exception.code, 1)
+        printed = "\n".join(call.args[0] for call in print_mock.call_args_list)
+        self.assertIn("Missing runtime requirements", printed)
         self.assertIn("OPENROUTER_API_KEY", printed)
 
     def test_start_writes_detached_state(self) -> None:

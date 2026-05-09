@@ -55,9 +55,21 @@ def _missing_tts_requirements(config: TtsConfig, allow_mock: bool) -> list[str]:
             return []
         return ["test-only TTS provider `mock` is not allowed for normal runs"]
 
-    if provider == "openai":
-        if not os.environ.get(config.api_key_env):
-            return [f"{config.api_key_env} for OpenAI TTS"]
+    if provider == "elevenlabs":
+        missing: list[str] = []
+        if not config.api_key_env or not os.environ.get(config.api_key_env):
+            missing.append(f"{config.api_key_env or 'ELEVENLABS_API_KEY'} for ElevenLabs TTS")
+        if config.response_format.startswith("mp3") and which("ffmpeg") is None:
+            missing.append("ffmpeg executable for assembling ElevenLabs MP3 segments")
+        return missing
+
+    if provider in {"litellm", "openai"}:
+        model = config.model
+        if provider == "openai" and "/" not in model:
+            model = f"openai/{model}"
+        env_name = config.api_key_env or _env_for_litellm_model(model)
+        if env_name and not os.environ.get(env_name):
+            return [f"{env_name} for LiteLLM TTS model `{model}`"]
         return []
 
     if provider == "piper":
@@ -80,6 +92,7 @@ def _env_for_litellm_model(model: str) -> str | None:
         "azure": "AZURE_API_KEY",
         "cohere": "COHERE_API_KEY",
         "deepseek": "DEEPSEEK_API_KEY",
+        "elevenlabs": "ELEVENLABS_API_KEY",
         "gemini": "GEMINI_API_KEY",
         "groq": "GROQ_API_KEY",
         "mistral": "MISTRAL_API_KEY",

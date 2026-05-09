@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 from pathlib import Path
+from shutil import which
 import math
 import struct
+import subprocess
+import tempfile
 import wave
 
 
@@ -68,5 +71,47 @@ def concatenate_wavs(
                 output.writeframes(segment.readframes(segment.getnframes()))
                 if index < len(segment_paths) - 1:
                     output.writeframes(silence)
+
+    return output_path
+
+
+def concatenate_audio_files(segment_paths: list[Path], output_path: Path) -> Path:
+    if not segment_paths:
+        raise ValueError("Cannot concatenate an empty list of audio files.")
+    if which("ffmpeg") is None:
+        raise RuntimeError("ffmpeg is required to assemble compressed audio segments.")
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False) as list_file:
+        list_path = Path(list_file.name)
+        for path in segment_paths:
+            escaped = str(path.resolve()).replace("'", "'\\''")
+            list_file.write(f"file '{escaped}'\n")
+
+    try:
+        subprocess.run(
+            [
+                "ffmpeg",
+                "-y",
+                "-f",
+                "concat",
+                "-safe",
+                "0",
+                "-i",
+                str(list_path),
+                "-c:a",
+                "libmp3lame",
+                "-b:a",
+                "128k",
+                str(output_path),
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        raise RuntimeError(f"ffmpeg failed to assemble audio: {exc.stderr}") from exc
+    finally:
+        list_path.unlink(missing_ok=True)
 
     return output_path

@@ -18,9 +18,9 @@ Google News RSS + Open-Meteo weather
         ↓
 LiteLLM script generation
         ↓
-optional TTS
+LiteLLM TTS rendering
         ↓
-episode.json + script.md + episode.wav
+episode.json + script.md + episode.mp3
 ```
 
 The important part is that the AI layer is isolated in
@@ -48,10 +48,11 @@ That model string is a little funny on purpose: LiteLLM uses the first
 `openrouter/` as the provider prefix, and OpenRouter's Auto Router model ID is
 `openrouter/auto`.
 
-Add your key to `.env`:
+Add the default LLM and TTS keys to `.env`:
 
 ```bash
 OPENROUTER_API_KEY=...
+ELEVENLABS_API_KEY=...
 ```
 
 You can switch to a specific OpenRouter model by changing the model:
@@ -81,8 +82,9 @@ ai:
   api_base: "http://localhost:11434"
 ```
 
-Provider API keys are read by LiteLLM from environment variables, such as
-`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or `OPENROUTER_API_KEY`.
+Provider API keys are read from environment variables such as
+`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`, and
+`ELEVENLABS_API_KEY`.
 
 You can validate the configured runtime before fetching anything:
 
@@ -107,8 +109,7 @@ uv run radio sources --config config.yaml
 
 ## Generate An Episode
 
-After adding `OPENROUTER_API_KEY` to `.env`, run the whole pipeline in the
-foreground:
+After adding the keys to `.env`, run the whole pipeline in the foreground:
 
 ```bash
 uv run radio generate
@@ -123,7 +124,7 @@ episodes/
     sources.json
     episode.json
     script.md
-    episode.wav      # present when TTS is enabled with a WAV-capable provider
+    episode.mp3
     audio/
 ```
 
@@ -150,27 +151,53 @@ Check whether the detached process is still alive:
 uv run radio status
 ```
 
-For script-only generation, use:
-
-```bash
-uv run radio start --skip-tts
-```
-
 ## TTS
 
-TTS is configured under `tts:`. The default example keeps it disabled:
+TTS is part of the default flow. `uv run radio generate` fetches sources,
+creates a script, and renders speech.
 
 ```yaml
 tts:
-  enabled: false
-  provider: "openai"
-  model: "gpt-4o-mini-tts"
-  response_format: "wav"
+  enabled: true
+  provider: "elevenlabs"
+  model: "elevenlabs/eleven_multilingual_v2"
+  response_format: "mp3"
+  api_key_env: "ELEVENLABS_API_KEY"
 ```
 
-To use OpenAI TTS, set `tts.enabled: true` and add `OPENAI_API_KEY` to `.env`.
-The OpenAI speech endpoint supports WAV output, which lets this project stitch
-segments into `episode.wav`.
+Add `ELEVENLABS_API_KEY` to `.env`. This goes through LiteLLM's `speech()` API.
+Voice values can be common mapped names like `alloy`/`onyx`, or raw ElevenLabs
+voice IDs:
+
+```yaml
+tts:
+  enabled: true
+  provider: "elevenlabs"
+  voices:
+    host:
+      voice: "alloy"
+    anchor:
+      voice: "onyx"
+```
+
+The TTS interface is still provider-swappable. For OpenAI/Azure-style speech,
+use the same LiteLLM speech path:
+
+```yaml
+tts:
+  enabled: true
+  provider: "litellm"
+  model: "openai/gpt-4o-mini-tts"
+  response_format: "wav"
+  api_key_env: "OPENAI_API_KEY"
+  voices:
+    host:
+      voice: "alloy"
+      instructions: "Warm, conversational, casual morning radio host."
+    anchor:
+      voice: "onyx"
+      instructions: "Clear, steady, professional news reader."
+```
 
 Piper is also wired as a local TTS provider:
 

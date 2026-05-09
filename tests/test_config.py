@@ -11,6 +11,10 @@ class ConfigTests(unittest.TestCase):
 
         self.assertEqual(config.ai.model, "openrouter/openrouter/auto")
         self.assertEqual(config.ai.api_key_env, "OPENROUTER_API_KEY")
+        self.assertEqual(config.tts.provider, "elevenlabs")
+        self.assertEqual(config.tts.model, "elevenlabs/eleven_multilingual_v2")
+        self.assertEqual(config.tts.api_key_env, "ELEVENLABS_API_KEY")
+        self.assertTrue(config.tts.enabled)
 
     def test_loads_ai_and_tts_config(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -36,13 +40,14 @@ ai:
 
 tts:
   enabled: true
-  provider: "openai"
-  model: "gpt-4o-mini-tts"
+  provider: "elevenlabs"
+  model: "elevenlabs/eleven_multilingual_v2"
   voices:
     host:
       voice: "alloy"
-      instructions: "Warm."
-      speed: 1.1
+      settings:
+        stability: 0.4
+        similarity_boost: 0.8
 """.strip()
                 + "\n"
             )
@@ -52,8 +57,9 @@ tts:
         self.assertEqual(config.station_name, "Test Station")
         self.assertEqual(config.ai.api_key_env, "OPENROUTER_API_KEY")
         self.assertTrue(config.tts.enabled)
+        self.assertEqual(config.tts.provider, "elevenlabs")
         self.assertEqual(config.tts.voices["host"].voice, "alloy")
-        self.assertEqual(config.tts.voices["host"].speed, 1.1)
+        self.assertEqual(config.tts.voices["host"].settings["stability"], 0.4)
 
 
 if __name__ == "__main__":

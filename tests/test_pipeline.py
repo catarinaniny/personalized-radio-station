@@ -97,7 +97,13 @@ tts:
                 "personalized_radio_station.pipeline.fetch_weather",
                 return_value=weather,
             ):
-                episode_dir = generate_episode(config_path, output_dir, allow_mock=True)
+                logs: list[str] = []
+                episode_dir = generate_episode(
+                    config_path,
+                    output_dir,
+                    allow_mock=True,
+                    log=logs.append,
+                )
 
             self.assertTrue((episode_dir / "sources.json").exists())
             self.assertTrue((episode_dir / "script.md").exists())
@@ -105,6 +111,9 @@ tts:
             episode = json.loads((episode_dir / "episode.json").read_text())
             self.assertEqual(episode["audio_file"], "episode.wav")
             self.assertTrue((output_dir / "latest").is_symlink())
+            self.assertTrue(any("Fetching Google News RSS" in log for log in logs))
+            self.assertTrue(any("Creating script" in log for log in logs))
+            self.assertTrue(any("Rendering TTS" in log for log in logs))
 
 
 if __name__ == "__main__":

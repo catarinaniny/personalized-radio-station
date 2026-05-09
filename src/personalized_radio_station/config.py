@@ -34,16 +34,17 @@ class TtsVoiceConfig:
     instructions: str | None = None
     speed: float = 1.0
     speaker: str | None = None
+    settings: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
 class TtsConfig:
-    enabled: bool = False
-    provider: str = "openai"
-    model: str = "gpt-4o-mini-tts"
-    response_format: str = "wav"
-    api_base: str = "https://api.openai.com/v1"
-    api_key_env: str = "OPENAI_API_KEY"
+    enabled: bool = True
+    provider: str = "elevenlabs"
+    model: str = "elevenlabs/eleven_multilingual_v2"
+    response_format: str = "mp3"
+    api_base: str | None = None
+    api_key_env: str | None = "ELEVENLABS_API_KEY"
     piper_path: str = "piper"
     piper_model_path: str | None = None
     voices: dict[str, TtsVoiceConfig] = field(default_factory=dict)
@@ -69,6 +70,8 @@ def load_config(path: str | Path) -> AppConfig:
     weather = raw.get("weather", {})
     ai = raw.get("ai", {})
     tts = raw.get("tts", {})
+    tts_provider = tts.get("provider", "elevenlabs")
+    tts_model = tts.get("model", _default_tts_model(tts_provider))
 
     return AppConfig(
         station_name=raw.get("station_name", "Personal Radio"),
@@ -92,12 +95,16 @@ def load_config(path: str | Path) -> AppConfig:
             max_tokens=_optional_int(ai.get("max_tokens")),
         ),
         tts=TtsConfig(
-            enabled=_as_bool(tts.get("enabled", False)),
-            provider=tts.get("provider", "openai"),
-            model=tts.get("model", "gpt-4o-mini-tts"),
-            response_format=tts.get("response_format", "wav"),
-            api_base=tts.get("api_base", "https://api.openai.com/v1"),
-            api_key_env=tts.get("api_key_env", "OPENAI_API_KEY"),
+            enabled=_as_bool(tts.get("enabled", True)),
+            provider=tts_provider,
+            model=tts_model,
+            response_format=tts.get(
+                "response_format", _default_tts_response_format(tts_provider)
+            ),
+            api_base=tts.get("api_base", _default_tts_api_base(tts_provider)),
+            api_key_env=tts.get(
+                "api_key_env", _default_tts_api_key_env(tts_provider, tts_model)
+            ),
             piper_path=tts.get("piper_path", "piper"),
             piper_model_path=tts.get("piper_model_path"),
             voices=_load_tts_voices(tts.get("voices", {})),
@@ -134,8 +141,44 @@ def _load_tts_voices(raw: dict[str, Any]) -> dict[str, TtsVoiceConfig]:
             instructions=value.get("instructions"),
             speed=float(value.get("speed", 1.0)),
             speaker=value.get("speaker"),
+            settings=dict(value.get("settings", {})),
         )
     return voices
+
+
+def _default_tts_model(provider: str) -> str:
+    provider = provider.lower()
+    if provider == "elevenlabs":
+        return "elevenlabs/eleven_multilingual_v2"
+    if provider in {"litellm", "openai"}:
+        return "openai/gpt-4o-mini-tts"
+    return "gpt-4o-mini-tts"
+
+
+def _default_tts_response_format(provider: str) -> str:
+    if provider.lower() == "elevenlabs":
+        return "mp3_44100_128"
+    return "wav"
+
+
+def _default_tts_api_base(provider: str) -> str | None:
+    return None
+
+
+def _default_tts_api_key_env(provider: str, model: str) -> str | None:
+    provider = provider.lower()
+    if provider == "elevenlabs":
+        return "ELEVENLABS_API_KEY"
+    if provider in {"litellm", "openai"}:
+        if model.startswith("anthropic/"):
+            return "ANTHROPIC_API_KEY"
+        if model.startswith("azure/"):
+            return "AZURE_API_KEY"
+        if model.startswith("elevenlabs/"):
+            return "ELEVENLABS_API_KEY"
+        if model.startswith("openai/") or provider == "openai":
+            return "OPENAI_API_KEY"
+    return None
 
 
 def _load_yaml(path: Path) -> dict[str, Any]:

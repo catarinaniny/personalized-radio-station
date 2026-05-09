@@ -28,17 +28,23 @@ voices:
   outro: "host"
 
 tts:
-  enabled: false
-  provider: "openai"
-  model: "gpt-4o-mini-tts"
-  response_format: "wav"
-  api_key_env: "OPENAI_API_KEY"
+  enabled: true
+  provider: "elevenlabs"
+  model: "elevenlabs/eleven_multilingual_v2"
+  response_format: "mp3"
+  api_key_env: "ELEVENLABS_API_KEY"
   voices:
     host:
       voice: "alloy"
-      instructions: "Warm, conversational, casual morning radio host."
-      speed: 1.0
+      settings:
+        stability: 0.45
+        similarity_boost: 0.75
+        style: 0.25
+        use_speaker_boost: true
     anchor:
       voice: "onyx"
-      instructions: "Clear, steady, professional news reader."
-      speed: 1.0
+      settings:
+        stability: 0.6
+        similarity_boost: 0.8
+        style: 0.1
+        use_speaker_boost: true

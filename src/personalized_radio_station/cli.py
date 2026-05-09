@@ -39,7 +39,6 @@ def _build_parser() -> ArgumentParser:
 
     check = subparsers.add_parser("check", help="Validate runtime config and credentials.")
     _add_common_options(check)
-    check.add_argument("--skip-tts", action="store_true", help="Do not validate TTS credentials.")
     check.set_defaults(handler=_handle_check)
 
     sources = subparsers.add_parser("sources", help="Fetch Google News RSS and weather only.")
@@ -54,12 +53,10 @@ def _build_parser() -> ArgumentParser:
 
     generate = subparsers.add_parser("generate", help="Generate an episode in the foreground.")
     _add_common_options(generate)
-    generate.add_argument("--skip-tts", action="store_true", help="Generate script only.")
     generate.set_defaults(handler=_handle_generate)
 
     start = subparsers.add_parser("start", help="Generate an episode in a detached process.")
     _add_common_options(start)
-    start.add_argument("--skip-tts", action="store_true", help="Generate script only.")
     start.add_argument(
         "--runs-dir",
         type=Path,
@@ -94,7 +91,7 @@ def _add_common_options(parser: ArgumentParser) -> None:
 def _handle_check(args: Namespace) -> None:
     load_env_file(args.env)
     config_path = _resolve_config_path(args.config)
-    missing = _missing_requirements(config_path, include_tts=not args.skip_tts)
+    missing = _missing_requirements(config_path, include_tts=True)
     if missing:
         _print_missing(missing)
         raise SystemExit(1)
@@ -110,18 +107,23 @@ def _handle_sources(args: Namespace) -> None:
 def _handle_generate(args: Namespace) -> None:
     load_env_file(args.env)
     config_path = _resolve_config_path(args.config)
+    missing = _missing_requirements(config_path, include_tts=True)
+    if missing:
+        _print_missing(missing)
+        raise SystemExit(1)
+
     episode_dir = generate_episode(
         config_path,
         args.output_dir,
-        skip_tts=args.skip_tts,
+        log=_log,
     )
-    print(f"Generated episode: {episode_dir}")
+    _print_episode_summary(episode_dir)
 
 
 def _handle_start(args: Namespace) -> None:
     load_env_file(args.env)
     config_path = _resolve_config_path(args.config)
-    missing = _missing_requirements(config_path, include_tts=not args.skip_tts)
+    missing = _missing_requirements(config_path, include_tts=True)
     if missing:
         _print_missing(missing)
         raise SystemExit(1)
@@ -143,9 +145,6 @@ def _handle_start(args: Namespace) -> None:
         "--output-dir",
         str(args.output_dir),
     ]
-    if args.skip_tts:
-        command.append("--skip-tts")
-
     log_file = log_path.open("ab")
     process = subprocess.Popen(
         command,
@@ -193,6 +192,24 @@ def _print_missing(missing: list[str]) -> None:
     print("Missing runtime requirements:")
     for item in missing:
         print(f"- {item}")
+
+
+def _log(message: str) -> None:
+    print(f"[radio] {message}", flush=True)
+
+
+def _print_episode_summary(episode_dir: Path) -> None:
+    print(f"[radio] Done: {episode_dir}", flush=True)
+    audio_files = [episode_dir / "episode.mp3", episode_dir / "episode.wav"]
+    for audio_file in audio_files:
+        if audio_file.exists():
+            print(f"[radio] Audio: {audio_file}", flush=True)
+            break
+    else:
+        print("[radio] Audio: not created", flush=True)
+
+    print(f"[radio] Script: {episode_dir / 'script.md'}", flush=True)
+    print(f"[radio] Sources: {episode_dir / 'sources.json'}", flush=True)
 
 
 def _resolve_config_path(path: Path) -> Path:

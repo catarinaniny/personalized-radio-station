@@ -3,6 +3,7 @@ from __future__ import annotations
 from argparse import ArgumentParser
 from datetime import datetime
 from pathlib import Path
+from typing import Callable
 import json
 
 from .config import load_config
@@ -14,21 +15,43 @@ from .tts import synthesize_episode
 from .weather import fetch_weather
 
 
+def _quiet_log(message: str) -> None:
+    return None
+
+
 def generate_episode(
     config_path: Path,
     output_dir: Path,
     skip_tts: bool = False,
     allow_mock: bool = False,
+    log: Callable[[str], None] = _quiet_log,
 ) -> Path:
+    log(f"Loading config: {config_path}")
     config = load_config(config_path)
+    log("Checking runtime requirements")
     assert_runtime_ready(config, include_tts=not skip_tts, allow_mock=allow_mock)
 
+    topics = ", ".join(config.news.topics)
+    log(f"Fetching Google News RSS: {topics}")
     news_items = fetch_google_news(config.news)
+    log(f"Fetched {len(news_items)} news items")
+
+    log(f"Fetching weather: {config.weather.name}")
     weather = fetch_weather(config.weather)
+    log(
+        "Weather fetched"
+        if weather.temperature_c is None
+        else f"Weather fetched: {weather.temperature_c}C in {weather.location}"
+    )
+
+    log(f"Creating script with LiteLLM model: {config.ai.model}")
     episode = generate_script(news_items, weather, config)
+    segment_count = len(episode.get("segments", []))
+    log(f"Script created with {segment_count} segments")
 
     episode_dir = output_dir / datetime.now().strftime("%Y-%m-%d-%H%M%S")
     episode_dir.mkdir(parents=True, exist_ok=True)
+    log(f"Saving episode artifacts: {episode_dir}")
 
     (episode_dir / "sources.json").write_text(
         json.dumps(
@@ -41,17 +64,28 @@ def generate_episode(
         + "\n"
     )
     if not skip_tts:
+        if config.tts.enabled:
+            log(f"Rendering TTS with {config.tts.provider}: {config.tts.model}")
+        else:
+            log("TTS is disabled in config; no audio will be created")
         tts_result = synthesize_episode(episode, config, episode_dir)
         if tts_result.episode_file:
             episode["audio_file"] = tts_result.episode_file.name
+            log(f"Audio created: {tts_result.episode_file}")
+        elif config.tts.enabled:
+            log("TTS finished, but no assembled episode audio was created")
+    else:
+        log("Skipping TTS by request; no audio will be created")
 
     (episode_dir / "episode.json").write_text(json.dumps(episode, indent=2) + "\n")
     (episode_dir / "script.md").write_text(render_markdown(episode))
+    log(f"Script saved: {episode_dir / 'script.md'}")
 
     latest = output_dir / "latest"
     if latest.exists() or latest.is_symlink():
         latest.unlink()
     latest.symlink_to(episode_dir.name)
+    log(f"Latest episode link updated: {latest}")
 
     return episode_dir
 
@@ -77,11 +111,6 @@ def main() -> None:
         help="Path to a .env file with provider API keys.",
     )
     parser.add_argument(
-        "--skip-tts",
-        action="store_true",
-        help="Generate the script but skip speech rendering.",
-    )
-    parser.add_argument(
         "--check",
         action="store_true",
         help="Validate config and runtime credentials without fetching sources.",
@@ -96,7 +125,7 @@ def main() -> None:
 
     if args.check:
         config = load_config(config_path)
-        missing = missing_runtime_requirements(config, include_tts=not args.skip_tts)
+        missing = missing_runtime_requirements(config, include_tts=True)
         if missing:
             print("Missing runtime requirements:")
             for item in missing:
@@ -105,5 +134,9 @@ def main() -> None:
         print("Runtime requirements look OK.")
         return
 
-    episode_dir = generate_episode(config_path, args.output_dir, skip_tts=args.skip_tts)
+    episode_dir = generate_episode(
+        config_path,
+        args.output_dir,
+        log=lambda message: print(f"[radio] {message}", flush=True),
+    )
     print(f"Generated episode: {episode_dir}")
