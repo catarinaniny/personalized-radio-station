@@ -364,10 +364,76 @@ body {
   0%, 100% { opacity: 1; }
   50%      { opacity: 0.35; }
 }
+
+/* Tune-in splash — full-bleed overlay, dismissed on first tap */
+.tune-in {
+  position: fixed; inset: 0;
+  z-index: 9000;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(ellipse at 50% 50%, var(--crt-bg-2) 0%, var(--crt-bg) 60%, #0a0502 100%);
+  cursor: pointer;
+  transition: opacity 380ms ease, filter 380ms ease;
+}
+.tune-in::before {
+  /* CRT scanlines while splash is up */
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(0,0,0,0.0) 0px,
+    rgba(0,0,0,0.0) 2px,
+    rgba(0,0,0,0.22) 3px,
+    rgba(0,0,0,0.0) 4px
+  );
+  mix-blend-mode: multiply;
+}
+.tune-in .label {
+  font-size: 14px;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  color: var(--crt-amber-dim);
+  margin-bottom: 18px;
+}
+.tune-in .cta {
+  font-size: 88px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--crt-amber);
+  text-shadow:
+    0 0 12px rgba(255,179,71,0.6),
+    0 0 32px rgba(255,140,40,0.35);
+  font-weight: 600;
+  user-select: none;
+}
+.tune-in .hint {
+  margin-top: 22px;
+  font-size: 11px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--crt-amber-dim);
+  opacity: 0.8;
+  animation: live-pulse 2.2s ease-in-out infinite;
+}
+.tune-in.dismissing {
+  opacity: 0;
+  filter: brightness(2.4) blur(2px);
+  pointer-events: none;
+}
 </style>
 </head>
 <body>
   <div class="grain" aria-hidden="true"></div>
+
+  <div class="tune-in" id="tune-in" role="button" tabindex="0" aria-label="Tune in">
+    <div>
+      <div class="label">Console-7 · Personal Broadcast</div>
+      <div class="cta">Tune In</div>
+      <div class="hint">tap to begin</div>
+    </div>
+  </div>
 
   <main class="console" aria-label="Console-7 broadcast">
     <header class="status">
@@ -679,6 +745,22 @@ body {
         e.preventDefault();
       }
     });
+
+    // ───── Tune-in splash ─────
+    const splash = document.getElementById('tune-in');
+    function tuneIn() {
+      splash.classList.add('dismissing');
+      // Start ambient now that we have a user gesture
+      setAmbient(true);
+      setTimeout(() => splash.remove(), 420);
+    }
+    splash.addEventListener('click', tuneIn, { once: true });
+    splash.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        tuneIn();
+      }
+    }, { once: true });
   </script>
 </body>
 </html>
