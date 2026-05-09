@@ -321,3 +321,369 @@ OpenRouter, OpenAI, Anthropic, or Ollama.
 
 The current app is a local API and file-based test frontend. It is not hardened
 as an internet-facing service.
+# Handoff: Console-7 Personal AI Radio
+
+## Overview
+
+Console-7 is a tabletop radio for personal AI broadcast streams. The user "tunes" between **Vibes** (saved AI-generated stations) by turning a frequency knob; each Vibe is configured from RSS feeds, hosts/voices, and a casual↔professional tone. A timer knob sets a sleep duration, the POWER button starts the broadcast, and a recessed SETTINGS panel hinges open from above the grille for full station management.
+
+The aesthetic is deliberately tactile — cream chassis, brass knobs, perforated grille, amber CRT-style display, subtle film-grain noise — meant to evoke a 70s-era home stereo component repurposed as an AI surface.
+
+---
+
+## About the design files
+
+The files in this bundle are **design references created in HTML/CSS/React (via in-browser Babel)** — a working interactive prototype demonstrating the intended look and behavior. They are **not** production code to copy directly.
+
+Your task is to **recreate this design in your target codebase's existing environment** (React + a real bundler, Vue, SwiftUI, native, etc.) using its established patterns, component library, and state management. If the project doesn't have an environment yet, choose what fits best (React + Vite + Tailwind/CSS Modules is a reasonable default for this kind of UI).
+
+Treat the HTML as the **source of truth for visuals and interactions** — extract the design tokens, the layout math, the animation timings — but rebuild the components in idiomatic code for your stack.
+
+## Fidelity
+
+**High-fidelity.** Pixel-perfect mockup with final colors, typography, spacing, knob physics, animations, and state transitions. Recreate exactly — match the hex values, the radii, the easing curves, the drag-to-rotate behaviors. Every value here is intentional.
+
+---
+
+## Files in this bundle
+
+```
+design_handoff_console7_radio/
+├── README.md                       ← this file
+├── Console-7 Radio.html            ← entry HTML (loads React + radio.jsx via Babel)
+├── radio.jsx                       ← all React components + main app
+├── stations.js                     ← seeded station library (window.STATIONS)
+├── styles.css                      ← all device styling (~1080 lines)
+├── colors_and_type.css             ← design tokens (colors, fonts, radii, type scale)
+└── fonts/
+    ├── geist-sans/                 ← Geist Sans (SIL OFL)
+    └── plex-mono/                  ← IBM Plex Mono (SIL OFL)
+```
+
+To preview locally: serve the folder from any static server (`python -m http.server`, `npx serve`, etc.) and open `Console-7 Radio.html`. It must be served over HTTP — opening the file directly will fail because of CORS on the font files.
+
+---
+
+## Layout — the device
+
+The radio is a **fixed-width chassis (920 px)** centered on a near-black background (`#0e1015`). It scales down responsively via a CSS custom property (`--device-scale`) — 0.78 below 1000 px viewport, 0.6 below 760 px. The chassis has soft drop shadow and rounded corners; an antenna SVG protrudes from the top-right.
+
+```
+┌────────────────────────────────────────────────────────────┐
+│              [SETTINGS push-button] (centered top)         │
+│   ┌──────────────────────────────────────────────────┐     │
+│   │  ⊙       ┌──────────────────────────────┐    ⊙   │     │  ← deck (top section)
+│   │ TIMER    │  display + tuner strip       │   TUNE │     │
+│   │ 10:50    └──────────────────────────────┘  96.0  │     │
+│   └──────────────────────────────────────────────────┘     │
+│   ┌──────────────────────────────────────────────────┐     │
+│   │                                                  │     │
+│   │           perforated grille (~440px tall)        │     │  ← grille (bottom section)
+│   │           [POWER button centered]                │     │
+│   │                                                  │     │
+│   └──────────────────────────────────────────────────┘     │
+│   VIBEFM       ●  BROADCASTING / STANDBY        SN-7042    │  ← footer
+│                                                            │
+│            [foot]                          [foot]          │  ← chassis feet
+└────────────────────────────────────────────────────────────┘
+```
+
+### Top section ("deck")
+- Cream chassis: `#e8d8b6` → `#d8c79a` linear gradient with inner shadow.
+- Three columns: `130px | 1fr | 130px`, gap `22px`, padding `24px`.
+- Left & right columns hold knobs (TIMER, TUNE) with mono labels below + readout.
+- Center column is the **display** — dark amber CRT panel.
+
+### Display
+- Background: `#1a0e05` with inner radial vignette.
+- Height ~104px, padding `12px 16px`, border-radius `6px`.
+- Amber text colors: `--amber-hi: #ffd58a`, `--amber: #ffb347`, `--amber-deep: #c5803a`.
+- Three rows:
+  1. Eyebrow (`▸ ON AIR` / `STANDBY`) + power LED dot
+  2. Station name or `XX.X FM` + timer readout (`10:50` or `— : —`)
+  3. Tuner strip (frequency scale 88–108 with station markers)
+- Behind everything: low-opacity (0.22) animated **frequency analyzer** (28 columns × 9 rows of amber cells).
+- Overlay: scanline pattern (`repeating-linear-gradient`, 2px transparent / 1px black at 28% opacity, `mix-blend-mode: multiply`).
+- Fonts: IBM Plex Mono throughout, with text-shadow for amber glow.
+
+### Grille
+- Background: dark warm brown `#3a2a1a` with bevel inset.
+- **Perforated dot pattern**: CSS `radial-gradient` repeated as background, ~6px grid of small amber dots at low opacity.
+- Holds the centered **POWER button** (large pushable circle).
+- When SETTINGS is pressed, the grille panel hinges open along its top edge revealing the settings UI behind it (transform: rotateX with perspective).
+
+### Footer strip
+- Mono caption row inside the chassis: `VIBEFM` (left) · `● BROADCASTING / STANDBY` LED (center) · `SN-7042` (right).
+- Bottom of chassis has two short cylindrical feet.
+
+---
+
+## Components
+
+### `Knob`
+Tactile rotary control. Drag vertically (or scroll) to rotate. Renders an SVG with:
+- Brass bezel ring (`<radialGradient>` from `#f3e1b8` → `#a07a3a`)
+- Inner cap (darker brass)
+- 24 minute tick marks around the cap
+- Indicator line from center to bezel edge, colored per knob
+- Rotation range: **−135° to +135°** (270° sweep)
+
+**Props:** `value`, `max`, `onChange(v)`, `color`, `size` (default 110), `label`.
+
+**Drag behavior:** mousedown captures `clientY`, then on mousemove maps `dy * sensitivity` to `dvalue`. `sensitivity = max / 200` (200px drag = full sweep). Releases on mouseup. Wheel events also adjust value with smaller step.
+
+**Below the knob:** mono label + numeric/text readout (`10:50`, `OFF`, `96.0`).
+
+### `Analyzer`
+Frequency bars visualizer. Grid of `columns × rows` cells (default 32×7).
+- `useEffect` runs a `setInterval` at ~80ms cadence; updates a `levels` array with a perlin-ish bell curve weighted toward the center, scaled by `playing ? 1 : 0.15`.
+- Each column lights `Math.round(level * rows)` cells from the bottom up.
+- Top-most lit cell uses `.an-cell.hi` (brighter amber, glow); cells below use `.an-cell.lit` (standard amber). Unlit cells are dim brown.
+- Cells have inner shadow + box-shadow glow when lit.
+
+Used both as the standalone visualizer (not rendered in the final design) and as the **display backdrop** at 0.22 opacity behind the amber readout.
+
+### `TunerStrip`
+Horizontal frequency scale inside the display. Three stacked rows:
+1. **Numbers row:** `90 95 100 105` evenly spaced, mono 8px, amber-deep.
+2. **Tick rule:** thin top border with major ticks at every 5 MHz (taller, brighter) and minor ticks every 1 MHz. A **pointer** (small triangle on a 18px rod) sits at the current frequency, draggable along the rule to seek.
+3. **Stations row:** each station shows as `● NAME` (3.5px dot + 7.5px mono label). Dot brightens to amber-hi when the strip is actively tuned to that station. Click any station to seek directly.
+
+Pointer drag: pointerdown → captures rect → pointermove maps `clientX` to a frequency between `FREQ_MIN` (88.0) and `FREQ_MAX` (108.0).
+
+### `Segmented`
+Pill-shaped toggle group used throughout the settings UI.
+- Container: `display: inline-flex`, gap `2px`, padding `2px`, background `rgba(0,0,0,0.06)`, border-radius `999px`.
+- Buttons: 4px 10px padding, mono 9px, transparent until selected.
+- Selected button: white background, drop shadow, dark text.
+
+**Props:** `value`, `options: Array<[value, label]>`, `onChange(v)`.
+
+### `RssChips`
+Multi-RSS-feed input. Single text field + `+` button; pressing Enter or clicking the + commits the URL as a removable chip.
+- Each chip: rounded pill (`border-radius: 999px`) with:
+  - 5px amber dot indicator
+  - domain extracted from URL (`new URL(u).hostname.replace(/^www\./, '')`) — falls back to raw input if not a valid URL
+  - 18px circular `×` button (hovers to rust-orange fill)
+- Duplicate URLs are silently rejected.
+- Chip max-width 200px with text-overflow ellipsis; full URL shown via `title` attribute.
+
+**Props:** `value: string[]`, `onChange(string[])`, `placeholder?`.
+
+### `SettingsPanel`
+Tabbed modal that appears when SETTINGS is pressed. Six tabs:
+1. **VIBES** — list + edit existing stations
+2. **+ NEW** — create a new vibe form
+3. **API** — BYO API keys
+4. **VOICES** — 6 factory voices with previews
+5. **AUDIO** — 5-band EQ + processing toggles
+6. **ABOUT** — device info
+
+Tab bar: horizontal mono uppercase row across the top of the panel, active tab gets rust-orange underline.
+
+### `StationsTab` (VIBES)
+- **Top:** horizontal chip rail of all stations. Each chip: number + station name + `1H` (host count). Active chip inverts to dark.
+- A dashed `+ NEW` chip at the end opens the Create Vibe tab.
+- **Below:** 4-column form grid editing the selected station:
+  - **NAME** (text)
+  - **HOSTS** (Solo / Duo segmented)
+  - **TONE** (Casual / Professional segmented)
+  - **VOICES** (compact A: M/F + B: M/F; B greys when Solo)
+  - **RSS · N** (RssChips, full width)
+- Bottom-right: red **DELETE** button.
+
+### `CreateVibeTab` (+ NEW)
+Same form layout as the editor but for a new station. CREATE VIBE button at bottom; disabled until name + at least one RSS URL.
+
+### Other settings tabs
+- **API** — labeled key inputs (Anthropic, ElevenLabs, etc.) with show/hide.
+- **VOICES** — grid of 6 voice cards (avatar circle, name, gender/style tags, ▸ preview button).
+- **AUDIO** — 5 vertical EQ sliders (60Hz, 250Hz, 1kHz, 4kHz, 12kHz) + toggle rows (Normalize, Compressor, Spatial).
+- **ABOUT** — device serial, firmware version, storage stats, factory reset link.
+
+---
+
+## Interactions & behavior
+
+### Power
+- Press POWER button → toggles `playing` boolean.
+- ON: analyzer animates, display shows `▸ ON AIR` + station name + active timer countdown, footer LED lights.
+- OFF: analyzer dims to ~15% activity, display shows `STANDBY`, timer reads `— : —`.
+
+### Tuning
+- **TUNE knob** sets `freqMHz` in 0.1 MHz steps from 88.0 to 108.0.
+- **Tuner-strip pointer drag** does the same.
+- **Click a station label** in the tuner strip → snaps to that station's `mhz`.
+- "Tuned" detection: within 0.4 MHz of any station's `mhz` → display shows the station name; otherwise shows `XX.X FM`.
+
+### Timer
+- **TIMER knob** sets `timerSec` from 0 to 3600 (1 hour).
+- Knob readout shows `MM:SS` or `OFF` when 0.
+- When `playing && timerSec > 0`, a `setInterval` decrements every second; reaching 0 turns POWER off.
+
+### Settings panel
+- SETTINGS button is a pill-shaped push-button on the chassis, just above the grille. Click animates it pressing in (`transform: translateY(2px)` + shadow change), then triggers the grille hinge animation.
+- **Grille hinge**: the perforated panel rotates open along its top edge (`transform-origin: top`, `transform: rotateX(-90deg)`, perspective `1200px`, easing `cubic-bezier(0.4, 0, 0.2, 1)`, 600ms).
+- Behind the grille: the settings panel slides into place.
+- A close button or pressing SETTINGS again reverses the animation.
+
+### Chip rail (Vibes tab)
+- Click any chip → selects that station for editing.
+- Click `+ NEW` → switches to the Create Vibe tab.
+
+### RSS chip input
+- Type URL → press Enter or click `+`.
+- Each chip × button removes that feed.
+
+---
+
+## State
+
+Top-level state in the main `Radio` component:
+
+```js
+const [playing, setPlaying]     = useState(false);
+const [freqMHz, setFreqMHz]     = useState(88.3);
+const [timerSec, setTimerSec]   = useState(0);
+const [stations, setStations]   = useState(DEFAULT_STATIONS);
+const [editingId, setEditingId] = useState(stations[0].id);
+const [isOpen, setIsOpen]       = useState(false);  // settings panel
+const [settingsTab, setSettingsTab] = useState("vibes");
+```
+
+### Station shape
+
+```ts
+type Station = {
+  id: number;
+  name: string;          // uppercase
+  tag: string;           // optional tagline
+  mhz: number;           // 88.0–108.0, unique per station
+  hosts: 1 | 2;          // solo or duo
+  voiceA: "M" | "F" | "N";
+  voiceB: "M" | "F" | "N";
+  tone: number;          // 0 = fully casual, 100 = fully professional (UI uses 25/75 binary)
+  urls: string[];        // RSS feed URLs
+  freq: "hourly" | "daily" | "continuous";
+};
+```
+
+`length` (broadcast duration) was intentionally removed — vibes are always-on, no per-vibe timing.
+
+### Derived
+- `station = stations.find(s => Math.abs(s.mhz - freqMHz) < 0.4)` — currently tuned station, or null.
+- `tuned = !!station` — whether display shows station name vs. raw frequency.
+
+---
+
+## Design tokens
+
+### Colors
+
+| Token | Hex | Usage |
+|---|---|---|
+| `--bg` | `#0e1015` | Page background |
+| `--cream` | `#e8d8b6` | Chassis primary |
+| `--cream-2` | `#d8c79a` | Chassis gradient end |
+| `--cream-shadow` | `#b39b6a` | Chassis inner shadow |
+| `--brass` | `#c5a572` | Knob bezel mid |
+| `--brass-hi` | `#f3e1b8` | Knob bezel highlight |
+| `--brass-lo` | `#a07a3a` | Knob bezel shadow |
+| `--rust` | `#c5481e` | Settings underline, RSS dot, delete, accent |
+| `--rust-deep` | `#9a3416` | Rust hover/pressed |
+| `--ink` | `#1f160c` | Dark text on cream |
+| `--ink-mid` | `#5a4630` | Mid text on cream |
+| `--rule` | `#bda580` | Hairline rules on cream |
+| `--rule-strong` | `#9a8158` | Stronger rules / borders |
+| `--paper` | `#f5e7c6` | Light paper-cream for inputs |
+| `--display-bg` | `#1a0e05` | CRT panel background |
+| `--amber-hi` | `#ffd58a` | Brightest CRT text |
+| `--amber` | `#ffb347` | Standard CRT text |
+| `--amber-deep` | `#c5803a` | Dim CRT text / tuner numbers |
+| `--grille` | `#3a2a1a` | Grille background |
+| `--grille-hole` | `#c5a572` | Perforation dot color |
+
+### Radii
+
+`4px` (small chips, buttons), `6px` (display, panels), `10px` (chassis sections), `14px` (chassis outer), `999px` (pills, segmented).
+
+### Shadows
+
+```css
+/* chassis outer */
+0 30px 60px rgba(0,0,0,0.55), 0 8px 24px rgba(0,0,0,0.35)
+/* sections */
+inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -1px 0 rgba(0,0,0,0.15)
+/* display vignette */
+inset 0 0 40px rgba(0,0,0,0.6)
+/* knob raised */
+0 2px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15)
+/* amber glow */
+0 0 6px rgba(255,179,71,0.55)
+```
+
+### Typography
+
+- **Display/CRT readouts:** IBM Plex Mono, 18–22px, 600 weight, with text-shadow `0 0 6px rgba(255,179,71,0.7), 0 0 14px rgba(255,140,40,0.4)`.
+- **Eyebrows / labels:** IBM Plex Mono, 9–10px, 600–700, uppercase, letter-spacing `0.3em`.
+- **Settings body:** IBM Plex Mono throughout, 9.5–11px depending on context.
+- **Tickers / numbers:** Plex Mono, 7.5–8px, slightly dimmer color.
+
+Geist Sans is loaded but unused in the radio itself — kept available because the matching landing page uses it.
+
+### Spacing
+
+Internal grid follows 4px unit. Common values: `4 6 8 10 12 16 22 24` px.
+
+---
+
+## Animations & transitions
+
+| Element | Property | Duration | Easing |
+|---|---|---|---|
+| POWER button press | `transform`, `box-shadow` | 80ms | `ease-out` |
+| Settings push-button | `transform`, `box-shadow` | 100ms | `ease-out` |
+| Grille hinge open/close | `transform: rotateX()` | 600ms | `cubic-bezier(0.4, 0, 0.2, 1)` |
+| Power LED on/off | `background`, `box-shadow` | 200ms | linear |
+| Analyzer cell update | `background`, `box-shadow` | 70ms | linear |
+| Knob rotation | `transform: rotate()` | none (instant on drag) | — |
+| Chip hover | `background`, `border-color` | 120ms | ease |
+| Tuner pointer | follows pointer instantly | — | — |
+| Settings tab change | content fades 150ms | 150ms | ease |
+
+Analyzer interval: 80ms. Each tick generates a new bell-curve-weighted random level per column, capped at `1.0`.
+
+---
+
+## Assets
+
+- **Fonts:** Geist Sans + IBM Plex Mono, self-hosted in `fonts/`. Both are SIL OFL — free to redistribute.
+- **Antenna:** inline SVG (single white-cream line + small ball at base), positioned absolutely above the chassis top-right.
+- **Noise overlay:** inline `<feTurbulence>` SVG as a base64 data URL, applied as a `background-image` at 10% opacity over the whole viewport. Adds subtle film grain.
+- **Grille perforations:** pure CSS — `radial-gradient` repeated as background, no image asset.
+- **Knob graphics:** pure SVG with radial gradients — no image asset.
+
+---
+
+## Implementation notes for porting
+
+1. **Knob component:** the trickiest piece. Test drag, scroll, and keyboard (arrow keys) interactions; consider extracting into a reusable `<RotaryKnob>`. Use `Pointer Events`, not separate mouse/touch.
+2. **Analyzer:** the random-walk algorithm is in `radio.jsx` — keep the bell-curve weighting toward center columns or it looks uniformly noisy. Animation loop should use `requestAnimationFrame` in production (the prototype uses `setInterval` for simplicity).
+3. **Grille hinge:** requires `perspective` on a parent and `transform-origin: top` on the grille. The settings panel must already be rendered behind the grille, not appear after — otherwise the reveal doesn't work.
+4. **Display analyzer:** sits at `z-index: 0` inside `.display`; readout rows are `z-index: 2`; scanline overlay (`::before`) is `z-index: 3`. Keep this stack.
+5. **Responsive scaling:** the chassis is fixed at 920px. The `--device-scale` variable on `:root` is a CSS-only zoom; consider real responsive layout for production (collapse to a single-column at small viewports).
+6. **State persistence:** the prototype loses state on reload. In production, persist `stations`, `editingId`, and last-tuned `freqMHz` to localStorage or your app's store.
+7. **API integration:** RSS feeds, voice generation (TTS), and audio playback are all stubbed. The settings UI captures the configuration; wire it up to your actual broadcast pipeline.
+8. **Accessibility:** add ARIA labels to knobs (`role="slider"`, `aria-valuenow`, `aria-valuemin`, `aria-valuemax`), keyboard support (arrow keys = step, home/end = min/max), and a screen-reader-only text alternative for the analyzer.
+
+---
+
+## Default station library
+
+`stations.js` exposes `window.STATIONS` — 7 seeded vibes used as the initial library. Each has `freq`, `name`, `tag`, `desc`, and a sample `tracks` array. The radio's `DEFAULT_STATIONS` (in `radio.jsx`) is a slightly different shape (with `mhz`, `hosts`, `voiceA/B`, `tone`, `urls`) used for the editor — port both shapes if you want to reuse the seeding.
+
+---
+
+## Questions?
+
+The original conversation that produced this design is available in your project history. The HTML files in this bundle are runnable references — open them in a browser to see and interact with the design alongside your implementation.
