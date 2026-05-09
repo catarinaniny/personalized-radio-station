@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CONSOLE-7 — Live Personal Broadcast</title>
+<meta name="description" content="A live, ritual radio station. Tune in. No play, no skip, no pause." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  /* Palette — copied verbatim from radio.html */
+  --cream:        #d9c7a3;
+  --cream-light:  #e8d8b6;
+  --cream-edge:   #efe2c4;
+  --cream-deep:   #b39d76;
+  --cream-shadow: #6f5f43;
+  --plate:        #ebdcb8;
+  --plate-deep:   #c2b08a;
+  --recess:       #8a7c5e;
+  --recess-deep:  #6b5d3f;
+
+  --crt-bg:       #1c0e04;
+  --crt-bg-2:     #2b1808;
+  --crt-amber:    #ffb347;
+  --crt-amber-hi: #ffd58a;
+  --crt-amber-dim:#a25e16;
+
+  --metal:        #b9a983;
+  --metal-dark:   #877856;
+  --rust:         #c5481e;
+  --rust-deep:    #8d2f10;
+  --screw:        #2c2418;
+  --ink:          #221a10;
+  --label-ink:    #2a2110;
+  --label-mid:    #6b5c3f;
+
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  font-family: var(--font-mono);
+  color: var(--cream);
+  background:
+    radial-gradient(ellipse at 50% 30%, #2a1f14 0%, #14100a 70%),
+    #0c0906;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+}
+
+/* Page film grain — copied from radio.html */
+.grain {
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.18;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.15 0 0 0 0 0.1 0 0 0 0 0.05 0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* Console — wide broadcast layout */
+.console {
+  height: 100vh;
+  width: 100vw;
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  gap: 24px;
+  padding: 28px 40px 24px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* Placeholders for components (filled in by later tasks) */
+.status,
+.ticker,
+.band,
+.meta {
+  border: 1px dashed rgba(255,179,71,0.18);
+  min-height: 32px;
+  color: var(--crt-amber-dim);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 8px 12px;
+}
+.ticker { min-height: 200px; }
+.band   { min-height: 110px; }
+</style>
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+
+  <main class="console" aria-label="Console-7 broadcast">
+    <header class="status">[ status bar — task 2 ]</header>
+    <section class="ticker">[ ticker — task 3 / 4 ]</section>
+    <section class="band">[ tuning band — task 5 / 6 ]</section>
+    <footer class="meta">[ meta strip — task 7 ]</footer>
+  </main>
+
+  <script>
+    // Filled in by later tasks.
+  </script>
+</body>
+</html>
