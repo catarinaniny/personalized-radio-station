@@ -636,7 +636,128 @@
     /* Children of stage need to sit above the rays */
     .stage > * { position: relative; z-index: 1; }
 
-    /* ===== Hero cursor demo — animated pointer that clicks "Make my show" =====
+    /* ===== Big audio-show preview (top of hero stage) =====
+       The OUTPUT — Today's daily show. Sits at the top of the stage like
+       OpusClip's long-video preview, with a play button + waveform. Pulses
+       at the moment the cursor demo "clicks" the Make my show button. */
+    .preview-big {
+      max-width: 600px;
+      margin: 0 auto 28px;
+      position: relative;
+      z-index: 2;
+      animation: disc-pulse 7s cubic-bezier(0.2, 0.8, 0.3, 1) infinite;
+      will-change: transform, filter;
+    }
+    .preview-big .card {
+      background: #1a1612;
+      border-radius: 22px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow:
+        0 30px 60px -20px rgba(0, 0, 0, 0.7),
+        0 12px 24px -6px rgba(0, 0, 0, 0.5);
+    }
+    .preview-big .art {
+      aspect-ratio: 16 / 7;
+      background:
+        radial-gradient(ellipse 80% 60% at 30% 50%, rgba(255, 220, 180, 0.32) 0%, transparent 70%),
+        linear-gradient(135deg, #5a3a25 0%, #1a1208 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    .preview-big .meta {
+      position: absolute;
+      top: 16px;
+      left: 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      z-index: 3;
+    }
+    .preview-big .meta .live {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--score-green);
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+    .preview-big .show-title {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      text-align: right;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      z-index: 3;
+      max-width: 60%;
+    }
+    .preview-big .show-title small {
+      display: block;
+      color: rgba(255, 255, 255, 0.52);
+      font-size: 11px;
+      font-weight: 500;
+      margin-top: 4px;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+    .preview-big .play-fab {
+      position: absolute;
+      left: 22px;
+      bottom: 22px;
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: var(--score-green);
+      border: 0;
+      cursor: pointer;
+      z-index: 3;
+      box-shadow: 0 12px 28px -6px rgba(185, 255, 67, 0.5);
+      display: grid;
+      place-items: center;
+      transition: transform .2s ease;
+    }
+    .preview-big .play-fab:hover { transform: scale(1.06); }
+    .preview-big .play-fab::after {
+      content: '';
+      width: 0; height: 0;
+      border-left: 14px solid #1a1410;
+      border-top: 9px solid transparent;
+      border-bottom: 9px solid transparent;
+      margin-left: 4px;
+    }
+    .preview-big .big-waveform {
+      position: absolute;
+      left: 92px;
+      right: 22px;
+      bottom: 30px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      z-index: 2;
+    }
+    .preview-big .big-waveform span {
+      flex: 1;
+      height: var(--h);
+      background: rgba(255, 255, 255, 0.55);
+      border-radius: 1.5px;
+      animation: wf-breathe 2.6s ease-in-out infinite alternate;
+    }
+    .preview-big .big-waveform span:nth-child(3n)   { animation-delay: -0.4s; background: rgba(185, 255, 67, 0.6); }
+    .preview-big .big-waveform span:nth-child(5n+1) { animation-delay: -0.8s; }
+    .preview-big .big-waveform span:nth-child(7n+2) { animation-delay: -1.2s; background: rgba(185, 255, 67, 0.4); }
+    @keyframes wf-breathe {
+      0%   { opacity: 0.55; transform: scaleY(0.85); }
+      100% { opacity: 1;    transform: scaleY(1); }
+    }
+
+    /* ===== Hero cursor demo — pointer clicks "Make my show" in the pill below =====
        Loops every 7s. On hover, animation pauses so the user can interact. */
     .cursor-demo {
       position: absolute;
@@ -644,7 +765,7 @@
       pointer-events: none;
       width: 22px;
       height: 22px;
-      top: 8%;
+      top: 6%;
       left: 78%;
       filter: drop-shadow(0 4px 8px rgba(0,0,0,0.55));
       transform-origin: 4px 4px;
@@ -654,23 +775,22 @@
     .cursor-demo svg { width: 100%; height: 100%; display: block; }
 
     @keyframes cursor-flow {
-      0%   { top: 8%;  left: 78%; opacity: 0; transform: scale(1); }
+      0%   { top: 6%;  left: 78%; opacity: 0; transform: scale(1); }
       6%   { opacity: 1; }
-      36%  { top: 60%; left: 58%; opacity: 1; transform: scale(1); }
-      42%  { top: 60%; left: 58%; opacity: 1; transform: scale(0.78); }
-      48%  { top: 60%; left: 58%; opacity: 1; transform: scale(1); }
-      80%  { top: 60%; left: 58%; opacity: 1; transform: scale(1); }
-      94%  { top: 60%; left: 58%; opacity: 0; transform: scale(1); }
-      100% { top: 8%;  left: 78%; opacity: 0; transform: scale(1); }
+      36%  { top: 56%; left: 60%; opacity: 1; transform: scale(1); }
+      42%  { top: 56%; left: 60%; opacity: 1; transform: scale(0.78); }
+      48%  { top: 56%; left: 60%; opacity: 1; transform: scale(1); }
+      80%  { top: 56%; left: 60%; opacity: 1; transform: scale(1); }
+      94%  { top: 56%; left: 60%; opacity: 0; transform: scale(1); }
+      100% { top: 6%;  left: 78%; opacity: 0; transform: scale(1); }
     }
 
-    /* Click ring around the button at the moment of click */
     .click-ring {
       position: absolute;
       z-index: 7;
       pointer-events: none;
-      top: 60%;
-      left: 58%;
+      top: 56%;
+      left: 60%;
       width: 16px;
       height: 16px;
       border-radius: 50%;
@@ -687,23 +807,40 @@
       100%     { transform: translate(-50%, -50%) scale(0); opacity: 0; }
     }
 
-    /* Audio disc pulses when the click registers */
-    .preview {
-      animation: disc-pulse 7s cubic-bezier(0.2, 0.8, 0.3, 1) infinite;
-      will-change: transform, filter;
-    }
+    /* Big preview pulses when the click registers */
     @keyframes disc-pulse {
       0%, 48%  { transform: scale(1); filter: drop-shadow(0 0 0 transparent); }
-      54%      { transform: scale(1.025); filter: drop-shadow(0 0 28px rgba(185,255,67,0.45)); }
-      66%      { transform: scale(1.005); filter: drop-shadow(0 0 12px rgba(185,255,67,0.18)); }
+      54%      { transform: scale(1.018); filter: drop-shadow(0 0 32px rgba(185,255,67,0.45)); }
+      66%      { transform: scale(1.004); filter: drop-shadow(0 0 14px rgba(185,255,67,0.18)); }
       82%      { transform: scale(1); filter: drop-shadow(0 0 0 transparent); }
       100%     { transform: scale(1); filter: drop-shadow(0 0 0 transparent); }
+    }
+
+    /* Source segments stagger-reveal AFTER the cursor click — same 7s loop */
+    .seg {
+      animation: seg-reveal 7s cubic-bezier(0.2, 0.8, 0.3, 1) infinite both;
+      will-change: opacity, transform;
+    }
+    .seg:nth-child(1) { animation-delay: 0.00s; }
+    .seg:nth-child(2) { animation-delay: 0.06s; }
+    .seg:nth-child(3) { animation-delay: 0.12s; }
+    .seg:nth-child(4) { animation-delay: 0.18s; }
+    .seg:nth-child(5) { animation-delay: 0.24s; }
+    .seg:nth-child(6) { animation-delay: 0.30s; }
+    @keyframes seg-reveal {
+      0%, 47%   { opacity: 0; transform: translateY(20px); }
+      55%       { opacity: 0; transform: translateY(20px); }
+      62%       { opacity: 1; transform: translateY(0); }
+      82%       { opacity: 1; transform: translateY(0); }
+      94%       { opacity: 0; transform: translateY(-12px); }
+      100%      { opacity: 0; transform: translateY(20px); }
     }
 
     /* Pause the demo when the user hovers anywhere on the stage */
     .stage:hover .cursor-demo,
     .stage:hover .click-ring,
-    .stage:hover .preview {
+    .stage:hover .preview-big,
+    .stage:hover .seg {
       animation-play-state: paused;
     }
 
@@ -1835,6 +1972,257 @@
     .auto-deliver-platforms .ap-yt  { background: #ff0033; color: white; }
     .auto-deliver-platforms .ap-em  { background: #f0e9d6; color: #1a1a1a; }
 
+    /* ===== Daily Automation card visuals — richer/denser visuals ===== */
+
+    /* Auto fetch — 3 stacked source preview cards + live "fetching" pulse */
+    .auto-fetch-thumb {
+      position: relative;
+      padding: 14px 14px 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .af-card {
+      background: rgba(0, 0, 0, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 9px;
+      padding: 9px 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .af-head {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11px;
+      color: var(--ink);
+      font-weight: 500;
+    }
+    .af-head strong { font-weight: 600; font-size: 11px; }
+    .af-head .af-time { margin-left: auto; color: var(--ink-3); font-size: 10px; }
+    .af-icon {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      flex-shrink: 0;
+      color: #fff;
+    }
+    .af-icon svg { width: 9px; height: 9px; }
+    .af-x .af-icon       { background: #000; border: 1px solid rgba(255,255,255,0.18); }
+    .af-pod .af-icon     { background: #9933cc; }
+    .af-news .af-icon    { background: #f0e9d6; color: #1a1a1a; }
+    .af-body { display: flex; flex-direction: column; gap: 3px; }
+    .af-line {
+      height: 4px;
+      background: rgba(255, 255, 255, 0.14);
+      border-radius: 2px;
+    }
+    .af-line.w90 { width: 90%; }
+    .af-line.w85 { width: 85%; }
+    .af-line.w80 { width: 80%; }
+    .af-line.w70 { width: 70%; }
+    .af-line.w55 { width: 55%; }
+    .af-pulse {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 11px;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      backdrop-filter: blur(6px);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--score-green);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .af-pulse .af-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--score-green);
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+
+    /* Auto mix — 4 channel mixer with animated level bars */
+    .auto-mix-thumb {
+      position: relative;
+      padding: 16px 14px;
+    }
+    .am-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .am-pill {
+      padding: 4px 9px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(185, 255, 67, 0.3);
+      border-radius: 999px;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--score-green);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .am-pill::before {
+      content: '';
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--score-green);
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+    .am-title {
+      font-size: 11px;
+      color: var(--ink-2);
+      font-weight: 500;
+    }
+    .am-tracks {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+    .am-track {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .am-label {
+      width: 28px;
+      flex-shrink: 0;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--ink-3);
+      letter-spacing: 0.08em;
+    }
+    .am-bar {
+      flex: 1;
+      height: 7px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+    .am-bar > span {
+      display: block;
+      height: 100%;
+      width: var(--w);
+      border-radius: 4px;
+      animation: am-pulse 2.4s ease-in-out infinite alternate;
+      transform-origin: left center;
+    }
+    .am-track:nth-child(2) .am-bar > span,
+    .am-track:nth-child(4) .am-bar > span { background: linear-gradient(90deg, rgba(255,255,255,0.6), rgba(255,255,255,0.4)); animation-delay: -0.4s; }
+    .am-track:nth-child(3) .am-bar > span,
+    .am-track:nth-child(5) .am-bar > span { background: linear-gradient(90deg, var(--score-green), rgba(185,255,67,0.6)); animation-delay: -0.8s; }
+    .am-track:nth-child(2) .am-bar > span { animation-delay: 0s; }
+    .am-track:nth-child(3) .am-bar > span { animation-delay: -0.3s; }
+    .am-track:nth-child(4) .am-bar > span { animation-delay: -0.6s; }
+    .am-track:nth-child(5) .am-bar > span { animation-delay: -0.9s; }
+    @keyframes am-pulse {
+      0%   { opacity: 0.55; transform: scaleX(0.95); }
+      100% { opacity: 1;    transform: scaleX(1); }
+    }
+    /* default first-child green bar */
+    .am-track:nth-child(2) .am-bar > span { background: var(--score-green); }
+
+    /* Auto deliver — show preview card + time + platform icons */
+    .auto-deliver-thumb {
+      position: relative;
+      padding: 16px 16px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .ad-show-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 11px 9px 9px;
+      background: rgba(0, 0, 0, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+    }
+    .ad-show-art {
+      width: 32px; height: 32px;
+      border-radius: 6px;
+      background:
+        radial-gradient(circle at 35% 35%, rgba(255, 220, 180, 0.45) 0%, transparent 60%),
+        linear-gradient(135deg, #5a3a25 0%, #1a1208 100%);
+      flex-shrink: 0;
+      position: relative;
+    }
+    .ad-show-art::after {
+      content: '';
+      position: absolute;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: var(--score-green);
+    }
+    .ad-show-info { flex: 1; min-width: 0; }
+    .ad-show-title { font-size: 11px; font-weight: 600; color: var(--ink); }
+    .ad-show-meta { font-size: 10px; color: var(--ink-3); margin-top: 1px; }
+    .ad-show-play {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--score-green);
+      color: #1a1410;
+      font-size: 9px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      font-weight: 700;
+    }
+    .ad-time {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .ad-when {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      font-feature-settings: 'tnum';
+      line-height: 1;
+    }
+    .ad-every {
+      font-size: 10px;
+      color: var(--ink-3);
+      line-height: 1.3;
+    }
+    .ad-platforms {
+      display: flex;
+      margin-top: 12px;
+    }
+    .ad-platforms span {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      font-size: 10px;
+      font-weight: 700;
+      margin-left: -5px;
+      border: 2px solid #1a1410;
+      color: #fff;
+    }
+    .ad-platforms span:first-child { margin-left: 0; }
+    .ad-platforms .ap-pod { background: #9933cc; }
+    .ad-platforms .ap-spt { background: #1db954; }
+    .ad-platforms .ap-yt  { background: #ff0033; }
+    .ad-platforms .ap-em  { background: #f0e9d6; color: #1a1a1a; }
+
     /* ========== AI HOST (Section 4) ========== */
     .editor-card {
       background: var(--card-grad);
@@ -2745,7 +3133,35 @@
 <div class="stage-wrap">
   <div class="stage">
 
-    <!-- segments — the SOURCES being mixed (top) -->
+    <!-- big preview at top — today's show (the OUTPUT) -->
+    <div class="preview-big">
+      <div class="card">
+        <div class="art">
+          <div class="meta"><span class="live"></span>Today · 2:01 PM · 22:00</div>
+          <button class="play-fab" type="button" aria-label="Play preview"></button>
+          <div class="big-waveform" aria-hidden="true">
+            <span style="--h:30%"></span><span style="--h:62%"></span><span style="--h:48%"></span><span style="--h:88%"></span><span style="--h:54%"></span><span style="--h:74%"></span><span style="--h:42%"></span><span style="--h:90%"></span><span style="--h:58%"></span><span style="--h:36%"></span><span style="--h:80%"></span><span style="--h:50%"></span><span style="--h:66%"></span><span style="--h:42%"></span><span style="--h:84%"></span><span style="--h:56%"></span><span style="--h:70%"></span><span style="--h:46%"></span><span style="--h:60%"></span><span style="--h:38%"></span><span style="--h:78%"></span><span style="--h:52%"></span><span style="--h:72%"></span><span style="--h:44%"></span><span style="--h:64%"></span><span style="--h:48%"></span><span style="--h:82%"></span><span style="--h:54%"></span><span style="--h:68%"></span><span style="--h:40%"></span>
+          </div>
+          <div class="show-title">Adrian's Daily<small>Naval on focus · markets · Lex × Mira</small></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- in-stage sub-input pill (cursor clicks the button on this) -->
+    <div class="stage-sub-pill">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+      </svg>
+      <input type="text" placeholder="Drop your sources and …">
+      <button type="button" class="liquid-btn size-sm cta-trigger" style="margin: 4px;">
+        <span class="liquid-btn-shell"></span>
+        <span class="liquid-btn-distort"></span>
+        <span class="liquid-btn-label">Make my show</span>
+      </button>
+    </div>
+
+    <!-- segments — the SOURCES extracted into the show (BOTTOM) -->
     <div class="segments">
 
       <!-- 1: X / Twitter -->
@@ -2831,37 +3247,6 @@
         <span class="score"><span class="label">Score</span><span class="num">97</span></span>
       </article>
 
-    </div>
-
-    <!-- convergence label between sources and show -->
-    <div class="converge">
-      <span class="conv-line"></span>
-      <span class="conv-label"><span class="dot"></span>Mixing · 22 min</span>
-      <span class="conv-line"></span>
-    </div>
-
-    <!-- in-stage sub-input pill -->
-    <div class="stage-sub-pill">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-      </svg>
-      <input type="text" placeholder="Drop your sources and …">
-      <button type="button" class="liquid-btn size-sm cta-trigger" style="margin: 4px;">
-        <span class="liquid-btn-shell"></span>
-        <span class="liquid-btn-distort"></span>
-        <span class="liquid-btn-label">Make my show</span>
-      </button>
-    </div>
-
-    <!-- preview: today's show output (BOTTOM) -->
-    <div class="preview">
-      <div class="card">
-        <div class="art">
-          <div class="meta"><span class="live"></span>Today · 2:01 PM</div>
-          <div class="duration">22:00</div>
-        </div>
-      </div>
     </div>
 
     <!-- Animated cursor demo + click ring (decorative, pauses on hover) -->
@@ -3029,17 +3414,33 @@
   <div class="auto-card">
     <div class="auto-steps">
 
-      <!-- Step 1: Auto fetch -->
+      <!-- Step 1: Auto fetch — 3 stacked source preview cards + live pulse -->
       <div class="auto-step">
-        <div class="thumb">
-          <div class="auto-fetch-icons">
-            <span class="src"><span class="dot x"><svg viewBox="0 0 24 24" fill="white" width="10" height="10"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span><span class="lbl">@you</span></span>
-            <span class="src"><span class="dot pod"></span><span class="lbl">2 podcasts</span></span>
-            <span class="src"><span class="dot news">N</span><span class="lbl">News</span></span>
+        <div class="thumb auto-fetch-thumb">
+          <div class="af-card af-x">
+            <div class="af-head">
+              <span class="af-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
+              <strong>@founder</strong>
+              <span class="af-time">2h</span>
+            </div>
+            <div class="af-body"><span class="af-line w90"></span><span class="af-line w70"></span></div>
           </div>
-          <div class="auto-fetch-pulse">
-            <span class="dot"></span> Fetching · 47 new
+          <div class="af-card af-pod">
+            <div class="af-head">
+              <span class="af-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="11" r="2.4" fill="currentColor"/><path d="M8 11.5a4 4 0 1 1 8 0"/></svg></span>
+              <strong>Lex Fridman</strong>
+              <span class="af-time">#443</span>
+            </div>
+            <div class="af-body"><span class="af-line w80"></span></div>
           </div>
+          <div class="af-card af-news">
+            <div class="af-head">
+              <span class="af-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v3H4V4zm0 5h10v2H4V9zm0 4h16v2H4v-2z"/></svg></span>
+              <strong>Markets · Today</strong>
+            </div>
+            <div class="af-body"><span class="af-line w85"></span></div>
+          </div>
+          <div class="af-pulse"><span class="af-dot"></span>Fetching · 47 new</div>
         </div>
         <h4>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m6 9 6 6 6-6"/><path d="M5 21h14"/></svg>
@@ -3051,19 +3452,21 @@
       <div class="auto-arrow">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M5 12h14"/><path d="m13 6 6 6-6 6"/>
-          <circle cx="3" cy="12" r="0.8" fill="currentColor"/>
         </svg>
       </div>
 
-      <!-- Step 2: Auto mix -->
+      <!-- Step 2: Auto mix — animated 4-channel mixer -->
       <div class="auto-step">
-        <div class="thumb">
-          <span class="auto-mix-pill">Live · AI</span>
-          <div class="auto-mix-stack">
-            <div class="auto-mix-row"><span class="lvl x"></span><span class="bar b1"></span></div>
-            <div class="auto-mix-row"><span class="lvl pod"></span><span class="bar b2"></span></div>
-            <div class="auto-mix-row"><span class="lvl news"></span><span class="bar b3"></span></div>
-            <div class="auto-mix-row"><span class="lvl yt"></span><span class="bar b4"></span></div>
+        <div class="thumb auto-mix-thumb">
+          <div class="am-header">
+            <span class="am-pill">Live · AI</span>
+            <span class="am-title">Composing 22:00</span>
+          </div>
+          <div class="am-tracks">
+            <div class="am-track"><span class="am-label">X</span><div class="am-bar"><span style="--w:72%"></span></div></div>
+            <div class="am-track"><span class="am-label">POD</span><div class="am-bar"><span style="--w:54%"></span></div></div>
+            <div class="am-track"><span class="am-label">NEWS</span><div class="am-bar"><span style="--w:88%"></span></div></div>
+            <div class="am-track"><span class="am-label">YT</span><div class="am-bar"><span style="--w:42%"></span></div></div>
           </div>
         </div>
         <h4>
@@ -3076,23 +3479,29 @@
       <div class="auto-arrow">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M5 12h14"/><path d="m13 6 6 6-6 6"/>
-          <circle cx="3" cy="12" r="0.8" fill="currentColor"/>
         </svg>
       </div>
 
-      <!-- Step 3: Auto deliver -->
+      <!-- Step 3: Auto deliver — show preview card + time + platform icons -->
       <div class="auto-step">
-        <div class="thumb">
-          <div class="auto-deliver-time">
-            <div class="when">07:00 AM</div>
-            <div class="every">every weekday</div>
+        <div class="thumb auto-deliver-thumb">
+          <div class="ad-show-card">
+            <span class="ad-show-art"></span>
+            <div class="ad-show-info">
+              <div class="ad-show-title">Today's Daily</div>
+              <div class="ad-show-meta">22:00 · Adrian</div>
+            </div>
+            <span class="ad-show-play">▶</span>
           </div>
-          <div class="auto-deliver-clock">7</div>
-          <div class="auto-deliver-platforms">
-            <span class="ap-pod">P</span>
-            <span class="ap-spt">S</span>
-            <span class="ap-yt">Y</span>
-            <span class="ap-em">@</span>
+          <div class="ad-time">
+            <span class="ad-when">07:00 AM</span>
+            <span class="ad-every">every<br>weekday</span>
+          </div>
+          <div class="ad-platforms">
+            <span class="ap-pod" title="Apple Podcasts">P</span>
+            <span class="ap-spt" title="Spotify">S</span>
+            <span class="ap-yt" title="YouTube">Y</span>
+            <span class="ap-em" title="Email">@</span>
           </div>
         </div>
         <h4>
