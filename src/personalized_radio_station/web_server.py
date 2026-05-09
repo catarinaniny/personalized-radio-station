@@ -35,6 +35,15 @@ from .weather import fetch_weather
 
 
 TERMINAL_STATUSES = {"complete", "failed"}
+FRONTEND_ROOT = Path(__file__).resolve().parents[2]
+FRONTEND_ENTRY = "Console-7 Radio.html"
+FRONTEND_FILES = {
+    FRONTEND_ENTRY,
+    "colors_and_type.css",
+    "styles.css",
+    "stations.js",
+    "radio.jsx",
+}
 
 
 @dataclass(frozen=True)
@@ -510,12 +519,12 @@ class _RadioRequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         path = urlparse(self.path).path
-        if path in {"/", "/index.html"}:
+        if path == "/api":
             self._send_json(
                 {
                     "name": "VibeFM API",
                     "status": "ok",
-                    "ui": "Open radio_test.html directly in your browser.",
+                    "ui": "/",
                 }
             )
             return
@@ -543,6 +552,11 @@ class _RadioRequestHandler(BaseHTTPRequestHandler):
             and parts[5] == "audio"
         ):
             self._send_segment_audio(parts[2], parts[4])
+            return
+
+        frontend_path = _frontend_path(path)
+        if frontend_path is not None:
+            self._send_file(frontend_path, content_type=_static_content_type(frontend_path))
             return
 
         self._send_json({"error": "Not found"}, status=HTTPStatus.NOT_FOUND)
@@ -836,6 +850,28 @@ def _path_parts(path: str) -> list[str]:
     return [unquote(part) for part in path.strip("/").split("/") if part]
 
 
+def _frontend_path(path: str) -> Path | None:
+    parts = _path_parts(path)
+    if not parts:
+        return FRONTEND_ROOT / FRONTEND_ENTRY
+    if parts == ["index.html"]:
+        return FRONTEND_ROOT / FRONTEND_ENTRY
+    if parts[0] == "fonts":
+        candidate = (FRONTEND_ROOT / Path(*parts)).resolve()
+    elif len(parts) == 1 and parts[0] in FRONTEND_FILES:
+        candidate = (FRONTEND_ROOT / parts[0]).resolve()
+    else:
+        return None
+
+    try:
+        candidate.relative_to(FRONTEND_ROOT)
+    except ValueError:
+        return None
+    if not candidate.is_file():
+        return None
+    return candidate
+
+
 def _clean_string(value: Any, fallback: str) -> str:
     text = str(value).strip() if value is not None else ""
     return text or fallback
@@ -1010,6 +1046,19 @@ def _audio_content_type(path: Path) -> str:
         return "audio/wav"
     if suffix == ".pcm":
         return "audio/L16"
+    return "application/octet-stream"
+
+
+def _static_content_type(path: Path) -> str:
+    suffix = path.suffix.lower()
+    if suffix == ".html":
+        return "text/html; charset=utf-8"
+    if suffix == ".css":
+        return "text/css; charset=utf-8"
+    if suffix in {".js", ".jsx"}:
+        return "text/javascript; charset=utf-8"
+    if suffix == ".woff2":
+        return "font/woff2"
     return "application/octet-stream"
 
 

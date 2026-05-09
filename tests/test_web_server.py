@@ -30,9 +30,10 @@ class WebServerTests(unittest.TestCase):
 
             try:
                 index = _get_text(f"{base_url}/")
-                api_info = json.loads(index)
+                self.assertIn("Console-7", index)
+                api_info = _get_json(f"{base_url}/api")
                 self.assertEqual(api_info["status"], "ok")
-                self.assertIn("radio_test.html", api_info["ui"])
+                self.assertEqual(api_info["ui"], "/")
 
                 job = _post_json(
                     f"{base_url}/api/episodes",

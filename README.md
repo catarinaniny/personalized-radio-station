@@ -110,30 +110,35 @@ Provider API keys are read from environment variables such as
 `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`, and
 `ELEVENLABS_API_KEY`.
 
-## Local API + File Frontend
+## Local API + Frontend
 
-Run the local backend API:
+Run the app server:
 
 ```bash
 uv run python -m personalized_radio_station.web_server
 ```
 
-Then open the standalone test page directly from this repo:
+Then open the stitched Console-7 frontend:
 
 ```text
-radio_test.html
+http://127.0.0.1:8765
 ```
 
-The backend root at `http://127.0.0.1:8765` returns API status JSON. The UI is
-not served by the backend anymore; `radio_test.html` is one self-contained HTML
-file that can be opened with `file://`.
+The backend serves the Console-7 radio UI at `/` and keeps API status JSON at
+`/api`. The older `radio_test.html` page still exists as a direct API test
+harness that can be opened with `file://`.
 
-The file page has Demo and Real modes plus a duration-minutes input. Demo is
-selected by default, creates an episode through `POST /api/episodes`, listens to
-`GET /api/episodes/{id}/events` with Server-Sent Events, and plays each
-generated audio segment through Web Audio as soon as that segment is ready. Demo
-mode writes normal episode artifacts under `episodes/{episode_id}/`, but does
-not call LLM, TTS, news, or weather APIs.
+If you serve the frontend separately, for example with `python -m http.server
+8000`, still keep the app server running on `http://127.0.0.1:8765`. The
+frontend first tries its own origin for `/api`, then falls back to
+`http://127.0.0.1:8765` when it detects a static file server.
+
+The frontend can create saved vibes through `POST /api/vibes`, start playback
+through `POST /api/episodes`, listen to `GET /api/episodes/{id}/events` with
+Server-Sent Events, and play generated audio segments through Web Audio as soon
+as each segment is ready. Demo mode is selected by default and writes normal
+episode artifacts under `episodes/{episode_id}/`, but does not call LLM, TTS,
+news, or weather APIs.
 
 The opening is intentionally written as if the station was already on air and
 you just tuned in. It should not start with a formal welcome.

@@ -16,6 +16,154 @@ const TIMER_MAX_SEC = 60 * 60;
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const pad = (n) => String(Math.floor(n)).padStart(2, "0");
 const pad2 = (n) => String(n).padStart(2, "0");
+const DEFAULT_BACKEND_BASE = "http://127.0.0.1:8765";
+const SAVED_FREQUENCIES = [88.3, 91.4, 94.7, 98.1, 101.2, 104.6, 106.8, 107.6];
+const PLAYER_ACTIVE_STATES = new Set(["starting", "generating", "playing"]);
+
+function defaultApiBase() {
+  if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+    return window.location.origin;
+  }
+  return DEFAULT_BACKEND_BASE;
+}
+
+function cleanApiBase(value) {
+  return String(value || "").trim().replace(/\/+$/, "");
+}
+
+async function requestJson(apiBase, path, options = {}) {
+  const response = await fetch(`${cleanApiBase(apiBase)}${path}`, options);
+  const text = await response.text();
+  let body = {};
+  if (text) {
+    try { body = JSON.parse(text); }
+    catch { body = { error: text }; }
+  }
+  if (!response.ok) {
+    const error = new Error(body.error || `Request failed: ${response.status}`);
+    error.status = response.status;
+    throw error;
+  }
+  return body;
+}
+
+function shouldTryFallbackApi(error) {
+  return !error?.status || [404, 405, 501].includes(error.status);
+}
+
+function candidateApiBases(primary) {
+  const bases = [cleanApiBase(primary), DEFAULT_BACKEND_BASE];
+  return bases.filter((base, index) => base && bases.indexOf(base) === index);
+}
+
+async function requestJsonFromAnyApi(primaryApiBase, path, options = {}) {
+  let lastError = null;
+  for (const base of candidateApiBases(primaryApiBase)) {
+    try {
+      return { data: await requestJson(base, path, options), apiBase: base };
+    } catch (error) {
+      lastError = error;
+      if (!shouldTryFallbackApi(error)) {
+        break;
+      }
+    }
+  }
+  throw lastError || new Error("API request failed");
+}
+
+function frequencyForIndex(index) {
+  if (index < SAVED_FREQUENCIES.length) return SAVED_FREQUENCIES[index];
+  const offset = (index - SAVED_FREQUENCIES.length + 1) * 1.7;
+  return Math.round((88.1 + (offset % 19.2)) * 10) / 10;
+}
+
+function stationFromVibe(vibe, index) {
+  const hostFormat = vibe.host_format || vibe.host?.format || "solo";
+  const voiceGender = vibe.voice_gender || vibe.host?.voice_gender || "female";
+  const sourceCount = (vibe.rss_feeds || []).length;
+  return {
+    id: vibe.id,
+    backendId: vibe.id,
+    name: String(vibe.name || "VIBE").toUpperCase(),
+    tag: sourceCount ? `${sourceCount} sources` : "default sources",
+    mhz: frequencyForIndex(index),
+    hosts: hostFormat === "duo" ? 2 : 1,
+    voiceA: voiceGender === "male" ? "M" : "F",
+    voiceB: voiceGender === "male" ? "F" : "M",
+    tone: vibe.tone === "professional" ? 75 : 25,
+    urls: vibe.custom_rss_feeds || [],
+    sourcePresetIds: vibe.source_preset_ids || [],
+    length: 2,
+    freq: "on-demand",
+  };
+}
+
+function vibePayloadFromStation(station) {
+  return {
+    name: String(station.name || "VIBE").trim() || "VIBE",
+    custom_rss_feeds: station.urls || [],
+    source_preset_ids: station.sourcePresetIds || [],
+    tone: station.tone >= 50 ? "professional" : "casual",
+    voice_gender: station.voiceA === "M" ? "male" : "female",
+    host_format: station.hosts === 2 ? "duo" : "solo",
+  };
+}
+
+function styleFromStation(station) {
+  const toneStyle =
+    station.tone >= 50
+      ? "professional, crisp, source-aware radio with confident framing"
+      : "casual, warm, already-on-air radio with useful pacing and a little texture";
+  const hostLabel = station.hosts === 2 ? "two-host handoff" : "solo host";
+  const voiceLabel = station.voiceA === "M" ? "male-led" : "female-led";
+  return `${toneStyle}; ${voiceLabel}; ${hostLabel}`;
+}
+
+function episodePayloadFromStation(station, mode, durationSeconds) {
+  const durationMinutes = Math.max(1, Math.round(durationSeconds / 60));
+  if (station.backendId) {
+    return {
+      mode,
+      vibe_id: station.backendId,
+      duration: `${durationMinutes} minutes`,
+      duration_minutes: durationMinutes,
+    };
+  }
+
+  const vibe = vibePayloadFromStation(station);
+  return {
+    mode,
+    station_name: vibe.name,
+    style: styleFromStation(station),
+    rss_feeds: vibe.custom_rss_feeds,
+    source_preset_ids: vibe.source_preset_ids,
+    host_tone: vibe.tone,
+    voice_gender: vibe.voice_gender,
+    host_format: vibe.host_format,
+    duration: `${durationMinutes} minutes`,
+    duration_minutes: durationMinutes,
+  };
+}
+
+function humanEpisodeStatus(status) {
+  return {
+    queued: "QUEUED",
+    checking_runtime: "CHECKING",
+    fetching_sources: "SOURCES",
+    generating_script: "SCRIPTING",
+    rendering_audio: "RENDERING",
+    audio_disabled: "NO AUDIO",
+    complete: "COMPLETE",
+    failed: "FAILED",
+  }[status] || String(status || "WORKING").toUpperCase();
+}
+
+function formatTimerSeconds(value) {
+  const total = Math.max(0, Math.round(value || 0));
+  const minutes = Math.floor(total / 60);
+  const seconds = total % 60;
+  return `${pad(minutes)}:${pad(seconds)}`;
+}
 
 /* ---------- Tuner strip (frequency scanner) ---------- */
 function TunerStrip({ freq, stations, onSeek }) {
@@ -136,22 +284,73 @@ function Analyzer({ playing, columns = 32, rows = 7 }) {
 }
 
 /* ---------- Knob ---------- */
-function Knob({ value, max, onChange, color = "#1a140a", size = 88 }) {
-  const angle = -135 + (value / max) * 270;
-  const drag = useRef(null);
-  const onDown = (e) => { drag.current = { y: e.clientY, v: value }; e.target.setPointerCapture?.(e.pointerId); };
-  const onMove = (e) => {
-    if (!drag.current) return;
-    const dy = drag.current.y - e.clientY;
-    onChange(clamp(drag.current.v + (dy / 180) * max, 0, max));
+function Knob({ value, max, onChange, color = "#1a140a", size = 88, step, ariaLabel = "Rotary control", ariaValueText, disabled = false }) {
+  const safeMax = Math.max(1, max || 1);
+  const boundedValue = clamp(value || 0, 0, safeMax);
+  const angle = -135 + (boundedValue / safeMax) * 270;
+  const drag = useRef(false);
+  const [dragging, setDragging] = useState(false);
+  const keyStep = step || safeMax / 100;
+
+  const valueFromPointer = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const dx = e.clientX - (rect.left + rect.width / 2);
+    const dy = e.clientY - (rect.top + rect.height / 2);
+    if (Math.hypot(dx, dy) < rect.width * 0.08) return null;
+    const rawAngle = Math.atan2(dx, -dy) * 180 / Math.PI;
+    return ((clamp(rawAngle, -135, 135) + 135) / 270) * safeMax;
   };
-  const onUp = (e) => { drag.current = null; e.target.releasePointerCapture?.(e.pointerId); };
-  const onWheel = (e) => { e.preventDefault(); onChange(clamp(value - (e.deltaY * max) / 8000, 0, max)); };
+
+  const applyPointerValue = (e) => {
+    const next = valueFromPointer(e);
+    if (next != null) onChange(clamp(next, 0, safeMax));
+  };
+
+  const onDown = (e) => {
+    if (disabled) return;
+    e.preventDefault();
+    drag.current = true;
+    setDragging(true);
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    applyPointerValue(e);
+  };
+  const onMove = (e) => {
+    if (!drag.current || disabled) return;
+    e.preventDefault();
+    applyPointerValue(e);
+  };
+  const onUp = (e) => {
+    drag.current = false;
+    setDragging(false);
+    e.currentTarget.releasePointerCapture?.(e.pointerId);
+  };
+  const onWheel = (e) => {
+    if (disabled) return;
+    e.preventDefault();
+    onChange(clamp(boundedValue - (e.deltaY * safeMax) / 8000, 0, safeMax));
+  };
+  const onKeyDown = (e) => {
+    if (disabled) return;
+    const changeBy = (amount) => onChange(clamp(boundedValue + amount, 0, safeMax));
+    if (e.key === "ArrowUp" || e.key === "ArrowRight") {
+      e.preventDefault(); changeBy(keyStep);
+    } else if (e.key === "ArrowDown" || e.key === "ArrowLeft") {
+      e.preventDefault(); changeBy(-keyStep);
+    } else if (e.key === "PageUp") {
+      e.preventDefault(); changeBy(keyStep * 10);
+    } else if (e.key === "PageDown") {
+      e.preventDefault(); changeBy(-keyStep * 10);
+    } else if (e.key === "Home") {
+      e.preventDefault(); onChange(0);
+    } else if (e.key === "End") {
+      e.preventDefault(); onChange(safeMax);
+    }
+  };
 
   const tickCount = 21;
   const ticks = Array.from({ length: tickCount }).map((_, i) => {
     const a = -135 + (i / (tickCount - 1)) * 270;
-    const lit = i / (tickCount - 1) <= value / max + 0.001;
+    const lit = i / (tickCount - 1) <= boundedValue / safeMax + 0.001;
     const r1 = 46, r2 = 49.5;
     const x1 = 50 + r1 * Math.sin((a * Math.PI) / 180);
     const y1 = 50 - r1 * Math.cos((a * Math.PI) / 180);
@@ -163,9 +362,20 @@ function Knob({ value, max, onChange, color = "#1a140a", size = 88 }) {
   });
 
   return (
-    <div className="knob" style={{ width: size, height: size }}
-         onPointerDown={onDown} onPointerMove={onMove}
-         onPointerUp={onUp} onPointerCancel={onUp} onWheel={onWheel}>
+    <div
+      className={"knob" + (dragging ? " dragging" : "") + (disabled ? " disabled" : "")}
+      style={{ width: size, height: size }}
+      role="slider"
+      tabIndex={disabled ? -1 : 0}
+      aria-label={ariaLabel}
+      aria-valuemin="0"
+      aria-valuemax={safeMax}
+      aria-valuenow={Math.round(boundedValue)}
+      aria-valuetext={ariaValueText}
+      aria-disabled={disabled}
+      onPointerDown={onDown} onPointerMove={onMove}
+      onPointerUp={onUp} onPointerCancel={onUp} onWheel={onWheel}
+      onKeyDown={onKeyDown}>
       <svg viewBox="0 0 100 100">
         <defs>
           <radialGradient id={`capG${size}`} cx="0.4" cy="0.3" r="0.8">
@@ -336,20 +546,28 @@ function CreateVibeTab({ onCreate }) {
   const [voiceB, setVoiceB] = useState("M");
   const [tone, setTone] = useState("casual");
   const [urls, setUrls] = useState([]);
+  const [saving, setSaving] = useState(false);
 
-  const valid = name.trim().length > 0 && urls.length > 0;
+  const valid = name.trim().length > 0 && !saving;
 
-  const submit = () => {
+  const submit = async () => {
     if (!valid) return;
-    onCreate({
-      name: name.toUpperCase(),
-      tag: "",
-      hosts, voiceA, voiceB,
-      tone: tone === "casual" ? 25 : 75,
-      urls,
-      freq: "daily",
-    });
-    setName(""); setUrls([]); setHosts(1); setVoiceA("F"); setVoiceB("M"); setTone("casual");
+    setSaving(true);
+    try {
+      await onCreate({
+        name: name.toUpperCase(),
+        tag: "",
+        hosts, voiceA, voiceB,
+        tone: tone === "casual" ? 25 : 75,
+        urls,
+        freq: "on-demand",
+      });
+      setName(""); setUrls([]); setHosts(1); setVoiceA("F"); setVoiceB("M"); setTone("casual");
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -398,31 +616,31 @@ function CreateVibeTab({ onCreate }) {
 
         <div className="field actions">
           <button className={"create-btn" + (valid ? "" : " disabled")}
-                  disabled={!valid} onClick={submit}>CREATE VIBE</button>
+                  disabled={!valid} onClick={submit}>{saving ? "SAVING" : "CREATE VIBE"}</button>
         </div>
       </div>
     </div>
   );
 }
 
-function ApiTab() {
-  const keys = [
-    { name: "OpenAI",     key: "sk-proj-•••••••••••••••••••2f8a", set: true },
-    { name: "Anthropic",  key: "sk-ant-•••••••••••••••••••a134",  set: true },
-    { name: "ElevenLabs", key: "—",                               set: false },
-    { name: "Google TTS", key: "—",                               set: false },
-  ];
+function ApiTab({ apiBase, onApiBaseChange, mode, onModeChange, apiStatus }) {
   return (
     <div className="simple-tab">
-      <p className="tab-lead">Bring your own keys. Stations use these for generation, voices, and synthesis.</p>
-      <div className="key-list">
-        {keys.map((k) => (
-          <div key={k.name} className="key-row">
-            <span className="key-name">{k.name}</span>
-            <span className={"key-val" + (k.set ? "" : " unset")}>{k.key}</span>
-            <button className="key-edit">{k.set ? "EDIT" : "ADD"}</button>
-          </div>
-        ))}
+      <div className="api-grid">
+        <div className="field grow-2">
+          <label>Backend</label>
+          <input type="url" value={apiBase} onChange={(e) => onApiBaseChange(e.target.value)} />
+        </div>
+        <div className="field">
+          <label>Mode</label>
+          <Segmented value={mode}
+                     options={[["mock", "Demo"], ["real", "Real"]]}
+                     onChange={onModeChange} />
+        </div>
+        <div className={"api-status " + apiStatus}>
+          <span className="api-dot" />
+          <span>{apiStatus === "ready" ? "API READY" : apiStatus === "checking" ? "CHECKING" : "API OFFLINE"}</span>
+        </div>
       </div>
     </div>
   );
@@ -512,7 +730,7 @@ function SettingsPanel(props) {
       <div className="settings-body">
         {tab === "vibes"  && <StationsTab {...props} />}
         {tab === "create" && <CreateVibeTab onCreate={props.onCreate} />}
-        {tab === "api"    && <ApiTab />}
+        {tab === "api"    && <ApiTab {...props} />}
       </div>
     </div>
   );
@@ -521,12 +739,33 @@ function SettingsPanel(props) {
 /* ---------- App ---------- */
 function App() {
   const [freqMHz, setFreqMHz] = useState(88.3);
-  const [timerSec, setTimerSec] = useState(0);
+  const [durationSec, setDurationSec] = useState(2 * 60);
+  const [remainingSec, setRemainingSec] = useState(0);
   const [stations, setStations] = useState(DEFAULT_STATIONS);
   const [editingId, setEditingId] = useState(DEFAULT_STATIONS[0].id);
   const [isOpen, setIsOpen] = useState(false);
+  const [apiBase, setApiBase] = useState(() => {
+    try { return localStorage.getItem("vibefm.apiBase") || defaultApiBase(); }
+    catch { return defaultApiBase(); }
+  });
+  const [apiStatus, setApiStatus] = useState("checking");
+  const [mode, setMode] = useState(() => {
+    try { return localStorage.getItem("vibefm.mode") || "mock"; }
+    catch { return "mock"; }
+  });
+  const [playerState, setPlayerState] = useState("idle");
+  const [playerText, setPlayerText] = useState("STANDBY");
+  const [segmentProgress, setSegmentProgress] = useState({ queued: 0, played: 0, total: 0 });
+  const [generationComplete, setGenerationComplete] = useState(false);
 
-  const playing = timerSec > 0;
+  const audioContextRef = useRef(null);
+  const eventSourceRef = useRef(null);
+  const activeApiBaseRef = useRef("");
+  const nextStartTimeRef = useRef(0);
+  const sourceRefs = useRef([]);
+  const runRef = useRef(0);
+
+  const playing = PLAYER_ACTIVE_STATES.has(playerState);
 
   // closest station to the current dial position
   let closestIdx = 0, closestDist = Infinity;
@@ -538,10 +777,60 @@ function App() {
   const station = stations[closestIdx] || stations[0];
 
   useEffect(() => {
-    if (timerSec <= 0) return;
-    const id = setInterval(() => setTimerSec((s) => Math.max(0, s - 1)), 1000);
+    if (!playing) return;
+    const id = setInterval(() => setRemainingSec((s) => Math.max(0, s - 1)), 1000);
     return () => clearInterval(id);
-  }, [timerSec > 0]);
+  }, [playing]);
+
+  useEffect(() => {
+    try { localStorage.setItem("vibefm.apiBase", apiBase); }
+    catch {}
+    let alive = true;
+    const id = setTimeout(async () => {
+      setApiStatus("checking");
+      try {
+        const { data, apiBase: resolvedApiBase } = await requestJsonFromAnyApi(apiBase, "/api/vibes");
+        if (!alive) return;
+        if (resolvedApiBase !== cleanApiBase(apiBase)) {
+          setApiBase(resolvedApiBase);
+        }
+        const saved = Array.isArray(data.vibes)
+          ? data.vibes.map((vibe, index) => stationFromVibe(vibe, index))
+          : [];
+        if (saved.length > 0) {
+          setStations(saved);
+          setEditingId(saved[0].id);
+          setFreqMHz(saved[0].mhz);
+        }
+        setApiStatus("ready");
+      } catch (error) {
+        if (!alive) return;
+        setApiStatus("offline");
+      }
+    }, 300);
+    return () => {
+      alive = false;
+      clearTimeout(id);
+    };
+  }, [apiBase]);
+
+  useEffect(() => {
+    try { localStorage.setItem("vibefm.mode", mode); }
+    catch {}
+  }, [mode]);
+
+  useEffect(() => {
+    return () => {
+      closePlaybackHardware();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!generationComplete || segmentProgress.total === 0) return;
+    if (segmentProgress.played >= segmentProgress.total) {
+      finishPlayback();
+    }
+  }, [generationComplete, segmentProgress]);
 
   useEffect(() => {
     const fit = () => {
@@ -559,10 +848,10 @@ function App() {
     const next = (closestIdx + d + stations.length) % stations.length;
     setFreqMHz(stations[next].mhz);
   };
-  const updateStation = (s) => setStations((list) => list.map((x) => x.id === s.id ? s : x));
-  const createStation = (partial) => {
+  const updateStation = (s) => setStations((list) => list.map((x) => x.id === s.id ? { ...s, backendId: null } : x));
+  const createStation = async (partial) => {
     const id = Date.now();
-    const base = { id, name: "NEW VIBE", tag: "", mhz: 99.0, hosts: 1, voiceA: "F", voiceB: "M", tone: 50, urls: [], length: 30, freq: "daily" };
+    const base = { id, name: "NEW VIBE", tag: "", mhz: 99.0, hosts: 1, voiceA: "F", voiceB: "M", tone: 50, urls: [], length: 2, freq: "on-demand" };
     const next = { ...base, ...(partial || {}), id };
     // assign next free MHz slot if not specified
     if (!partial || partial.mhz == null) {
@@ -570,8 +859,36 @@ function App() {
       while (stations.some((s) => Math.abs(s.mhz - m) < 0.6) && m < 107.5) m += 1.0;
       next.mhz = Math.round(m * 10) / 10;
     }
-    setStations((list) => [...list, next]);
-    setEditingId(id);
+
+    if (!partial) {
+      setStations((list) => [...list, next]);
+      setEditingId(id);
+      setFreqMHz(next.mhz);
+      return;
+    }
+
+    try {
+      const { data, apiBase: resolvedApiBase } = await requestJsonFromAnyApi(apiBase, "/api/vibes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(vibePayloadFromStation(next)),
+      });
+      if (resolvedApiBase !== cleanApiBase(apiBase)) {
+        setApiBase(resolvedApiBase);
+      }
+      const saved = stationFromVibe(data.vibe, stations.length);
+      setStations((list) => [...list, saved]);
+      setEditingId(saved.id);
+      setFreqMHz(saved.mhz);
+      setApiStatus("ready");
+      setPlayerState("idle");
+      setPlayerText("VIBE SAVED");
+    } catch (error) {
+      setApiStatus("offline");
+      setPlayerState("failed");
+      setPlayerText(error.message || "SAVE FAILED");
+      throw error;
+    }
   };
   const deleteStation = (id) => {
     setStations((list) => {
@@ -581,9 +898,186 @@ function App() {
     });
   };
 
-  const minutes = Math.floor(timerSec / 60);
-  const seconds = timerSec % 60;
-  const timerDisplay = playing ? `${pad(minutes)}:${pad(seconds)}` : "— : —";
+  function isCurrentRun(runId) {
+    return runId === runRef.current;
+  }
+
+  function closePlaybackHardware() {
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+    }
+    sourceRefs.current.forEach((source) => {
+      try { source.stop(); }
+      catch {}
+    });
+    sourceRefs.current = [];
+    if (audioContextRef.current && audioContextRef.current.state !== "closed") {
+      audioContextRef.current.close().catch(() => {});
+    }
+    audioContextRef.current = null;
+    activeApiBaseRef.current = "";
+  }
+
+  async function stopPlayback(label = "STOPPED") {
+    runRef.current += 1;
+    closePlaybackHardware();
+    setGenerationComplete(false);
+    setSegmentProgress({ queued: 0, played: 0, total: 0 });
+    setRemainingSec(0);
+    setPlayerState("idle");
+    setPlayerText(label);
+  }
+
+  function finishPlayback() {
+    if (!PLAYER_ACTIVE_STATES.has(playerState) && playerState !== "complete") return;
+    closePlaybackHardware();
+    setPlayerState("complete");
+    setPlayerText("PLAYBACK COMPLETE");
+    setRemainingSec(0);
+  }
+
+  async function startEpisode() {
+    if (playing) {
+      await stopPlayback();
+      return;
+    }
+
+    const stationToPlay = station;
+    const selectedDuration = Math.max(60, Math.round(durationSec || 120));
+    await stopPlayback("STANDBY");
+    const runId = runRef.current + 1;
+    runRef.current = runId;
+    setGenerationComplete(false);
+    setSegmentProgress({ queued: 0, played: 0, total: 0 });
+    setRemainingSec(selectedDuration);
+    setPlayerState("starting");
+    setPlayerText("STARTING");
+
+    try {
+      const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+      audioContextRef.current = new AudioContextCtor();
+      await audioContextRef.current.resume();
+      nextStartTimeRef.current = audioContextRef.current.currentTime + 0.18;
+
+      const { data: job, apiBase: resolvedApiBase } = await requestJsonFromAnyApi(apiBase, "/api/episodes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(episodePayloadFromStation(stationToPlay, mode, selectedDuration)),
+      });
+      if (!isCurrentRun(runId)) return;
+      if (resolvedApiBase !== cleanApiBase(apiBase)) {
+        setApiBase(resolvedApiBase);
+      }
+      activeApiBaseRef.current = resolvedApiBase;
+
+      setPlayerState("generating");
+      setPlayerText(job.vibe ? `TUNED ${job.vibe.name}` : `TUNED ${stationToPlay.name}`);
+      const stream = new EventSource(`${resolvedApiBase}${job.events_url}`);
+      eventSourceRef.current = stream;
+      stream.addEventListener("status", (event) => handleStatus(event, runId));
+      stream.addEventListener("script_ready", (event) => handleScriptReady(event, runId));
+      stream.addEventListener("segment_ready", (event) => handleSegmentReady(event, runId));
+      stream.addEventListener("complete", (event) => handleComplete(event, runId));
+      stream.addEventListener("failed", (event) => handleFailed(event, runId));
+      stream.onerror = () => {
+        if (isCurrentRun(runId) && !generationComplete) {
+          setPlayerText("SIGNAL RETRY");
+        }
+      };
+    } catch (error) {
+      if (!isCurrentRun(runId)) return;
+      closePlaybackHardware();
+      setPlayerState("failed");
+      setPlayerText(error.message || "PLAY FAILED");
+      setRemainingSec(0);
+    }
+  }
+
+  function handleStatus(event, runId) {
+    if (!isCurrentRun(runId)) return;
+    const data = JSON.parse(event.data);
+    setPlayerState(data.status === "rendering_audio" ? "playing" : "generating");
+    setPlayerText(humanEpisodeStatus(data.status));
+  }
+
+  function handleScriptReady(event, runId) {
+    if (!isCurrentRun(runId)) return;
+    const data = JSON.parse(event.data);
+    setSegmentProgress((progress) => ({ ...progress, total: data.segment_count || 0 }));
+    setPlayerText(`${data.segment_count || 0} SEGMENTS`);
+  }
+
+  async function handleSegmentReady(event, runId) {
+    if (!isCurrentRun(runId)) return;
+    const segment = JSON.parse(event.data);
+    try {
+      await queueSegment(segment, runId);
+    } catch (error) {
+      if (!isCurrentRun(runId)) return;
+      setPlayerState("failed");
+      setPlayerText(error.message || "AUDIO FAILED");
+    }
+  }
+
+  async function queueSegment(segment, runId) {
+    const context = audioContextRef.current;
+    if (!context) return;
+
+    const segmentApiBase = activeApiBaseRef.current || cleanApiBase(apiBase);
+    const response = await fetch(`${segmentApiBase}${segment.audio_url}`);
+    if (!response.ok) {
+      throw new Error(`SEGMENT ${response.status}`);
+    }
+    const bytes = await response.arrayBuffer();
+    const buffer = await context.decodeAudioData(bytes);
+    if (!isCurrentRun(runId)) return;
+
+    const source = context.createBufferSource();
+    source.buffer = buffer;
+    source.connect(context.destination);
+    const startAt = Math.max(nextStartTimeRef.current, context.currentTime + 0.06);
+    source.start(startAt);
+    nextStartTimeRef.current = startAt + buffer.duration + 0.04;
+    sourceRefs.current.push(source);
+    setPlayerState("playing");
+    setPlayerText(`PLAYING ${segment.index + 1}`);
+    setSegmentProgress((progress) => ({ ...progress, queued: progress.queued + 1 }));
+    source.onended = () => {
+      if (!isCurrentRun(runId)) return;
+      setSegmentProgress((progress) => ({ ...progress, played: progress.played + 1 }));
+    };
+  }
+
+  function handleComplete(event, runId) {
+    if (!isCurrentRun(runId)) return;
+    const data = JSON.parse(event.data);
+    setGenerationComplete(true);
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+    }
+    if (!data.audio_url && segmentProgress.queued === 0) {
+      setPlayerState("complete");
+      setPlayerText("COMPLETE");
+      setRemainingSec(0);
+    } else {
+      setPlayerText("ALL QUEUED");
+    }
+  }
+
+  function handleFailed(event, runId) {
+    if (!isCurrentRun(runId)) return;
+    const data = JSON.parse(event.data);
+    closePlaybackHardware();
+    setPlayerState("failed");
+    setPlayerText(data.error || "FAILED");
+    setRemainingSec(0);
+  }
+
+  const timerDisplay = formatTimerSeconds(playing ? remainingSec : durationSec);
+  const transportLabel = playing ? "STOP" : "PLAY";
+  const statusLabel = playerText.length > 22 ? `${playerText.slice(0, 21)}...` : playerText;
   const editing = stations.find((s) => s.id === editingId) || stations[0];
 
   return (
@@ -601,9 +1095,18 @@ function App() {
         <div className="body">
           <div className="top-bar">
             <div className="knob-cell">
-              <Knob value={timerSec} max={TIMER_MAX_SEC} onChange={(v) => setTimerSec(Math.round(v))} color="#c5481e" />
-              <span className="knob-label">TIMER</span>
-              <span className="knob-value">{playing ? `${pad(minutes)}:${pad(seconds)}` : "OFF"}</span>
+              <Knob
+                value={playing ? remainingSec : durationSec}
+                max={TIMER_MAX_SEC}
+                onChange={(v) => !playing && setDurationSec(Math.max(60, Math.round(v / 60) * 60))}
+                color="#c5481e"
+                step={60}
+                ariaLabel="Episode length"
+                ariaValueText={timerDisplay}
+                disabled={playing}
+              />
+              <span className="knob-label">LENGTH</span>
+              <span className="knob-value">{timerDisplay}</span>
             </div>
 
             <div className="display">
@@ -612,7 +1115,7 @@ function App() {
               </div>
               <div className="disp-row">
                 <span className="disp-eyebrow">
-                  {playing ? "▸ ON AIR" : "STANDBY"}
+                  {playing ? "▸ ON AIR" : playerState === "failed" ? "ERROR" : playerState === "complete" ? "COMPLETE" : "STANDBY"}
                 </span>
                 <span className={"power-dot" + (playing ? " on" : "")}></span>
               </div>
@@ -631,6 +1134,9 @@ function App() {
                 max={FREQ_MAX - FREQ_MIN}
                 onChange={(v) => setFreqMHz(Math.round((v + FREQ_MIN) * 10) / 10)}
                 color="#e8d8b6"
+                step={0.1}
+                ariaLabel="Tuning frequency"
+                ariaValueText={`${freqMHz.toFixed(1)} MHz`}
               />
               <span className="knob-label">TUNE · MHz</span>
               <span className="knob-value">{freqMHz.toFixed(1)}</span>
@@ -653,6 +1159,11 @@ function App() {
               onChange={updateStation}
               onCreate={createStation}
               onDelete={deleteStation}
+              apiBase={apiBase}
+              onApiBaseChange={setApiBase}
+              mode={mode}
+              onModeChange={setMode}
+              apiStatus={apiStatus}
             />
 
             <div className={"grille-panel" + (isOpen ? " open" : "")}></div>
@@ -660,9 +1171,16 @@ function App() {
 
           <div className="foot">
             <span className="brand">VibeFM</span>
-            <div className="led">
-              <span className={"lamp" + (playing ? " on" : "")}></span>
-              <span>{playing ? "BROADCASTING" : "STANDBY"}</span>
+            <div className="transport">
+              <button className={"play-btn" + (playing ? " active" : "")}
+                      type="button"
+                      onClick={startEpisode}>
+                {transportLabel}
+              </button>
+              <div className="led">
+                <span className={"lamp" + (playing ? " on" : "")}></span>
+                <span>{statusLabel}</span>
+              </div>
             </div>
             <span>SN-7042</span>
           </div>
