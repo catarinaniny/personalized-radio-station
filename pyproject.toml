@@ -1,0 +1,22 @@
+[project]
+name = "personalized-radio-station"
+version = "0.1.0"
+description = "A simple personal radio script generator powered by RSS, weather, and LiteLLM."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "litellm>=1.0.0",
+  "PyYAML>=6.0.0",
+]
+
+[project.scripts]
+radio = "personalized_radio_station.cli:main"
+generate-episode = "personalized_radio_station.pipeline:main"
+fetch-sources = "personalized_radio_station.sources:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,44 @@
+station_name: "Personal Radio"
+style: "casual, concise morning radio"
+episode_minutes: 5
+
+news:
+  language: "en-US"
+  country: "US"
+  topics:
+    - "artificial intelligence"
+    - "startups"
+    - "music technology"
+
+weather:
+  name: "Lisbon"
+  latitude: 38.7223
+  longitude: -9.1393
+
+ai:
+  model: "openrouter/openrouter/auto"
+  api_key_env: "OPENROUTER_API_KEY"
+  temperature: 0.7
+  max_tokens: 1800
+
+voices:
+  intro: "host"
+  weather: "host"
+  news: "anchor"
+  outro: "host"
+
+tts:
+  enabled: false
+  provider: "openai"
+  model: "gpt-4o-mini-tts"
+  response_format: "wav"
+  api_key_env: "OPENAI_API_KEY"
+  voices:
+    host:
+      voice: "alloy"
+      instructions: "Warm, conversational, casual morning radio host."
+      speed: 1.0
+    anchor:
+      voice: "onyx"
+      instructions: "Clear, steady, professional news reader."
+      speed: 1.0

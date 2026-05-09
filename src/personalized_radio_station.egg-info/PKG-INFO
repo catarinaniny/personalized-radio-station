@@ -1,3 +1,12 @@
+Metadata-Version: 2.4
+Name: personalized-radio-station
+Version: 0.1.0
+Summary: A simple personal radio script generator powered by RSS, weather, and LiteLLM.
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: litellm>=1.0.0
+Requires-Dist: PyYAML>=6.0.0
+
 # Personalized Radio Station
 
 A tiny backend-first experiment for generating a personal radio briefing.

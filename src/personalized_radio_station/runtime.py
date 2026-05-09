@@ -1,0 +1,90 @@
+from __future__ import annotations
+
+import os
+from pathlib import Path
+from shutil import which
+
+from .config import AppConfig, AiConfig, TtsConfig
+
+
+def missing_runtime_requirements(
+    config: AppConfig, include_tts: bool = True, allow_mock: bool = False
+) -> list[str]:
+    missing: list[str] = []
+    missing.extend(_missing_ai_requirements(config.ai, allow_mock=allow_mock))
+
+    if include_tts and config.tts.enabled:
+        missing.extend(_missing_tts_requirements(config.tts, allow_mock=allow_mock))
+
+    return missing
+
+
+def assert_runtime_ready(
+    config: AppConfig, include_tts: bool = True, allow_mock: bool = False
+) -> None:
+    missing = missing_runtime_requirements(
+        config, include_tts=include_tts, allow_mock=allow_mock
+    )
+    if missing:
+        joined = "\n".join(f"- {item}" for item in missing)
+        raise RuntimeError(f"Missing runtime requirements:\n{joined}")
+
+
+def _missing_ai_requirements(config: AiConfig, allow_mock: bool) -> list[str]:
+    if config.model == "mock":
+        if allow_mock:
+            return []
+        return ["test-only LiteLLM model `mock` is not allowed for normal runs"]
+
+    if config.model.startswith("ollama/"):
+        return []
+
+    env_name = config.api_key_env or _env_for_litellm_model(config.model)
+    if env_name and not os.environ.get(env_name):
+        return [f"{env_name} for LiteLLM model `{config.model}`"]
+    return []
+
+
+def _missing_tts_requirements(config: TtsConfig, allow_mock: bool) -> list[str]:
+    provider = config.provider.lower()
+    if provider == "none":
+        return []
+
+    if provider == "mock":
+        if allow_mock:
+            return []
+        return ["test-only TTS provider `mock` is not allowed for normal runs"]
+
+    if provider == "openai":
+        if not os.environ.get(config.api_key_env):
+            return [f"{config.api_key_env} for OpenAI TTS"]
+        return []
+
+    if provider == "piper":
+        missing: list[str] = []
+        if which(config.piper_path) is None and not Path(config.piper_path).exists():
+            missing.append(f"`{config.piper_path}` executable for Piper TTS")
+        if not config.piper_model_path:
+            missing.append("`tts.piper_model_path` for Piper TTS")
+        elif not Path(config.piper_model_path).exists():
+            missing.append(f"Piper voice model at `{config.piper_model_path}`")
+        return missing
+
+    return [f"supported TTS provider; got `{config.provider}`"]
+
+
+def _env_for_litellm_model(model: str) -> str | None:
+    provider = model.split("/", 1)[0]
+    return {
+        "anthropic": "ANTHROPIC_API_KEY",
+        "azure": "AZURE_API_KEY",
+        "cohere": "COHERE_API_KEY",
+        "deepseek": "DEEPSEEK_API_KEY",
+        "gemini": "GEMINI_API_KEY",
+        "groq": "GROQ_API_KEY",
+        "mistral": "MISTRAL_API_KEY",
+        "openai": "OPENAI_API_KEY",
+        "openrouter": "OPENROUTER_API_KEY",
+        "together_ai": "TOGETHERAI_API_KEY",
+        "xai": "XAI_API_KEY",
+    }.get(provider)
