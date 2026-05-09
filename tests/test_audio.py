@@ -3,7 +3,11 @@ from tempfile import TemporaryDirectory
 import unittest
 import wave
 
-from personalized_radio_station.audio import concatenate_wavs, write_mock_wav
+from personalized_radio_station.audio import (
+    audio_duration_seconds,
+    concatenate_wavs,
+    write_mock_wav,
+)
 
 
 class AudioTests(unittest.TestCase):
@@ -23,6 +27,8 @@ class AudioTests(unittest.TestCase):
                 self.assertEqual(wav.getnchannels(), 1)
                 self.assertEqual(wav.getframerate(), 24_000)
                 self.assertGreater(wav.getnframes(), 0)
+
+            self.assertAlmostEqual(audio_duration_seconds(first), 0.2, places=2)
 
 
 if __name__ == "__main__":

@@ -35,9 +35,11 @@ tts:
   api_key_env: "ELEVENLABS_API_KEY"
   single_voice: true
   primary_voice: "host"
+  words_per_minute: 155
   voices:
     host:
       voice: "alloy"
+      words_per_minute: 155
       settings:
         stability: 0.45
         similarity_boost: 0.75

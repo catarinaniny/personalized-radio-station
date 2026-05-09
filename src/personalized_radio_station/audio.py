@@ -115,3 +115,35 @@ def concatenate_audio_files(segment_paths: list[Path], output_path: Path) -> Pat
         list_path.unlink(missing_ok=True)
 
     return output_path
+
+
+def audio_duration_seconds(path: Path) -> float | None:
+    if path.suffix.lower() == ".wav":
+        with wave.open(str(path), "rb") as wav:
+            return wav.getnframes() / wav.getframerate()
+
+    if which("ffprobe") is None:
+        return None
+
+    result = subprocess.run(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
+            str(path),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return None
+
+    try:
+        return float(result.stdout.strip())
+    except ValueError:
+        return None

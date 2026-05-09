@@ -44,6 +44,7 @@ class TtsVoiceConfig:
     voice: str
     instructions: str | None = None
     speed: float = 1.0
+    words_per_minute: int | None = None
     speaker: str | None = None
     settings: dict[str, Any] = field(default_factory=dict)
 
@@ -58,6 +59,7 @@ class TtsConfig:
     api_key_env: str | None = "ELEVENLABS_API_KEY"
     single_voice: bool = True
     primary_voice: str = "host"
+    words_per_minute: int = 155
     piper_path: str = "piper"
     piper_model_path: str | None = None
     voices: dict[str, TtsVoiceConfig] = field(default_factory=dict)
@@ -124,6 +126,7 @@ def load_config(path: str | Path) -> AppConfig:
             ),
             single_voice=_as_bool(tts.get("single_voice", True)),
             primary_voice=tts.get("primary_voice", "host"),
+            words_per_minute=int(tts.get("words_per_minute", 155)),
             piper_path=tts.get("piper_path", "piper"),
             piper_model_path=tts.get("piper_model_path"),
             voices=_load_tts_voices(tts.get("voices", {})),
@@ -195,6 +198,7 @@ def _load_tts_voices(raw: dict[str, Any]) -> dict[str, TtsVoiceConfig]:
             voice=value.get("voice", name),
             instructions=value.get("instructions"),
             speed=float(value.get("speed", 1.0)),
+            words_per_minute=_optional_int(value.get("words_per_minute")),
             speaker=value.get("speaker"),
             settings=dict(value.get("settings", {})),
         )

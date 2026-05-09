@@ -24,6 +24,8 @@ class ConfigTests(unittest.TestCase):
         self.assertTrue(config.tts.enabled)
         self.assertTrue(config.tts.single_voice)
         self.assertEqual(config.tts.primary_voice, "host")
+        self.assertEqual(config.tts.words_per_minute, 155)
+        self.assertEqual(config.tts.voices["host"].words_per_minute, 155)
         self.assertEqual(config.duration.label, "5 minutes")
 
     def test_loads_ai_and_tts_config(self) -> None:
@@ -55,6 +57,7 @@ tts:
   voices:
     host:
       voice: "alloy"
+      words_per_minute: 145
       settings:
         stability: 0.4
         similarity_boost: 0.8
@@ -71,6 +74,7 @@ tts:
         self.assertEqual(config.tts.provider, "elevenlabs")
         self.assertTrue(config.tts.single_voice)
         self.assertEqual(config.tts.voices["host"].voice, "alloy")
+        self.assertEqual(config.tts.voices["host"].words_per_minute, 145)
         self.assertEqual(config.tts.voices["host"].settings["stability"], 0.4)
 
 

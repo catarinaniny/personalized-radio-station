@@ -194,6 +194,7 @@ tts:
   api_key_env: "ELEVENLABS_API_KEY"
   single_voice: true
   primary_voice: "host"
+  words_per_minute: 155
 ```
 
 Add `ELEVENLABS_API_KEY` to `.env`. This goes through LiteLLM's `speech()` API.
@@ -210,7 +211,17 @@ tts:
   voices:
     host:
       voice: "alloy"
+      words_per_minute: 155
 ```
+
+Duration targeting uses `words_per_minute` to estimate how many words the script
+should contain. After TTS, `episode.json` stores the actual audio duration and
+measured words per minute, which you can use to tune this value for your chosen
+voice.
+
+To avoid wasting tokens, the app only makes one length-correction LLM call, and
+only when the first script is outside the target word range. Unlimited episodes
+skip this correction.
 
 The TTS interface is still provider-swappable. For OpenAI/Azure-style speech,
 use the same LiteLLM speech path:
@@ -240,6 +251,47 @@ tts:
   piper_path: "piper"
   piper_model_path: "/path/to/voice.onnx"
 ```
+
+## Cost Estimates
+
+These are rough API-cost estimates for one 5 minute episode, last checked on
+2026-05-09. Provider pricing changes, so treat this as a planning guide.
+
+Assumptions:
+
+- around 3,000 input tokens and 1,200 output tokens for the script
+- around 750 spoken words, or 4,500-5,000 TTS characters
+- no free tiers, credits, caching, Batch API discounts, taxes, or OpenRouter
+  credit-purchase fees included
+
+Simple 5 minute cost guide:
+
+OpenAI TTS means `openai/gpt-4o-mini-tts` in the list below.
+
+- `openai/gpt-4o-mini` + OpenAI TTS = ~$0.08 / 5 minutes. Cheap and good.
+- `openai/gpt-4.1-mini` + OpenAI TTS = ~$0.08 / 5 minutes. Better script.
+- `anthropic/claude-haiku-4.5` + OpenAI TTS = ~$0.08-$0.09 / 5 minutes. Better writing than most budget models.
+- `anthropic/claude-sonnet-4.6` + OpenAI TTS = ~$0.10 / 5 minutes. Strong script quality.
+- `openai/gpt-5.5` + OpenAI TTS = ~$0.13 / 5 minutes. Premium script, budget voice.
+- `openai/gpt-4.1-mini` + ElevenLabs Flash/Turbo = ~$0.25-$0.30 / 5 minutes. Good script, better voice.
+- `anthropic/claude-haiku-4.5` + ElevenLabs Flash/Turbo = ~$0.26-$0.31 / 5 minutes. Better writing, good voice.
+- `anthropic/claude-sonnet-4.6` + ElevenLabs Flash/Turbo = ~$0.28-$0.33 / 5 minutes. Strong writing, good voice.
+- `openai/gpt-5.5` + ElevenLabs Flash/Turbo = ~$0.30-$0.35 / 5 minutes. Premium script, good voice.
+- `openai/gpt-4.1-mini` + ElevenLabs Multilingual v2/v3 = ~$0.45-$0.60 / 5 minutes. Budget script, premium voice.
+- `anthropic/claude-haiku-4.5` + ElevenLabs Multilingual v2/v3 = ~$0.46-$0.61 / 5 minutes. Good balance.
+- `anthropic/claude-sonnet-4.6` + ElevenLabs Multilingual v2/v3 = ~$0.48-$0.63 / 5 minutes. Premium-feeling brief.
+- `openai/gpt-5.5` + ElevenLabs Multilingual v2/v3 = ~$0.50-$0.65 / 5 minutes. High-end cloud option.
+- `openrouter/openrouter/auto` + ElevenLabs Multilingual v2/v3 = variable, often ~$0.46-$0.65 / 5 minutes. Check OpenRouter Activity.
+- `ollama/...` + Piper = $0 API cost / 5 minutes. Local/offline; quality depends on your models.
+
+Anthropic currently covers the script-generation side here, not TTS, so Claude
+models need to be paired with OpenAI, ElevenLabs, Piper, or another speech
+provider. Sources: [OpenAI pricing](https://openai.com/api/pricing/),
+[OpenAI TTS model pricing](https://developers.openai.com/api/docs/models/gpt-4o-mini-tts),
+[Anthropic pricing](https://platform.claude.com/docs/en/about-claude/pricing),
+[ElevenLabs API pricing](https://elevenlabs.io/pricing/api/),
+[Google Gemini pricing](https://ai.google.dev/gemini-api/docs/pricing), and
+[OpenRouter Auto Router](https://openrouter.ai/docs/features/model-routing).
 
 ## Tests
 

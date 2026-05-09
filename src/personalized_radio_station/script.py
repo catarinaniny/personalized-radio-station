@@ -6,6 +6,7 @@ import json
 from .ai import generate_text
 from .config import AppConfig
 from .news import NewsItem
+from .timing import count_episode_words, effective_words_per_minute, word_budget
 from .weather import WeatherReport
 
 
@@ -28,7 +29,8 @@ def generate_script(
     ]
 
     raw = generate_text(messages, config.ai)
-    return _parse_episode(raw)
+    episode = _parse_episode(raw)
+    return _maybe_revise_for_word_budget(episode, config)
 
 
 def render_markdown(episode: dict) -> str:
@@ -46,11 +48,19 @@ def render_markdown(episode: dict) -> str:
 def _build_prompt(
     news_items: list[NewsItem], weather: WeatherReport, config: AppConfig
 ) -> str:
+    budget = word_budget(config)
     context = {
         "station_name": config.station_name,
         "style": config.style,
         "target_duration": config.duration.label,
         "target_minutes": config.duration.minutes,
+        "speech_rate_words_per_minute": effective_words_per_minute(config),
+        "target_word_count": budget.target_words if budget else None,
+        "target_word_range": (
+            {"min": budget.min_words, "max": budget.max_words}
+            if budget
+            else None
+        ),
         "voices": config.voices,
         "opening_style": "already_on_air_listener_just_tuned_in",
         "voice_policy": (
@@ -77,6 +87,8 @@ def _build_prompt(
         "speaking, then smoothly move into the briefing. Do not begin with a formal "
         "welcome, episode setup, or phrase like `Good morning, here is...`.\n"
         "Use the same voice label for every segment when the voice_policy says so. "
+        "When target_word_count is provided, write approximately that many spoken "
+        "words across all segment text and stay inside target_word_range. "
         "Keep it natural for TTS. Avoid markdown. Mention source names when useful, "
         "but do not include raw URLs in the spoken text. If target_duration is "
         "`unlimited`, prioritize useful coverage over fitting a fixed runtime.\n\n"
@@ -99,4 +111,85 @@ def _parse_episode(raw: str) -> dict:
     return {
         "title": "Personalized Radio Briefing",
         "segments": [{"type": "script", "voice": "host", "text": raw.strip()}],
+    }
+
+
+def _maybe_revise_for_word_budget(episode: dict, config: AppConfig) -> dict:
+    budget = word_budget(config)
+    if not budget:
+        _set_word_budget_metadata(episode, revised=False, reason="unlimited_duration")
+        return episode
+
+    word_count = count_episode_words(episode)
+    if budget.min_words <= word_count <= budget.max_words:
+        _set_word_budget_metadata(
+            episode,
+            revised=False,
+            reason="within_range",
+            initial_word_count=word_count,
+        )
+        return episode
+
+    revised_raw = generate_text(
+        [
+            {
+                "role": "system",
+                "content": (
+                    "You revise radio scripts for length. Return valid JSON only. "
+                    "Preserve the same sources, facts, voice labels, and JSON shape."
+                ),
+            },
+            {
+                "role": "user",
+                "content": _build_revision_prompt(episode, word_count, budget, config),
+            },
+        ],
+        config.ai,
+    )
+    revised_episode = _parse_episode(revised_raw)
+    revised_word_count = count_episode_words(revised_episode)
+    _set_word_budget_metadata(
+        revised_episode,
+        revised=True,
+        reason=_revision_reason(word_count, budget),
+        initial_word_count=word_count,
+        revised_word_count=revised_word_count,
+    )
+    return revised_episode
+
+
+def _build_revision_prompt(episode: dict, word_count: int, budget, config: AppConfig) -> str:
+    direction = "expand" if word_count < budget.min_words else "trim"
+    return (
+        f"The script is {word_count} words, outside the target range of "
+        f"{budget.min_words}-{budget.max_words} words for {config.duration.label}.\n"
+        f"Please {direction} it to approximately {budget.target_words} spoken words.\n"
+        "Keep the same already-on-air opening style. Use the same voice label for "
+        "every segment when present. Do not add facts beyond the existing script.\n"
+        "Return valid JSON only with the same shape.\n\n"
+        f"Current episode JSON:\n{json.dumps(episode, indent=2)}"
+    )
+
+
+def _revision_reason(word_count: int, budget) -> str:
+    if word_count < budget.min_words:
+        return "too_short"
+    if word_count > budget.max_words:
+        return "too_long"
+    return "within_range"
+
+
+def _set_word_budget_metadata(
+    episode: dict,
+    revised: bool,
+    reason: str,
+    initial_word_count: int | None = None,
+    revised_word_count: int | None = None,
+) -> None:
+    generation = episode.setdefault("generation", {})
+    generation["word_budget_revision"] = {
+        "revised": revised,
+        "reason": reason,
+        "initial_word_count": initial_word_count,
+        "revised_word_count": revised_word_count,
     }
