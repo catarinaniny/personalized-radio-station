@@ -1,0 +1,279 @@
+/* ============================================================
+   Console-7 — Colors & Type
+   Design tokens shared across the radio + landing page.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   Fonts — self-hosted (fonts/ directory)
+   Geist Sans from vercel/geist-font (SIL OFL)
+   IBM Plex Mono from IBM/plex          (SIL OFL)
+   Relative URLs resolve from the CSS file's own location, so
+   artifacts one level deep (preview/*, ui_kits/*) still find
+   the fonts via the CSS when it's linked with a relative href.
+   ------------------------------------------------------------ */
+@font-face { font-family: "Geist"; font-weight: 200; font-style: normal; font-display: swap;
+  src: url("./fonts/geist-sans/Geist-UltraLight.woff2") format("woff2"); }
+@font-face { font-family: "Geist"; font-weight: 400; font-style: normal; font-display: swap;
+  src: url("./fonts/geist-sans/Geist-Regular.woff2") format("woff2"); }
+@font-face { font-family: "Geist"; font-weight: 500; font-style: normal; font-display: swap;
+  src: url("./fonts/geist-sans/Geist-Medium.woff2") format("woff2"); }
+@font-face { font-family: "Geist"; font-weight: 600; font-style: normal; font-display: swap;
+  src: url("./fonts/geist-sans/Geist-SemiBold.woff2") format("woff2"); }
+@font-face { font-family: "Geist"; font-weight: 700; font-style: normal; font-display: swap;
+  src: url("./fonts/geist-sans/Geist-Bold.woff2") format("woff2"); }
+
+/* Geist has no true italic — the italic moments in the CTA card use the
+   UltraLight and the browser synthesises a slant. Good enough for the
+   intended use; if you need a real italic, substitute a paired display. */
+
+@font-face { font-family: "IBM Plex Mono"; font-weight: 400; font-style: normal; font-display: swap;
+  src: url("./fonts/plex-mono/IBMPlexMono-Regular.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-weight: 400; font-style: italic; font-display: swap;
+  src: url("./fonts/plex-mono/IBMPlexMono-Italic.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-weight: 500; font-style: normal; font-display: swap;
+  src: url("./fonts/plex-mono/IBMPlexMono-Medium.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-weight: 600; font-style: normal; font-display: swap;
+  src: url("./fonts/plex-mono/IBMPlexMono-SemiBold.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-weight: 700; font-style: normal; font-display: swap;
+  src: url("./fonts/plex-mono/IBMPlexMono-Bold.woff2") format("woff2"); }
+
+:root {
+  /* ---------- BRAND ---------- */
+  /* Primary brand orange — CTAs, brackets, links, asterisk glyph. */
+  --brand:          #E9580A;                     /* hot rust-orange */
+  --brand-muted:    rgb(233 88 10 / 0.30);       /* 30% alpha — washes, hover fills */
+  --brand-hex:      #E9580A;
+
+  /* Secondary amber — hover states, chart accents, highlights, graphs. */
+  --brand-2:        #E87F04;                     /* warmer amber */
+  --brand-2-muted:  rgb(232 127 4 / 0.30);
+  --brand-2-hex:    #E87F04;
+
+  /* Alias used by the foundation CSS earlier in the kit. */
+  --accent-brand:   var(--brand);
+  --accent-brand-2: var(--brand-2);
+
+  /* Workforce override — product pages reassign --wf-accent */
+  --wf-accent: var(--brand);
+
+  /* ---------- NEUTRALS — LIGHT MODE ---------- */
+  --background:        #FFFFFF;
+  --foreground:        #252525;     /* near-black */
+  --card:              #FFFFFF;
+  --card-foreground:   #252525;
+  --popover:           #FFFFFF;
+  --popover-foreground:#252525;
+
+  --primary:              #343434;
+  --primary-foreground:   #FAFAFA;
+  --secondary:            #F7F7F7;
+  --secondary-foreground: #343434;
+  --muted:                #F7F7F7;
+  --muted-foreground:     #8E8E8E;  /* mid gray — captions, metadata */
+  --accent:               #F7F7F7;
+  --accent-foreground:    #343434;
+
+  --border:  #EBEBEB;
+  --input:   #EBEBEB;
+  --ring:    #B5B5B5;
+
+  --destructive: oklch(0.577 0.245 27.325);
+
+  /* ---------- EARTH-TONE CHART PALETTE ---------- */
+  /* Re-themed from shadcn's stock blues. Primary is the brand; secondary
+     amber is chart-2. Remaining tones remain warm earths for harmony. */
+  --chart-1: #E9580A;                 /* brand primary      */
+  --chart-2: #E87F04;                 /* brand secondary    */
+  --chart-3: oklch(0.50 0.110 50);    /* deep umber    — #7E4F36 */
+  --chart-4: oklch(0.78 0.085 85);    /* sand / khaki  — #D9BD86 */
+  --chart-5: oklch(0.40 0.060 40);    /* dark cocoa    — #5C443A */
+
+  /* ---------- RADIUS SCALE ---------- */
+  --radius:    0.625rem;                          /* 10px base */
+  --radius-sm: calc(var(--radius) - 4px);         /* 6px  */
+  --radius-md: calc(var(--radius) - 2px);         /* 8px  */
+  --radius-lg: var(--radius);                     /* 10px */
+  --radius-xl: calc(var(--radius) + 4px);         /* 14px */
+  --radius-2xl:calc(var(--radius) + 8px);         /* 18px */
+  --radius-3xl:calc(var(--radius) + 12px);        /* 22px */
+  --radius-4xl:calc(var(--radius) + 16px);        /* 26px — used by Badge */
+
+  /* ---------- SHADOWS / ELEVATION ---------- */
+  --shadow-sm:    0 1px 2px rgba(0,0,0,0.04);
+  --shadow-card:  0 4px 20px rgba(0,0,0,0.08);
+  --shadow-hover: 0 4px 20px rgba(0,0,0,0.12);
+
+  /* ---------- TYPOGRAPHY — FAMILIES ---------- */
+  --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* ---------- TYPE SCALE — RAW ---------- */
+  --text-2xs: 0.625rem;   /* 10px */
+  --text-xs:  0.75rem;    /* 12px */
+  --text-sm:  0.875rem;   /* 14px */
+  --text-base:1rem;       /* 16px */
+  --text-lg:  1.125rem;   /* 18px */
+  --text-xl:  1.25rem;    /* 20px */
+  --text-2xl: 1.5rem;     /* 24px */
+  --text-3xl: 1.875rem;   /* 30px */
+  --text-4xl: 2.25rem;    /* 36px */
+  --text-5xl: 3rem;       /* 48px */
+  --text-6xl: 3.75rem;    /* 60px */
+
+  /* ---------- TRACKING ---------- */
+  --tracking-tight:   -0.04em;   /* display headings */
+  --tracking-normal:  0;
+  --tracking-wide:    0.12em;    /* mono nav links, eyebrows */
+  --tracking-widest:  0.15em;    /* uppercase eyebrows, hero strap */
+  --tracking-2xl:     0.2em;     /* tier numbers */
+}
+
+.dark {
+  --background:        #252525;
+  --foreground:        #FAFAFA;
+  --card:              #343434;
+  --card-foreground:   #FAFAFA;
+  --popover:           #343434;
+  --popover-foreground:#FAFAFA;
+  --primary:              #EBEBEB;
+  --primary-foreground:   #343434;
+  --secondary:            #404040;
+  --secondary-foreground: #FAFAFA;
+  --muted:                #404040;
+  --muted-foreground:     #B5B5B5;
+  --accent:               #404040;
+  --accent-foreground:    #FAFAFA;
+  --border: rgba(255,255,255,0.10);
+  --input:  rgba(255,255,255,0.15);
+  --ring:   #8E8E8E;
+
+  /* Dark-mode brand swap — amber reads better on #252525 than the hot
+     primary, so we promote --brand-2 as the on-dark primary. The hot
+     primary is kept available as --brand-hot for moments that need it. */
+  --brand:         #E87F04;
+  --brand-muted:   rgb(232 127 4 / 0.30);
+  --brand-hex:     #E87F04;
+  --brand-2:       #E9580A;
+  --brand-2-muted: rgb(233 88 10 / 0.30);
+  --brand-2-hex:   #E9580A;
+  --brand-hot:     #E9580A;
+}
+
+/* ============================================================
+   SEMANTIC TYPE STYLES
+   These map raw tokens to named roles. Use these in markup.
+   ============================================================ */
+
+/* Display — hero headlines. Always mono, uppercase, tight. */
+.t-display {
+  font-family: var(--font-mono);
+  font-size: clamp(1.75rem, 7vw, 4rem);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: var(--tracking-tight);
+  text-transform: uppercase;
+}
+
+/* H1 — page titles */
+.t-h1 {
+  font-family: var(--font-mono);
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: var(--tracking-tight);
+  text-transform: uppercase;
+}
+
+/* H2 — section heads. Mono, semibold, often w/ brand color span. */
+.t-h2 {
+  font-family: var(--font-mono);
+  font-size: clamp(1.25rem, 3vw, 2rem);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: var(--tracking-tight);
+  text-transform: uppercase;
+}
+
+.t-h3 {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+
+/* Eyebrow — tiny mono uppercase label above headlines */
+.t-eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-2xl);
+  color: var(--brand);
+}
+
+/* Nav link — mono, bold, wide */
+.t-nav {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+/* Body — Geist Sans, comfortable */
+.t-body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--foreground);
+}
+
+.t-body-lg {
+  font-family: var(--font-sans);
+  font-size: var(--text-lg);
+  font-weight: 400;
+  line-height: 1.55;
+}
+
+.t-body-mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
+  font-weight: 400;
+  line-height: 1.55;
+  color: rgb(37 37 37 / 0.8);
+}
+.dark .t-body-mono { color: rgb(250 250 250 / 0.8); }
+
+/* Caption / metadata */
+.t-caption {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--muted-foreground);
+}
+
+/* Code / data */
+.t-code {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  background: var(--muted);
+  color: var(--foreground);
+  padding: 0.1em 0.35em;
+  border-radius: var(--radius-sm);
+}
+
+/* Italic display — used in CTA invite copy */
+.t-display-italic {
+  font-family: var(--font-sans);
+  font-style: italic;
+  font-weight: 200;
+  font-size: clamp(2rem, 7vw, 6rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
