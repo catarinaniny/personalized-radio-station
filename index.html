@@ -38,14 +38,262 @@
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       min-height: 100vh;
-      padding-bottom: 96px;
+      padding-top: 88px;        /* room for the floating mini-nav */
+      padding-bottom: 96px;     /* room for the sticky bottom CTA */
       overflow-x: hidden;
     }
     a { color: inherit; text-decoration: none; }
     img, svg { display: block; max-width: 100%; }
     button { font-family: inherit; cursor: pointer; }
 
-    /* ========== NAV ========== */
+    /* ========== FLOATING MINI-NAV ==========
+       Faithful to sign-in-flow-1.tsx <MiniNavbar />: fixed pill, dot-cluster logo,
+       hover-slide nav links, outlined LogIn, white-gradient Signup with diffuse glow. */
+    .mini-nav {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      padding: 10px 8px 10px 24px;
+      border: 1px solid #333;
+      background: rgba(31, 31, 31, 0.55);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 999px;
+      width: max-content;
+      max-width: calc(100vw - 32px);
+      transition: border-radius 0s ease-in-out;
+      box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Dot-cluster logo (4 dots in a + pattern) */
+    .mini-logo {
+      position: relative;
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+    .mini-logo .d {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #e5e7eb;
+      opacity: 0.85;
+    }
+    .mini-logo .d.t { top: 0; left: 50%; transform: translateX(-50%); }
+    .mini-logo .d.b { bottom: 0; left: 50%; transform: translateX(-50%); }
+    .mini-logo .d.l { top: 50%; left: 0; transform: translateY(-50%); }
+    .mini-logo .d.r { top: 50%; right: 0; transform: translateY(-50%); }
+
+    /* Hover-slide nav links */
+    .mini-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+    .mini-link {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      overflow: hidden;
+      height: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .mini-link .layer {
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.4s ease-out;
+      line-height: 20px;
+    }
+    .mini-link:hover .layer {
+      transform: translateY(-50%);
+    }
+    .mini-link .layer span:first-child {
+      color: #d1d5db;
+      line-height: 20px;
+    }
+    .mini-link .layer span:last-child {
+      color: #ffffff;
+      line-height: 20px;
+    }
+
+    /* Action buttons (LogIn + Signup) */
+    .mini-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .mini-login {
+      padding: 7px 14px;
+      border: 1px solid #333;
+      background: rgba(31, 31, 31, 0.62);
+      color: #d1d5db;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: border-color 0.2s ease, color 0.2s ease;
+      font-family: inherit;
+    }
+    .mini-login:hover {
+      border-color: rgba(255, 255, 255, 0.5);
+      color: #fff;
+    }
+
+    .mini-signup-wrap {
+      position: relative;
+      display: inline-block;
+    }
+    .mini-signup-wrap::before {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 999px;
+      background: rgba(243, 244, 246, 0.6);
+      filter: blur(18px);
+      opacity: 0.42;
+      pointer-events: none;
+      transition: inset 0.3s ease-out, opacity 0.3s ease-out, filter 0.3s ease-out;
+    }
+    .mini-signup-wrap:hover::before {
+      inset: -12px;
+      opacity: 0.62;
+      filter: blur(24px);
+    }
+    .mini-signup {
+      position: relative;
+      z-index: 1;
+      padding: 7px 16px;
+      background: linear-gradient(135deg, #f3f4f6 0%, #d1d5db 100%);
+      color: #000;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 999px;
+      border: 0;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      font-family: inherit;
+    }
+    .mini-signup:hover {
+      background: linear-gradient(135deg, #e5e7eb 0%, #9ca3af 100%);
+    }
+
+    @media (max-width: 720px) {
+      .mini-links { display: none; }
+      .mini-nav { gap: 14px; padding: 10px 8px 10px 18px; }
+    }
+
+    /* ========== LIQUID GLASS BUTTON ==========
+       Apple-style glass refraction. Uses an SVG <feTurbulence> + <feDisplacementMap>
+       filter as the backdrop-filter. Falls back to a simple blur on browsers that
+       don't support SVG-as-backdrop-filter (Firefox, older Chromium).
+       In React port: use the LiquidButton component from liquid-glass-button.tsx. */
+    .defs-only {
+      position: absolute;
+      width: 0;
+      height: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .liquid-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 36px;
+      background: transparent;
+      border: 0;
+      color: var(--ink);
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      cursor: pointer;
+      border-radius: 999px;
+      transition: transform .3s cubic-bezier(0.2, 0.7, 0.2, 1), filter .2s ease;
+      isolation: isolate;
+      outline: none;
+    }
+    .liquid-btn:hover {
+      transform: scale(1.05);
+      filter: brightness(1.08);
+    }
+    .liquid-btn:active {
+      transform: scale(0.98);
+      filter: brightness(0.96);
+    }
+
+    .liquid-btn-shell {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      z-index: 0;
+      box-shadow:
+        0 0 8px rgba(0, 0, 0, 0.04),
+        0 2px 6px rgba(0, 0, 0, 0.10),
+        inset 3px 3px 0.5px -3.5px rgba(255, 255, 255, 0.10),
+        inset -3px -3px 0.5px -3.5px rgba(255, 255, 255, 0.85),
+        inset 1px 1px 1px -0.5px rgba(255, 255, 255, 0.6),
+        inset -1px -1px 1px -0.5px rgba(255, 255, 255, 0.6),
+        inset 0 0 6px 6px rgba(255, 255, 255, 0.10),
+        inset 0 0 2px 2px rgba(255, 255, 255, 0.06),
+        0 0 14px rgba(0, 0, 0, 0.15);
+    }
+
+    .liquid-btn-distort {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      z-index: -1;
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: url("#container-glass") blur(2px);
+      -webkit-backdrop-filter: url("#container-glass") blur(2px);
+    }
+
+    /* Fallback for browsers without SVG-as-backdrop-filter */
+    @supports not (backdrop-filter: url("#x")) {
+      .liquid-btn-distort {
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+      }
+    }
+
+    .liquid-btn-label {
+      position: relative;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    /* size variants */
+    .liquid-btn.size-sm {
+      padding: 10px 20px;
+      font-size: 14px;
+    }
+    .liquid-btn.size-lg {
+      padding: 18px 44px;
+      font-size: 18px;
+    }
+
+    /* primary tint (for over dark bg, gives the glass a warm core) */
+    .liquid-btn.tint-amber .liquid-btn-distort {
+      background: rgba(249, 115, 22, 0.10);
+    }
+
+    /* ========== LEGACY (replaced by .mini-nav, kept to avoid orphan styles breaking) ========== */
     .nav {
       max-width: 1440px;
       margin: 0 auto;
@@ -1976,26 +2224,37 @@
 </head>
 <body>
 
-<!-- ============== NAV ============== -->
-<nav class="nav">
-  <a href="#" class="logo">
-    <span class="mark">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <path d="M2 8 q1.5 -4 3 0 t3 0 t3 0 q1.5 -2 3 0"/>
-      </svg>
-    </span>
-    WAVE
+<!-- SVG filter for liquid-glass button refraction (used by .liquid-btn-distort) -->
+<svg class="defs-only" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="container-glass" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05 0.05" numOctaves="1" seed="1" result="turbulence"/>
+      <feGaussianBlur in="turbulence" stdDeviation="2" result="blurredNoise"/>
+      <feDisplacementMap in="SourceGraphic" in2="blurredNoise" scale="70" xChannelSelector="R" yChannelSelector="B" result="displaced"/>
+      <feGaussianBlur in="displaced" stdDeviation="4" result="finalBlur"/>
+      <feComposite in="finalBlur" in2="finalBlur" operator="over"/>
+    </filter>
+  </defs>
+</svg>
+
+<!-- ============== FLOATING MINI-NAV ============== -->
+<nav class="mini-nav" aria-label="Primary">
+  <a href="#" class="mini-logo" aria-label="WAVE home">
+    <span class="d t"></span>
+    <span class="d l"></span>
+    <span class="d r"></span>
+    <span class="d b"></span>
   </a>
-  <div class="nav-links">
-    <a class="nav-link has-caret">Features</a>
-    <a class="nav-link has-caret">Sources</a>
-    <a class="nav-link has-caret">Pricing</a>
-    <a class="nav-link has-caret">For listeners</a>
-    <a class="nav-link">Manifesto<span class="nav-pill-new">New</span></a>
+  <div class="mini-links">
+    <a class="mini-link" href="#manifesto"><span class="layer"><span>Manifesto</span><span>Manifesto</span></span></a>
+    <a class="mini-link" href="https://github.com/zertyn-ai/personalized-radio-station" target="_blank" rel="noopener"><span class="layer"><span>Build log</span><span>Build log</span></span></a>
+    <a class="mini-link" href="#sources"><span class="layer"><span>Sources</span><span>Sources</span></span></a>
   </div>
-  <div class="nav-right">
-    <a class="sign-in">Sign in</a>
-    <a class="nav-cta">Sign up — It's FREE</a>
+  <div class="mini-actions">
+    <button type="button" class="mini-login">LogIn</button>
+    <span class="mini-signup-wrap">
+      <button type="button" class="mini-signup cta-trigger">Signup</button>
+    </span>
   </div>
 </nav>
 
@@ -2014,7 +2273,11 @@
       <button type="button" class="submit cta-trigger">Get my radio</button>
     </div>
     <span class="pill-or">or</span>
-    <button type="button" class="pill-secondary cta-trigger">Connect accounts</button>
+    <button type="button" class="liquid-btn size-sm cta-trigger">
+      <span class="liquid-btn-shell"></span>
+      <span class="liquid-btn-distort"></span>
+      <span class="liquid-btn-label">Connect accounts</span>
+    </button>
   </form>
 </section>
 
@@ -2126,7 +2389,11 @@
         <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
       </svg>
       <input type="text" placeholder="Drop your sources and …">
-      <button type="button" class="submit cta-trigger">Make my show</button>
+      <button type="button" class="liquid-btn size-sm cta-trigger" style="margin: 4px;">
+        <span class="liquid-btn-shell"></span>
+        <span class="liquid-btn-distort"></span>
+        <span class="liquid-btn-label">Make my show</span>
+      </button>
     </div>
 
     <!-- preview: today's show output (BOTTOM) -->
@@ -2530,7 +2797,11 @@
     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
   </svg>
   <input type="text" placeholder="Drop your sources">
-  <button class="submit cta-trigger" type="button">Get my radio</button>
+  <button type="button" class="liquid-btn size-sm cta-trigger" style="margin: 3px;">
+    <span class="liquid-btn-shell"></span>
+    <span class="liquid-btn-distort"></span>
+    <span class="liquid-btn-label">Get my radio</span>
+  </button>
 </div>
 
 <script>
