@@ -46,6 +46,26 @@
     img, svg { display: block; max-width: 100%; }
     button { font-family: inherit; cursor: pointer; }
 
+    /* ========== DOT-MATRIX PAGE BACKGROUND ==========
+       Faithful to <CanvasRevealEffect> from sign-in-flow-1.tsx — a grid of
+       white dots with randomized opacity from the bucket
+       [0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.8, 0.8, 0.8, 1.0] (intro animation removed).
+       In React port: drop in the React-three-fiber CanvasRevealEffect with
+       colors=[[255,255,255]], dotSize=6, totalSize=20.
+       Here: a fixed-position div with a JS-generated 200×200 canvas tile
+       set as background-image (one-time render, then CSS repeats it). */
+    #dot-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -10;
+      pointer-events: none;
+      background-color: #000;
+      background-repeat: repeat;
+      /* gentle vignette so dots fade slightly at top and bottom edges */
+      mask-image: linear-gradient(to bottom, transparent 0%, black 6%, black 86%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 6%, black 86%, transparent 100%);
+    }
+
     /* ========== FLOATING MINI-NAV ==========
        Faithful to sign-in-flow-1.tsx <MiniNavbar />: fixed pill, dot-cluster logo,
        hover-slide nav links, outlined LogIn, white-gradient Signup with diffuse glow. */
@@ -1951,20 +1971,62 @@
       flex-shrink: 0;
     }
 
-    /* Social proof — opus.pro: "Used by 16M+ creators and businesses" */
-    .social-proof {
-      text-align: center;
-      margin: 56px auto 0;
+    /* Powered-by marquee — auto-scrolling logo strip ("Powered by ...") */
+    .powered-by {
+      margin: 64px auto 0;
       padding: 0 32px;
-      max-width: 1280px;
+      max-width: 1440px;
+      text-align: center;
+    }
+    .powered-by .pb-label {
       color: rgba(255, 255, 255, 0.5);
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 400;
+      letter-spacing: 0.04em;
+      margin-bottom: 28px;
     }
-    .social-proof strong {
-      color: rgba(255, 255, 255, 0.9);
+    .marquee {
+      overflow: hidden;
+      position: relative;
+      mask-image: linear-gradient(to right, transparent 0%, black 9%, black 91%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 9%, black 91%, transparent 100%);
+    }
+    .marquee-track {
+      display: flex;
+      gap: 72px;
+      width: max-content;
+      align-items: center;
+      animation: marquee-scroll 26s linear infinite;
+    }
+    .marquee:hover .marquee-track {
+      animation-play-state: paused;
+    }
+    @keyframes marquee-scroll {
+      0%   { transform: translate3d(0, 0, 0); }
+      100% { transform: translate3d(-50%, 0, 0); }
+    }
+    .pb-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 22px;
       font-weight: 500;
+      letter-spacing: -0.01em;
+      flex-shrink: 0;
+      cursor: default;
+      transition: color 0.2s ease;
+      white-space: nowrap;
     }
+    .pb-item:hover { color: #fff; }
+    .pb-item .pb-mark {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+    }
+    .pb-item .pb-mark svg { width: 100%; height: 100%; }
 
     /* ========== EXPANDABLE CTA MODAL ==========
        In React port: use framer-motion <motion.div layoutId="cta-card"> shared element
@@ -2284,6 +2346,9 @@
 </head>
 <body>
 
+<!-- DOT-MATRIX page background (random-opacity white dots on black) -->
+<div id="dot-bg" aria-hidden="true"></div>
+
 <!-- SVG filter for liquid-glass button refraction (used by .liquid-btn-distort) -->
 <svg class="defs-only" aria-hidden="true" focusable="false">
   <defs>
@@ -2497,10 +2562,48 @@
   </button>
 </div>
 
-<!-- ============== SOCIAL PROOF (faithful to opus.pro "Used by 16M+ creators") ============== -->
-<div class="social-proof">
-  Used by <strong>2k+ early listeners</strong> across 23 countries
-</div>
+<!-- ============== POWERED BY (auto-scrolling logo marquee) ============== -->
+<section class="powered-by" aria-label="Powered by">
+  <p class="pb-label">Powered by</p>
+  <div class="marquee">
+    <div class="marquee-track" aria-hidden="true">
+      <!-- Set 1 -->
+      <span class="pb-item">
+        <span class="pb-mark"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6.5" y="4" width="3.5" height="16" rx="0.6"/><rect x="14" y="4" width="3.5" height="16" rx="0.6"/></svg></span>
+        ElevenLabs
+      </span>
+      <span class="pb-item">
+        <span class="pb-mark"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1.5l1.4 8.4L21.2 8l-6.6 5.4 6.6 5.4-7.8-1.9L12 22.5l-1.4-5.6L2.8 18.8l6.6-5.4-6.6-5.4 7.8 1.9z"/></svg></span>
+        Claude
+      </span>
+      <span class="pb-item">
+        <span class="pb-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M7 9 q5 -3 10 0 t-2 5 t-3 1 t-2 -3 t1 -3"/></svg></span>
+        ChatGPT
+      </span>
+      <span class="pb-item">
+        <span class="pb-mark"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.5 2 2 6.6 2 12.2c0 4.5 2.9 8.3 6.9 9.6.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.4-3.4-1.4-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.4 1.1 3 .8.1-.7.4-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.7 1 .8-.2 1.6-.3 2.5-.3.8 0 1.7.1 2.5.3 1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .4.3.7.9.7 1.8v2.7c0 .3.2.6.7.5 4-1.3 6.9-5.1 6.9-9.6C22 6.6 17.5 2 12 2z"/></svg></span>
+        GitHub
+      </span>
+      <!-- Set 2 (duplicate for seamless loop — mirrors set 1 exactly) -->
+      <span class="pb-item">
+        <span class="pb-mark"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6.5" y="4" width="3.5" height="16" rx="0.6"/><rect x="14" y="4" width="3.5" height="16" rx="0.6"/></svg></span>
+        ElevenLabs
+      </span>
+      <span class="pb-item">
+        <span class="pb-mark"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1.5l1.4 8.4L21.2 8l-6.6 5.4 6.6 5.4-7.8-1.9L12 22.5l-1.4-5.6L2.8 18.8l6.6-5.4-6.6-5.4 7.8 1.9z"/></svg></span>
+        Claude
+      </span>
+      <span class="pb-item">
+        <span class="pb-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M7 9 q5 -3 10 0 t-2 5 t-3 1 t-2 -3 t1 -3"/></svg></span>
+        ChatGPT
+      </span>
+      <span class="pb-item">
+        <span class="pb-mark"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.5 2 2 6.6 2 12.2c0 4.5 2.9 8.3 6.9 9.6.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.4-3.4-1.4-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.4 1.1 3 .8.1-.7.4-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.7 1 .8-.2 1.6-.3 2.5-.3.8 0 1.7.1 2.5.3 1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .4.3.7.9.7 1.8v2.7c0 .3.2.6.7.5 4-1.3 6.9-5.1 6.9-9.6C22 6.6 17.5 2 12 2z"/></svg></span>
+        GitHub
+      </span>
+    </div>
+  </div>
+</section>
 
 <!-- ============== SECTION 2: AI LISTENING MODELS ============== -->
 <section class="feature">
@@ -2898,6 +3001,35 @@
 </div>
 
 <script>
+  // Dot-matrix page background — render a 200×200 canvas tile with randomized
+  // dot opacities (matching the reference component's opacity bucket), then
+  // set it as the background-image on #dot-bg. CSS handles the repeat.
+  (function () {
+    const el = document.getElementById('dot-bg');
+    if (!el) return;
+    const TILE = 200;
+    const STEP = 20;          // grid spacing — 20px between dots, matching totalSize=20
+    const DOT  = 1.4;         // dot radius — matching dotSize ~3 in shader, /2 = 1.5
+    const c = document.createElement('canvas');
+    c.width = TILE;
+    c.height = TILE;
+    const ctx = c.getContext('2d');
+    // Opacity bucket — most dots dim, a few bright. Mirrors the reference's
+    // [0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.8, 0.8, 0.8, 1.0] but scaled darker so
+    // the grid sits as a subtle texture instead of grabbing attention.
+    const opacities = [0.10, 0.10, 0.12, 0.14, 0.16, 0.20, 0.26, 0.36, 0.48, 0.62];
+    for (let y = STEP / 2; y < TILE; y += STEP) {
+      for (let x = STEP / 2; x < TILE; x += STEP) {
+        const op = opacities[Math.floor(Math.random() * opacities.length)];
+        ctx.fillStyle = 'rgba(255, 255, 255, ' + op + ')';
+        ctx.beginPath();
+        ctx.arc(x, y, DOT, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    el.style.backgroundImage = 'url(' + c.toDataURL('image/png') + ')';
+  })();
+
   // Cycling word at end of H1 — vertical translate spring (framer-motion equiv).
   (function () {
     const cycler = document.querySelector('.cycler');
