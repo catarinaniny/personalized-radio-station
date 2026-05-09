@@ -225,11 +225,7 @@ body {
       </span>
     </header>
     <section class="ticker" aria-label="Now broadcasting">
-      <div class="ticker-track" id="ticker-track">
-        <span class="src">Reuters</span>OpenAI ships GPT-5.5 with 2M-token context<span class="age"> · 14m</span>
-        <span class="gap">·</span>
-        <span class="src">AP</span>Apple unveils on-device agent runtime at WWDC<span class="age"> · 1h</span>
-      </div>
+      <div class="ticker-track" id="ticker-track"></div>
     </section>
     <section class="band">[ tuning band — task 5 / 6 ]</section>
     <footer class="meta">[ meta strip — task 7 ]</footer>
@@ -241,6 +237,78 @@ body {
       activeStationId: 'tech',  // default tune-in
     };
 
+    // ───── Mock data (shape matches Google News RSS: title / source / age) ─────
+    const STATIONS = {
+      top: {
+        freq: 88.0, label: 'TOP',
+        headlines: [
+          { title: 'ICJ rules on coastal sovereignty claim', source: 'Reuters', age: '12m' },
+          { title: 'Global heat record set for third year running', source: 'AP', age: '38m' },
+          { title: 'Markets close mixed after Fed minutes', source: 'Bloomberg', age: '1h' },
+          { title: 'Storm warnings issued across coastal regions', source: 'AP', age: '2h' },
+          { title: 'UN reaches deal on plastic treaty draft', source: 'Reuters', age: '3h' },
+          { title: 'Vaccine trial reports strong phase-3 results', source: 'NYT', age: '5h' },
+        ],
+      },
+      world: {
+        freq: 92.0, label: 'WORLD',
+        headlines: [
+          { title: 'EU finance ministers convene over budget rules', source: 'FT', age: '24m' },
+          { title: 'Japan ruling coalition gains in by-elections', source: 'NHK', age: '1h' },
+          { title: 'Argentina debt restructuring talks resume', source: 'Reuters', age: '2h' },
+          { title: 'India approves new high-speed rail corridor', source: 'BBC', age: '3h' },
+          { title: 'Kenya hosts climate adaptation summit', source: 'Al Jazeera', age: '4h' },
+          { title: 'Norway sovereign fund posts record return', source: 'Bloomberg', age: '6h' },
+        ],
+      },
+      tech: {
+        freq: 96.0, label: 'TECH',
+        headlines: [
+          { title: 'OpenAI ships GPT-5.5 with 2M-token context', source: 'Reuters', age: '14m' },
+          { title: 'Apple unveils on-device agent runtime at WWDC', source: 'AP', age: '1h' },
+          { title: 'Anthropic releases Claude Opus 4.7 (1M context)', source: 'TechCrunch', age: '2h' },
+          { title: 'Nvidia previews next-gen Rubin architecture', source: 'The Verge', age: '3h' },
+          { title: 'GitHub launches multi-agent code review preview', source: 'Wired', age: '5h' },
+          { title: 'Meta open-sources real-time vision encoder', source: 'IEEE Spectrum', age: '7h' },
+        ],
+      },
+      business: {
+        freq: 100.0, label: 'BUSINESS',
+        headlines: [
+          { title: 'S&P 500 closes flat as oil ticks higher', source: 'WSJ', age: '20m' },
+          { title: 'Boeing reports first profitable quarter in years', source: 'Reuters', age: '1h' },
+          { title: 'Stripe valuation reaches $110B in tender offer', source: 'Bloomberg', age: '2h' },
+          { title: 'Container shipping rates ease on softer demand', source: 'FT', age: '3h' },
+          { title: 'Yen strengthens after BOJ policy hint', source: 'Nikkei', age: '4h' },
+          { title: 'Private credit funds raise record fresh capital', source: 'Bloomberg', age: '6h' },
+        ],
+      },
+      sports: {
+        freq: 104.0, label: 'SPORTS',
+        headlines: [
+          { title: 'Champions League final set after late-equaliser drama', source: 'BBC', age: '1h' },
+          { title: 'NBA East semifinals go to game seven', source: 'ESPN', age: '2h' },
+          { title: 'Formula 1: Verstappen takes pole in Imola', source: 'Sky Sports', age: '3h' },
+          { title: 'Wimbledon seedings announced', source: 'Reuters', age: '4h' },
+          { title: 'Olympic torch route revealed for 2028 LA Games', source: 'AP', age: '6h' },
+          { title: 'Cricket: India clinches series in last over', source: 'Cricinfo', age: '8h' },
+        ],
+      },
+      science: {
+        freq: 108.0, label: 'SCIENCE',
+        headlines: [
+          { title: 'JWST detects organics in TRAPPIST-1e atmosphere', source: 'Nature', age: '30m' },
+          { title: 'CRISPR therapy trial restores hearing in mice', source: 'Science', age: '2h' },
+          { title: 'New superconductor stable at higher temps', source: 'Phys.org', age: '3h' },
+          { title: 'Mars rover finds sulfate-rich layered rock', source: 'NASA', age: '5h' },
+          { title: 'Quantum simulator scales to 10,000 qubits', source: 'Nature', age: '7h' },
+          { title: 'Genome project maps full human variation', source: 'Cell', age: '12h' },
+        ],
+      },
+    };
+
+    const STATION_ORDER = ['top', 'world', 'tech', 'business', 'sports', 'science'];
+
     // ───── Clock ─────
     function pad2(n) { return String(n).padStart(2, '0'); }
     function tickClock() {
@@ -250,6 +318,52 @@ body {
     }
     tickClock();
     setInterval(tickClock, 1000);
+
+    // ───── Ticker engine ─────
+    //
+    // Renders the active station's headlines as a single horizontal track and
+    // scrolls it right-to-left at a constant pixel-per-second rate. We render
+    // the headlines twice back-to-back so the loop seam isn't visible. When the
+    // track scrolls one full copy width, we reset to 0 — the next copy starts
+    // flush, no flicker.
+    const TICKER_PX_PER_SEC = 60;  // ~30s for a long headline to cross
+    const ticker = {
+      track: document.getElementById('ticker-track'),
+      copyWidth: 0,
+      offset: 0,
+      lastTs: 0,
+      reduced: false,  // wired up in task 9
+    };
+
+    function renderTicker() {
+      const station = STATIONS[state.activeStationId];
+      // Render the headline list twice for seamless looping
+      const oneCopy = station.headlines.map(h =>
+        `<span class="src">${h.source}</span>${h.title}<span class="age"> · ${h.age}</span>`
+      ).join('<span class="gap">·</span>');
+      ticker.track.innerHTML = oneCopy + '<span class="gap">·</span>' + oneCopy;
+      ticker.offset = 0;
+      ticker.track.style.transform = 'translateX(0)';
+      // Measure one copy's width after layout
+      requestAnimationFrame(() => {
+        ticker.copyWidth = ticker.track.scrollWidth / 2;
+      });
+    }
+
+    function tickerStep(ts) {
+      if (!ticker.lastTs) ticker.lastTs = ts;
+      const dt = (ts - ticker.lastTs) / 1000;
+      ticker.lastTs = ts;
+      if (!ticker.reduced && ticker.copyWidth > 0) {
+        ticker.offset += TICKER_PX_PER_SEC * dt;
+        if (ticker.offset >= ticker.copyWidth) ticker.offset -= ticker.copyWidth;
+        ticker.track.style.transform = `translateX(${-ticker.offset}px)`;
+      }
+      requestAnimationFrame(tickerStep);
+    }
+
+    renderTicker();
+    requestAnimationFrame(tickerStep);
   </script>
 </body>
 </html>
