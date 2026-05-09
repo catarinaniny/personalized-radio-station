@@ -11,6 +11,8 @@ import secrets
 import sqlite3
 import threading
 
+from .hosts import host_style
+
 
 PRESET_RSS_SOURCES: dict[str, dict[str, str]] = {
     "hacker_news": {
@@ -64,8 +66,7 @@ class Vibe:
 
     @property
     def style(self) -> str:
-        host_label = "one host" if self.host_format == "solo" else "two hosts"
-        return f"{self.tone}, {self.voice_gender}-voiced, {host_label} radio"
+        return host_style(self.tone, self.voice_gender, self.host_format)
 
     def to_dict(self) -> dict[str, Any]:
         return {

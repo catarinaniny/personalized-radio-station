@@ -16,6 +16,7 @@ import time
 from .audio import audio_duration_seconds, concatenate_wavs, write_mock_wav
 from .config import AppConfig, WeatherConfig, load_config, parse_duration
 from .env import load_env_file
+from .hosts import apply_host_profile, host_style
 from .news import describe_news_sources, fetch_news
 from .pipeline import _add_audio_timing, _timing_metadata
 from .runtime import assert_runtime_ready
@@ -269,7 +270,14 @@ class EpisodeService:
             self._set_status(job, "generating_script", "Writing a test script")
             self._sleep()
 
-            episode = _build_mock_episode(station_name, style, duration, weather_name, topics)
+            episode = _build_mock_episode(
+                station_name,
+                style,
+                duration,
+                weather_name,
+                topics,
+                host_format=_clean_host_format(payload.get("host_format")),
+            )
             self._prepare_public_segments(job, episode)
             (job.output_dir / "episode.json").write_text(json.dumps(episode, indent=2) + "\n")
             (job.output_dir / "script.md").write_text(render_markdown(episode))
@@ -727,7 +735,9 @@ def _build_mock_episode(
     duration: str,
     weather_name: str,
     topics: list[str],
+    host_format: str = "solo",
 ) -> dict[str, Any]:
+    news_voice = "cohost" if host_format == "duo" else "host"
     segments = [
         {
             "type": "intro",
@@ -750,7 +760,7 @@ def _build_mock_episode(
         segments.append(
             {
                 "type": "news",
-                "voice": "host",
+                "voice": news_voice,
                 "text": (
                     f"On {topic}, the mock wire says there is enough movement to keep "
                     "watching, but nothing here called a paid model or external news API."
@@ -812,7 +822,7 @@ def _episode_payload_from_vibe(payload: dict[str, Any], vibe: Vibe) -> dict[str,
         {
             "vibe_id": vibe.id,
             "station_name": vibe.name,
-            "style": vibe.style,
+            "style": host_style(vibe.tone, vibe.voice_gender, vibe.host_format),
             "rss_feeds": vibe.rss_feeds,
             "replace_rss_feeds": True,
             "topics": [],
@@ -883,7 +893,18 @@ def _apply_payload_to_config(config: AppConfig, payload: dict[str, Any]) -> AppC
         )
     updates["weather"] = weather
 
-    return replace(config, **updates)
+    configured = replace(config, **updates)
+    return apply_host_profile(
+        configured,
+        _optional_string(payload.get("host_tone")),
+        _optional_string(payload.get("voice_gender")),
+        _optional_string(payload.get("host_format")),
+    )
+
+
+def _clean_host_format(value: Any) -> str:
+    text = str(value).strip().lower() if value is not None else ""
+    return text if text in {"solo", "duo"} else "solo"
 
 
 def _resolve_config_path(path: Path) -> Path:

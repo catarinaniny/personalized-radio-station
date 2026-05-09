@@ -66,6 +66,8 @@ tts:
         self.assertIn("already_on_air_listener_just_tuned_in", prompt)
         self.assertIn("station was already playing", prompt)
         self.assertIn('Use the voice label \\"host\\" for every segment.', prompt)
+        self.assertIn("casual should feel more like vibes", prompt)
+        self.assertIn("professional should feel slightly more expert", prompt)
         self.assertIn('"target_duration": "18 minutes"', prompt)
         self.assertIn('"speech_rate_words_per_minute": 155', prompt)
         self.assertIn('"target_word_count": 2790', prompt)

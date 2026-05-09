@@ -768,8 +768,13 @@
       }
 
       function styleFromHost(vibe) {
-        const hostLabel = vibe.host_format === "duo" ? "two hosts" : "one host";
-        return `${vibe.tone}, ${vibe.voice_gender}-voiced, ${hostLabel} radio`;
+        const toneStyle =
+          vibe.tone === "professional"
+            ? "professional, slightly more expert radio with crisp framing, clear context, and confident analysis without sounding stiff"
+            : "casual, vibe-forward, loose but useful radio with warm pacing, quick reactions, and a little texture between source-backed facts";
+        const hostLabel = vibe.host_format === "duo" ? "two-host handoff" : "solo host";
+        const voiceLabel = vibe.voice_gender === "male" ? "male-led" : "female-led";
+        return `${toneStyle}; ${voiceLabel}; ${hostLabel}`;
       }
 
       function dedupe(values) {

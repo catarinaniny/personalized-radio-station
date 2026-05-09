@@ -62,11 +62,15 @@ def _build_prompt(
             else None
         ),
         "voices": config.voices,
+        "host_format": "solo" if config.tts.single_voice else "duo",
         "opening_style": "already_on_air_listener_just_tuned_in",
         "voice_policy": (
             f'Use the voice label "{config.tts.primary_voice}" for every segment.'
             if config.tts.single_voice
-            else "Use the configured voice labels by segment."
+            else (
+                "Use only the configured voice labels. Follow the voices map by "
+                "segment type, with natural host/cohost handoffs."
+            )
         ),
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "weather": weather.to_dict(),
@@ -86,7 +90,11 @@ def _build_prompt(
         "listener has just tuned in. Start mid-flow, as if the host is already "
         "speaking, then smoothly move into the briefing. Do not begin with a formal "
         "welcome, episode setup, or phrase like `Good morning, here is...`.\n"
-        "Use the same voice label for every segment when the voice_policy says so. "
+        "Follow style closely: casual should feel more like vibes and texture; "
+        "professional should feel slightly more expert, with concise context and "
+        "clear framing. Use the same voice label for every segment when the "
+        "voice_policy says so. For duo shows, use host/cohost handoffs without "
+        "writing speaker names into the spoken text. "
         "When target_word_count is provided, write approximately that many spoken "
         "words across all segment text and stay inside target_word_range. "
         "Keep it natural for TTS. Avoid markdown. Mention source names when useful, "

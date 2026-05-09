@@ -43,7 +43,8 @@ class VibeStoreTests(unittest.TestCase):
         self.assertEqual(reloaded.tone, "professional")
         self.assertEqual(reloaded.voice_gender, "male")
         self.assertEqual(reloaded.host_format, "duo")
-        self.assertIn("two hosts", reloaded.style)
+        self.assertIn("slightly more expert", reloaded.style)
+        self.assertIn("two-host handoff", reloaded.style)
 
     def test_defaults_to_hacker_news_when_no_sources_are_supplied(self) -> None:
         with TemporaryDirectory() as temp_dir:
