@@ -110,74 +110,12 @@ Provider API keys are read from environment variables such as
 `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`, and
 `ELEVENLABS_API_KEY`.
 
-You can validate the configured runtime before fetching anything:
-
-```bash
-uv run vibefm check
-```
-
-## Test Source Fetching
-
-RSS/Atom and Open-Meteo fetching do not need LLM or TTS credentials:
-
-```bash
-uv run vibefm sources --limit-per-topic 2
-```
-
-That prints JSON with `weather` plus fetched `news` items. To test a copied
-config explicitly:
-
-```bash
-uv run vibefm sources --config config.yaml
-```
-
-## Generate An Episode
-
-After adding the keys to `.env`, run the whole pipeline in the foreground:
-
-```bash
-uv run vibefm generate
-```
-
-Override the target duration for one run:
-
-```bash
-uv run vibefm generate --duration 18m
-uv run vibefm generate --duration unlimited
-```
-
-The CLI prints each stage as it runs:
-
-```text
-[vibefm] Fetching news RSS sources: Google News (artificial intelligence, startups, music technology); 3 RSS feeds
-[vibefm] Fetching weather: Lisbon
-[vibefm] Creating script targeting 18 minutes with LiteLLM model: openrouter/openai/gpt-oss-20b:nitro
-[vibefm] Rendering TTS with elevenlabs: elevenlabs/eleven_turbo_v2_5
-[vibefm] Audio: episodes/2026-05-09-120000/episode.mp3
-```
-
-The opening is intentionally written as if the station was already on air and
-you just tuned in. It should not start with a formal welcome.
-
-Outputs are saved under `episodes/`:
-
-```text
-episodes/
-  latest -> 2026-05-09-120000
-  2026-05-09-120000/
-    sources.json
-    episode.json
-    script.md
-    episode.mp3
-    audio/
-```
-
 ## Local API + File Frontend
 
 Run the local backend API:
 
 ```bash
-uv run vibefm web
+uv run python -m personalized_radio_station.web_server
 ```
 
 Then open the standalone test page directly from this repo:
@@ -197,10 +135,26 @@ generated audio segment through Web Audio as soon as that segment is ready. Demo
 mode writes normal episode artifacts under `episodes/{episode_id}/`, but does
 not call LLM, TTS, news, or weather APIs.
 
+The opening is intentionally written as if the station was already on air and
+you just tuned in. It should not start with a formal welcome.
+
+Outputs are saved under `episodes/`:
+
+```text
+episodes/
+  ep_20260509145245_6dfcbe44/
+    sources.json
+    episode.json
+    script.md
+    episode.wav or episode.mp3
+    audio/
+```
+
 The file page can also save reusable vibes, which are radio-station presets
-stored in SQLite. A vibe includes a name, preset RSS sources such as Hacker News,
+stored in SQLite. A vibe includes a name, optional extra preset RSS sources,
 optional custom RSS feeds, and host metadata for tone, voice gender, and
-solo/duo format. The backend exposes:
+solo/duo format. Default Google News topics and default RSS feeds still come
+from config; vibe sources are added on top. The backend exposes:
 
 ```text
 GET  /api/vibes
@@ -219,22 +173,15 @@ Create an episode from a saved vibe by passing its id:
 ```
 
 The web server stores vibes in `vibefm.sqlite3` by default. Override that path
-when needed:
-
-```bash
-uv run vibefm web --db data/vibefm.sqlite3
-```
+by passing `db_path` to `personalized_radio_station.web_server.create_server()`
+when embedding the API in tests or another local runner.
 
 The file page also shows a debug timing log from the event stream. Each status,
 script-ready, segment-ready, completion, or failure event includes
 `elapsed_seconds`, which helps identify whether startup time is source fetching,
 script generation, TTS, or audio playback scheduling.
 
-Real mode uses the configured `config.yaml` and `.env`:
-
-```bash
-uv run vibefm web --config config.yaml --env .env
-```
+Real mode uses `config.yaml` and `.env` from the current working directory.
 
 When the frontend sends `"mode": "real"`, the server validates runtime
 requirements, fetches Google News, configured RSS/Atom feeds, and Open-Meteo weather, generates the
@@ -242,38 +189,9 @@ script with the configured LiteLLM model, renders TTS with the configured
 provider, emits `segment_ready` events as each TTS segment is written, and serves
 the final stitched episode audio when complete.
 
-## Detached Runs
-
-To start one full generation in the background:
-
-```bash
-uv run vibefm start
-```
-
-Detached runs accept the same duration override:
-
-```bash
-uv run vibefm start --duration 18m
-```
-
-The command validates credentials first, then detaches the generation process.
-It writes a PID/state file and a log under `runs/`:
-
-```text
-runs/
-  vibefm.pid.json
-  2026-05-09-120000.log
-```
-
-Check whether the detached process is still alive:
-
-```bash
-uv run vibefm status
-```
-
 ## TTS
 
-TTS is part of the default flow. `uv run vibefm generate` fetches sources,
+TTS is part of the real-mode API flow. A real episode request fetches sources,
 creates a script, and renders speech.
 
 ```yaml
@@ -390,16 +308,16 @@ provider. Sources: [OpenAI pricing](https://openai.com/api/pricing/),
 uv run python -m unittest discover -s tests
 ```
 
-Tests use internal mock LLM/TTS providers for deterministic runs. Normal CLI
-runs reject those mock providers so real usage goes through LiteLLM-backed
-providers such as OpenRouter, OpenAI, Anthropic, or Ollama.
+Tests use internal mock LLM/TTS providers for deterministic runs. Normal
+programmatic generation rejects those mock providers unless the caller
+explicitly opts in, so real usage goes through LiteLLM-backed providers such as
+OpenRouter, OpenAI, Anthropic, or Ollama.
 
 ## What Is Intentionally Missing
 
-- no database
-- no API server
-- no queue
 - no user accounts
+- no production auth
+- no durable job queue
 
-The next backend step is to add a small API or scheduler once the CLI flow feels
-good.
+The current app is a local API and file-based test frontend. It is not hardened
+as an internet-facing service.

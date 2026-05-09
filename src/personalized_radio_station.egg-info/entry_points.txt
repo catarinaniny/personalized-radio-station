@@ -1,2 +1,0 @@
-[console_scripts]
-radio = personalized_radio_station.cli:main

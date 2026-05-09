@@ -9,6 +9,7 @@ import threading
 import time
 import unittest
 
+from personalized_radio_station.config import DEFAULT_NEWS_TOPICS, DEFAULT_RSS_FEEDS
 from personalized_radio_station.news import NewsItem
 from personalized_radio_station.weather import WeatherReport
 from personalized_radio_station.web_server import create_server
@@ -173,6 +174,7 @@ tts:
                 ready_mock.assert_called_once()
                 news_mock.assert_called_once()
                 fetched_config = news_mock.call_args.args[0]
+                self.assertEqual(fetched_config.rss_feeds[: len(DEFAULT_RSS_FEEDS)], DEFAULT_RSS_FEEDS)
                 self.assertIn("https://example.com/custom.xml", fetched_config.rss_feeds)
                 self.assertNotIn("file:///tmp/not-rss.xml", fetched_config.rss_feeds)
                 weather_mock.assert_called_once()
@@ -244,15 +246,19 @@ tts:
                 self.assertEqual(
                     sources["rss_feeds"],
                     [
-                        "https://hnrss.org/frontpage",
+                        *DEFAULT_RSS_FEEDS,
                         "https://example.com/builders.xml",
                     ],
+                )
+                self.assertEqual(
+                    [item["topic"] for item in sources["news"]],
+                    DEFAULT_NEWS_TOPICS,
                 )
                 self.assertEqual(sources["vibe"]["host_format"], "duo")
                 episode = json.loads(
                     (root / "episodes" / job["episode_id"] / "episode.json").read_text()
                 )
-                self.assertEqual(len(episode["segments"]), 3)
+                self.assertEqual(len(episode["segments"]), 6)
             finally:
                 server.shutdown()
                 server.server_close()

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from argparse import ArgumentParser
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from http import HTTPStatus
@@ -14,14 +15,20 @@ import threading
 import time
 
 from .audio import audio_duration_seconds, concatenate_wavs, write_mock_wav
-from .config import AppConfig, WeatherConfig, load_config, parse_duration
+from .config import (
+    DEFAULT_NEWS_TOPICS,
+    DEFAULT_RSS_FEEDS,
+    AppConfig,
+    WeatherConfig,
+    load_config,
+    parse_duration,
+)
 from .env import load_env_file
 from .hosts import apply_host_profile, host_style
 from .news import describe_news_sources, fetch_news
-from .pipeline import _add_audio_timing, _timing_metadata
 from .runtime import assert_runtime_ready
 from .script import generate_script, render_markdown
-from .timing import count_episode_words
+from .timing import add_audio_timing, count_episode_words, episode_timing_metadata
 from .tts import synthesize_episode
 from .vibes import Vibe, VibeStore
 from .weather import fetch_weather
@@ -182,7 +189,7 @@ class EpisodeService:
             self._set_status(job, "generating_script", f"Generating script with {config.ai.model}")
             episode = generate_script(news_items, weather, config)
             script_words = count_episode_words(episode)
-            episode["timing"] = _timing_metadata(config, script_words)
+            episode["timing"] = episode_timing_metadata(config, script_words)
             self._prepare_public_segments(job, episode)
             (job.output_dir / "episode.json").write_text(json.dumps(episode, indent=2) + "\n")
             (job.output_dir / "script.md").write_text(render_markdown(episode))
@@ -211,7 +218,7 @@ class EpisodeService:
                 )
                 if tts_result.episode_file:
                     episode["audio_file"] = tts_result.episode_file.name
-                    _add_audio_timing(episode, tts_result.episode_file, script_words, config)
+                    add_audio_timing(episode, tts_result.episode_file, script_words, config)
                     with job.condition:
                         job.final_audio_path = tts_result.episode_file
             else:
@@ -243,8 +250,13 @@ class EpisodeService:
             )
             duration = _duration_from_payload(payload, "2 minutes")
             weather_name = _clean_string(payload.get("weather_name"), "Lisbon")
-            rss_feeds = _clean_rss_feeds(
+            payload_rss_feeds = _clean_rss_feeds(
                 payload.get("rss_feeds", payload.get("rss_urls", payload.get("rss")))
+            )
+            rss_feeds = (
+                payload_rss_feeds
+                if payload.get("replace_rss_feeds")
+                else _dedupe_strings([*DEFAULT_RSS_FEEDS, *payload_rss_feeds])
             )
 
             sources = {
@@ -459,6 +471,31 @@ def serve(
         print("\n[vibefm] Shutting down.", flush=True)
     finally:
         server.server_close()
+
+
+def main() -> None:
+    parser = ArgumentParser(description="Run the local VibeFM API server.")
+    parser.add_argument("--host", default="127.0.0.1", help="Host interface to bind.")
+    parser.add_argument("--port", type=int, default=8765, help="Port to bind.")
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("episodes"),
+        help="Directory where API-generated episode artifacts are saved.",
+    )
+    parser.add_argument("--config", type=Path, default=Path("config.yaml"), help="Path to config YAML.")
+    parser.add_argument("--env", type=Path, default=Path(".env"), help="Path to .env file.")
+    parser.add_argument("--db", type=Path, default=None, help="SQLite database path for saved vibes.")
+    args = parser.parse_args()
+
+    serve(
+        host=args.host,
+        port=args.port,
+        output_dir=args.output_dir,
+        config_path=args.config,
+        env_path=args.env,
+        db_path=args.db,
+    )
 
 
 class _RadioRequestHandler(BaseHTTPRequestHandler):
@@ -808,7 +845,7 @@ def _clean_topics(value: Any, fallback: list[str] | None = None) -> list[str]:
     default_topics = (
         fallback
         if fallback is not None
-        else ["artificial intelligence", "startups", "music technology"]
+        else list(DEFAULT_NEWS_TOPICS)
     )
     if not isinstance(value, list):
         return default_topics
@@ -824,9 +861,6 @@ def _episode_payload_from_vibe(payload: dict[str, Any], vibe: Vibe) -> dict[str,
             "station_name": vibe.name,
             "style": host_style(vibe.tone, vibe.voice_gender, vibe.host_format),
             "rss_feeds": vibe.rss_feeds,
-            "replace_rss_feeds": True,
-            "topics": [],
-            "replace_topics": True,
             "host_tone": vibe.tone,
             "voice_gender": vibe.voice_gender,
             "host_format": vibe.host_format,
@@ -979,17 +1013,6 @@ def _audio_content_type(path: Path) -> str:
     return "application/octet-stream"
 
 
-def _web_content_type(path: Path) -> str:
-    suffix = path.suffix.lower()
-    if suffix == ".html":
-        return "text/html; charset=utf-8"
-    if suffix == ".css":
-        return "text/css; charset=utf-8"
-    if suffix == ".js":
-        return "application/javascript; charset=utf-8"
-    return "application/octet-stream"
-
-
 def _slug(value: Any) -> str:
     text = "".join(char.lower() if char.isalnum() else "-" for char in str(value))
     return "-".join(part for part in text.split("-") if part) or "segment"
@@ -997,3 +1020,7 @@ def _slug(value: Any) -> str:
 
 def _mock_segment_seconds(text: str) -> float:
     return min(6.0, max(1.4, len(text) / 42))
+
+
+if __name__ == "__main__":
+    main()

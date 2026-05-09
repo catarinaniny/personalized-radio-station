@@ -35,14 +35,6 @@ def fetch_news(config: NewsConfig, limit_per_feed: int = 5) -> list[NewsItem]:
     return _fetch_feed_requests(_feed_requests(config), limit_per_feed)
 
 
-def fetch_google_news(config: NewsConfig, limit_per_topic: int = 5) -> list[NewsItem]:
-    requests = [
-        FeedRequest(topic=f"Google News: {topic}", url=_google_news_url(topic, config))
-        for topic in config.topics
-    ]
-    return _fetch_feed_requests(requests, limit_per_topic)
-
-
 def describe_news_sources(config: NewsConfig) -> str:
     parts: list[str] = []
     if config.topics:

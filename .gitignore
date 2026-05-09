@@ -8,3 +8,4 @@ config.yaml
 episodes/*
 !episodes/.gitkeep
 runs/
+*.sqlite3

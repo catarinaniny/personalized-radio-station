@@ -46,14 +46,14 @@ class VibeStoreTests(unittest.TestCase):
         self.assertIn("slightly more expert", reloaded.style)
         self.assertIn("two-host handoff", reloaded.style)
 
-    def test_defaults_to_hacker_news_when_no_sources_are_supplied(self) -> None:
+    def test_allows_vibe_without_extra_sources(self) -> None:
         with TemporaryDirectory() as temp_dir:
             vibe = VibeStore(Path(temp_dir) / "vibes.sqlite3").create_vibe(
-                {"name": "HN Morning"}
+                {"name": "Morning Show"}
             )
 
-        self.assertEqual(vibe.source_preset_ids, ["hacker_news"])
-        self.assertEqual(vibe.rss_feeds, ["https://hnrss.org/frontpage"])
+        self.assertEqual(vibe.source_preset_ids, [])
+        self.assertEqual(vibe.rss_feeds, [])
 
     def test_rejects_invalid_host_options_and_feed_urls(self) -> None:
         with TemporaryDirectory() as temp_dir:

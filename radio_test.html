@@ -297,10 +297,10 @@
           </div>
 
           <div class="field">
-            <span>Preset sources</span>
+            <span>Additional preset sources</span>
             <div class="three-col" id="presetSources">
               <label class="choice">
-                <input type="checkbox" value="hacker_news" checked />
+                <input type="checkbox" value="hacker_news" />
                 Hacker News
               </label>
               <label class="choice">
@@ -315,7 +315,7 @@
           </div>
 
           <label class="field">
-            <span>Custom RSS feeds</span>
+            <span>Additional RSS feeds</span>
             <textarea id="customFeeds" rows="3" spellcheck="false"></textarea>
           </label>
 
@@ -726,9 +726,6 @@
           station_name: vibe.name || "VibeFM",
           style: styleFromHost(vibe),
           weather_name: "Lisbon",
-          topics: [],
-          replace_topics: true,
-          replace_rss_feeds: true,
           rss_feeds: dedupe([...presetFeeds, ...vibe.custom_rss_feeds]),
           host_tone: vibe.tone,
           voice_gender: vibe.voice_gender,

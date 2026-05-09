@@ -144,8 +144,6 @@ class VibeStore:
                 payload.get("source_presets", payload.get("preset_sources")),
             )
         )
-        if not source_preset_ids and not custom_rss_feeds:
-            source_preset_ids = ["hacker_news"]
 
         now = _now()
         vibe = Vibe(

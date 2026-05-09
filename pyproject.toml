@@ -9,10 +9,6 @@ dependencies = [
   "PyYAML>=6.0.0",
 ]
 
-[project.scripts]
-vibefm = "personalized_radio_station.cli:main"
-radio = "personalized_radio_station.cli:main"
-
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
