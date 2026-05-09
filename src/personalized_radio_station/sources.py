@@ -5,13 +5,13 @@ from pathlib import Path
 import json
 
 from .config import load_config
-from .news import fetch_google_news
+from .news import fetch_news
 from .weather import fetch_weather
 
 
 def fetch_sources(config_path: Path, limit_per_topic: int = 5) -> dict:
     config = load_config(config_path)
-    news_items = fetch_google_news(config.news, limit_per_topic=limit_per_topic)
+    news_items = fetch_news(config.news, limit_per_feed=limit_per_topic)
     weather = fetch_weather(config.weather)
 
     return {
@@ -32,7 +32,7 @@ def main() -> None:
         "--limit-per-topic",
         type=int,
         default=3,
-        help="Maximum Google News RSS items to keep for each topic.",
+        help="Maximum RSS items to keep for each Google News topic or feed.",
     )
     args = parser.parse_args()
 

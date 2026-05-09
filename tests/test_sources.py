@@ -34,7 +34,7 @@ ai:
             )
 
             with patch(
-                "personalized_radio_station.sources.fetch_google_news",
+                "personalized_radio_station.sources.fetch_news",
                 return_value=[
                     NewsItem(
                         topic="ai",

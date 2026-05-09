@@ -6,11 +6,20 @@ from typing import Any
 import re
 
 
+DEFAULT_NEWS_TOPICS = ["artificial intelligence", "startups", "music technology"]
+DEFAULT_RSS_FEEDS = [
+    "https://techcrunch.com/feed/",
+    "https://www.producthunt.com/feed",
+    "https://hnrss.org/frontpage",
+]
+
+
 @dataclass(frozen=True)
 class NewsConfig:
-    topics: list[str]
+    topics: list[str] = field(default_factory=lambda: list(DEFAULT_NEWS_TOPICS))
     language: str = "en-US"
     country: str = "US"
+    rss_feeds: list[str] = field(default_factory=lambda: list(DEFAULT_RSS_FEEDS))
 
 
 @dataclass(frozen=True)
@@ -94,13 +103,16 @@ def load_config(path: str | Path) -> AppConfig:
     tts_model = tts.get("model", _default_tts_model(tts_provider))
 
     return AppConfig(
-        station_name=raw.get("station_name", "Personal Radio"),
+        station_name=raw.get("station_name", "VibeFM"),
         style=raw.get("style", "casual, concise morning radio"),
         duration=parse_duration(raw.get("duration", raw.get("episode_minutes", 5))),
         news=NewsConfig(
-            topics=list(news.get("topics", [])),
+            topics=_string_list(news.get("topics", DEFAULT_NEWS_TOPICS)),
             language=news.get("language", "en-US"),
             country=news.get("country", "US"),
+            rss_feeds=_string_list(
+                news.get("rss_feeds", news.get("feeds", DEFAULT_RSS_FEEDS))
+            ),
         ),
         weather=WeatherConfig(
             name=weather["name"],
@@ -141,6 +153,19 @@ def _optional_int(value: Any) -> int | None:
     if value is None:
         return None
     return int(value)
+
+
+def _string_list(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        values = re.split(r"[\n,]+", value)
+    elif isinstance(value, list):
+        values = value
+    else:
+        values = [value]
+
+    return [str(item).strip() for item in values if str(item).strip()]
 
 
 def parse_duration(value: Any) -> EpisodeDuration:

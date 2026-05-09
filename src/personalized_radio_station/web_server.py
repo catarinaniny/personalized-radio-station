@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import unquote, urlparse
 import json
+import re
 import secrets
 import threading
 import time
@@ -15,7 +16,7 @@ import time
 from .audio import audio_duration_seconds, concatenate_wavs, write_mock_wav
 from .config import AppConfig, WeatherConfig, load_config, parse_duration
 from .env import load_env_file
-from .news import fetch_google_news
+from .news import describe_news_sources, fetch_news
 from .pipeline import _add_audio_timing, _timing_metadata
 from .runtime import assert_runtime_ready
 from .script import generate_script, render_markdown
@@ -43,7 +44,7 @@ class EpisodeJob:
     updated_at: str
     started_at_monotonic: float = field(default_factory=time.perf_counter)
     mode: str = "mock"
-    title: str = "Personalized Radio Test"
+    title: str = "VibeFM Test"
     error: str | None = None
     final_audio_path: Path | None = None
     segments: list[dict[str, Any]] = field(default_factory=list)
@@ -131,9 +132,12 @@ class EpisodeService:
             self._set_status(job, "checking_runtime", "Checking runtime requirements")
             assert_runtime_ready(config, include_tts=True)
 
-            topics = ", ".join(config.news.topics)
-            self._set_status(job, "fetching_sources", f"Fetching sources: {topics}")
-            news_items = fetch_google_news(config.news)
+            self._set_status(
+                job,
+                "fetching_sources",
+                f"Fetching sources: {describe_news_sources(config.news)}",
+            )
+            news_items = fetch_news(config.news)
             weather = fetch_weather(config.weather)
             (job.output_dir / "sources.json").write_text(
                 json.dumps(
@@ -203,7 +207,7 @@ class EpisodeService:
             self._set_status(job, "fetching_sources", "Collecting test sources")
             self._sleep()
 
-            station_name = _clean_string(payload.get("station_name"), "Codex FM")
+            station_name = _clean_string(payload.get("station_name"), "VibeFM")
             style = _clean_string(payload.get("style"), "warm, concise, already on air")
             topics = _clean_topics(payload.get("topics"))
             duration = _duration_from_payload(payload, "2 minutes")
@@ -284,7 +288,7 @@ class EpisodeService:
 
     def _prepare_public_segments(self, job: EpisodeJob, episode: dict[str, Any]) -> None:
         with job.condition:
-            job.title = str(episode.get("title", "Personalized Radio"))
+            job.title = str(episode.get("title", "VibeFM"))
             job.segments = [
                 {
                     "index": index,
@@ -395,19 +399,19 @@ def serve(
         env_path=env_path,
     )
     address, actual_port = server.server_address
-    print(f"[radio] API listening on http://{address}:{actual_port}", flush=True)
-    print("[radio] Demo mode is free; real mode uses configured model and TTS APIs.", flush=True)
+    print(f"[vibefm] API listening on http://{address}:{actual_port}", flush=True)
+    print("[vibefm] Demo mode is free; real mode uses configured model and TTS APIs.", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print("\n[radio] Shutting down.", flush=True)
+        print("\n[vibefm] Shutting down.", flush=True)
     finally:
         server.server_close()
 
 
 class _RadioRequestHandler(BaseHTTPRequestHandler):
     service: EpisodeService
-    server_version = "PersonalRadioHTTP/0.1"
+    server_version = "VibeFMHTTP/0.1"
 
     def do_OPTIONS(self) -> None:
         self.send_response(HTTPStatus.NO_CONTENT)
@@ -419,7 +423,7 @@ class _RadioRequestHandler(BaseHTTPRequestHandler):
         if path in {"/", "/index.html"}:
             self._send_json(
                 {
-                    "name": "Personalized Radio API",
+                    "name": "VibeFM API",
                     "status": "ok",
                     "ui": "Open radio_test.html directly in your browser.",
                 }
@@ -727,6 +731,11 @@ def _apply_payload_to_config(config: AppConfig, payload: dict[str, Any]) -> AppC
     news = config.news
     if "topics" in payload:
         news = replace(news, topics=_clean_topics(payload.get("topics")))
+    rss_feeds = _clean_rss_feeds(
+        payload.get("rss_feeds", payload.get("rss_urls", payload.get("rss")))
+    )
+    if rss_feeds:
+        news = replace(news, rss_feeds=_dedupe_strings([*news.rss_feeds, *rss_feeds]))
     language = _optional_string(payload.get("language"))
     country = _optional_string(payload.get("country"))
     if language:
@@ -763,6 +772,38 @@ def _optional_string(value: Any) -> str | None:
         return None
     text = str(value).strip()
     return text or None
+
+
+def _clean_rss_feeds(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        values = re.split(r"[\n,]+", value)
+    elif isinstance(value, list):
+        values = value
+    else:
+        values = [value]
+
+    feeds: list[str] = []
+    for item in values:
+        url = str(item).strip()
+        if not url:
+            continue
+        if urlparse(url).scheme.lower() not in {"http", "https"}:
+            continue
+        feeds.append(url)
+    return _dedupe_strings(feeds)
+
+
+def _dedupe_strings(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    deduped: list[str] = []
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        deduped.append(value)
+    return deduped
 
 
 def _duration_from_payload(payload: dict[str, Any], fallback: str | None = None) -> str | None:

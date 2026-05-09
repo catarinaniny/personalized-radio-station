@@ -72,7 +72,7 @@ class CliTests(unittest.TestCase):
                     ]
                 )
 
-            state_path = runs_dir / "radio.pid.json"
+            state_path = runs_dir / "vibefm.pid.json"
             state = json.loads(state_path.read_text())
 
         self.assertEqual(state["pid"], 12345)
@@ -87,7 +87,7 @@ class CliTests(unittest.TestCase):
         with TemporaryDirectory() as temp_dir:
             runs_dir = Path(temp_dir) / "runs"
             runs_dir.mkdir()
-            (runs_dir / "radio.pid.json").write_text(
+            (runs_dir / "vibefm.pid.json").write_text(
                 json.dumps(
                     {
                         "pid": 12345,

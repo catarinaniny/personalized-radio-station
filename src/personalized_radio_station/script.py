@@ -34,7 +34,7 @@ def generate_script(
 
 
 def render_markdown(episode: dict) -> str:
-    lines = [f"# {episode.get('title', 'Personalized Radio Briefing')}", ""]
+    lines = [f"# {episode.get('title', 'VibeFM Briefing')}", ""]
 
     for segment in episode.get("segments", []):
         segment_type = segment.get("type", "segment").title()
@@ -74,7 +74,7 @@ def _build_prompt(
     }
 
     return (
-        "Create a personalized radio episode script.\n"
+        "Create a VibeFM episode script.\n"
         "Output JSON with this shape:\n"
         "{\n"
         '  "title": "Episode title",\n'
@@ -116,7 +116,7 @@ def _parse_episode(raw: str) -> dict:
                 pass
 
     return {
-        "title": "Personalized Radio Briefing",
+        "title": "VibeFM Briefing",
         "segments": [{"type": "script", "voice": "host", "text": raw.strip()}],
     }
 

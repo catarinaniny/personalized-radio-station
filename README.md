@@ -1,11 +1,11 @@
-# Personalized Radio Station
+# VibeFM
 
-A tiny backend-first experiment for generating a personal radio briefing.
+A tiny backend-first experiment for generating a VibeFM briefing.
 
 Current flow:
 
 ```text
-Google News RSS + Open-Meteo weather
+Google News + RSS/Atom feeds + Open-Meteo weather
         ↓
 LiteLLM script generation
         ↓
@@ -37,6 +37,21 @@ Use `"unlimited"` for an open-ended episode:
 
 ```yaml
 duration: "unlimited"
+```
+
+News comes from Google News searches plus normal RSS/Atom feeds. The default
+feed set includes TechCrunch, Product Hunt, and Hacker News:
+
+```yaml
+news:
+  topics:
+    - "artificial intelligence"
+    - "startups"
+    - "music technology"
+  rss_feeds:
+    - "https://techcrunch.com/feed/"
+    - "https://www.producthunt.com/feed"
+    - "https://hnrss.org/frontpage"
 ```
 
 By default, `config.example.yaml` uses OpenRouter's Nitro route for
@@ -98,22 +113,22 @@ Provider API keys are read from environment variables such as
 You can validate the configured runtime before fetching anything:
 
 ```bash
-uv run radio check
+uv run vibefm check
 ```
 
 ## Test Source Fetching
 
-Google News RSS and Open-Meteo fetching do not need LLM or TTS credentials:
+RSS/Atom and Open-Meteo fetching do not need LLM or TTS credentials:
 
 ```bash
-uv run radio sources --limit-per-topic 2
+uv run vibefm sources --limit-per-topic 2
 ```
 
 That prints JSON with `weather` plus fetched `news` items. To test a copied
 config explicitly:
 
 ```bash
-uv run radio sources --config config.yaml
+uv run vibefm sources --config config.yaml
 ```
 
 ## Generate An Episode
@@ -121,24 +136,24 @@ uv run radio sources --config config.yaml
 After adding the keys to `.env`, run the whole pipeline in the foreground:
 
 ```bash
-uv run radio generate
+uv run vibefm generate
 ```
 
 Override the target duration for one run:
 
 ```bash
-uv run radio generate --duration 18m
-uv run radio generate --duration unlimited
+uv run vibefm generate --duration 18m
+uv run vibefm generate --duration unlimited
 ```
 
 The CLI prints each stage as it runs:
 
 ```text
-[radio] Fetching Google News RSS: artificial intelligence, startups, music technology
-[radio] Fetching weather: Lisbon
-[radio] Creating script targeting 18 minutes with LiteLLM model: openrouter/openai/gpt-oss-20b:nitro
-[radio] Rendering TTS with elevenlabs: elevenlabs/eleven_multilingual_v2
-[radio] Audio: episodes/2026-05-09-120000/episode.mp3
+[vibefm] Fetching news RSS sources: Google News (artificial intelligence, startups, music technology); 3 RSS feeds
+[vibefm] Fetching weather: Lisbon
+[vibefm] Creating script targeting 18 minutes with LiteLLM model: openrouter/openai/gpt-oss-20b:nitro
+[vibefm] Rendering TTS with elevenlabs: elevenlabs/eleven_multilingual_v2
+[vibefm] Audio: episodes/2026-05-09-120000/episode.mp3
 ```
 
 The opening is intentionally written as if the station was already on air and
@@ -162,7 +177,7 @@ episodes/
 Run the local backend API:
 
 ```bash
-uv run radio web
+uv run vibefm web
 ```
 
 Then open the standalone test page directly from this repo:
@@ -190,11 +205,11 @@ script generation, TTS, or audio playback scheduling.
 Real mode uses the configured `config.yaml` and `.env`:
 
 ```bash
-uv run radio web --config config.yaml --env .env
+uv run vibefm web --config config.yaml --env .env
 ```
 
 When the frontend sends `"mode": "real"`, the server validates runtime
-requirements, fetches Google News RSS and Open-Meteo weather, generates the
+requirements, fetches Google News, configured RSS/Atom feeds, and Open-Meteo weather, generates the
 script with the configured LiteLLM model, renders TTS with the configured
 provider, emits `segment_ready` events as each TTS segment is written, and serves
 the final stitched episode audio when complete.
@@ -204,13 +219,13 @@ the final stitched episode audio when complete.
 To start one full generation in the background:
 
 ```bash
-uv run radio start
+uv run vibefm start
 ```
 
 Detached runs accept the same duration override:
 
 ```bash
-uv run radio start --duration 18m
+uv run vibefm start --duration 18m
 ```
 
 The command validates credentials first, then detaches the generation process.
@@ -218,19 +233,19 @@ It writes a PID/state file and a log under `runs/`:
 
 ```text
 runs/
-  radio.pid.json
+  vibefm.pid.json
   2026-05-09-120000.log
 ```
 
 Check whether the detached process is still alive:
 
 ```bash
-uv run radio status
+uv run vibefm status
 ```
 
 ## TTS
 
-TTS is part of the default flow. `uv run radio generate` fetches sources,
+TTS is part of the default flow. `uv run vibefm generate` fetches sources,
 creates a script, and renders speech.
 
 ```yaml

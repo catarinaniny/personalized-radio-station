@@ -146,7 +146,7 @@ tts:
                 with patch(
                     "personalized_radio_station.web_server.assert_runtime_ready"
                 ) as ready_mock, patch(
-                    "personalized_radio_station.web_server.fetch_google_news",
+                    "personalized_radio_station.web_server.fetch_news",
                     return_value=news_items,
                 ) as news_mock, patch(
                     "personalized_radio_station.web_server.fetch_weather",
@@ -161,6 +161,10 @@ tts:
                             "mode": "real",
                             "station_name": "Request FM",
                             "topics": ["markets"],
+                            "rss_feeds": [
+                                "https://example.com/custom.xml",
+                                "file:///tmp/not-rss.xml",
+                            ],
                             "weather_name": "Porto",
                         },
                     )
@@ -168,6 +172,9 @@ tts:
 
                 ready_mock.assert_called_once()
                 news_mock.assert_called_once()
+                fetched_config = news_mock.call_args.args[0]
+                self.assertIn("https://example.com/custom.xml", fetched_config.rss_feeds)
+                self.assertNotIn("file:///tmp/not-rss.xml", fetched_config.rss_feeds)
                 weather_mock.assert_called_once()
                 script_mock.assert_called_once()
                 statuses = [

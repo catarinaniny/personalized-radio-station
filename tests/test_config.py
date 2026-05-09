@@ -2,7 +2,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
-from personalized_radio_station.config import load_config, parse_duration
+from personalized_radio_station.config import DEFAULT_RSS_FEEDS, load_config, parse_duration
 
 
 class ConfigTests(unittest.TestCase):
@@ -29,6 +29,7 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(config.tts.words_per_minute, 155)
         self.assertEqual(config.tts.voices["host"].words_per_minute, 155)
         self.assertEqual(config.duration.label, "5 minutes")
+        self.assertEqual(config.news.rss_feeds, DEFAULT_RSS_FEEDS)
 
     def test_loads_ai_and_tts_config(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -72,6 +73,7 @@ tts:
         self.assertEqual(config.station_name, "Test Station")
         self.assertTrue(config.duration.is_unlimited)
         self.assertEqual(config.ai.api_key_env, "OPENROUTER_API_KEY")
+        self.assertEqual(config.news.rss_feeds, DEFAULT_RSS_FEEDS)
         self.assertTrue(config.tts.enabled)
         self.assertEqual(config.tts.provider, "elevenlabs")
         self.assertTrue(config.tts.single_voice)

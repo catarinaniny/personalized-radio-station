@@ -1,4 +1,4 @@
-station_name: "Personal Radio"
+station_name: "VibeFM"
 style: "casual, concise morning radio"
 duration: "5 minutes"
 
@@ -9,6 +9,10 @@ news:
     - "artificial intelligence"
     - "startups"
     - "music technology"
+  rss_feeds:
+    - "https://techcrunch.com/feed/"
+    - "https://www.producthunt.com/feed"
+    - "https://hnrss.org/frontpage"
 
 weather:
   name: "Lisbon"

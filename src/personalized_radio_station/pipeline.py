@@ -10,7 +10,7 @@ import json
 from .audio import audio_duration_seconds
 from .config import load_config, parse_duration
 from .env import load_env_file
-from .news import fetch_google_news
+from .news import describe_news_sources, fetch_news
 from .runtime import assert_runtime_ready, missing_runtime_requirements
 from .script import generate_script, render_markdown
 from .timing import count_episode_words, effective_words_per_minute, format_duration, word_budget
@@ -37,9 +37,8 @@ def generate_episode(
     log("Checking runtime requirements")
     assert_runtime_ready(config, include_tts=not skip_tts, allow_mock=allow_mock)
 
-    topics = ", ".join(config.news.topics)
-    log(f"Fetching Google News RSS: {topics}")
-    news_items = fetch_google_news(config.news)
+    log(f"Fetching news RSS sources: {describe_news_sources(config.news)}")
+    news_items = fetch_news(config.news)
     log(f"Fetched {len(news_items)} news items")
 
     log(f"Fetching weather: {config.weather.name}")
@@ -156,7 +155,7 @@ def _format_signed_duration(seconds: float) -> str:
 
 
 def main() -> None:
-    parser = ArgumentParser(description="Generate a personalized radio episode script.")
+    parser = ArgumentParser(description="Generate a VibeFM episode script.")
     parser.add_argument(
         "--config",
         type=Path,
@@ -207,6 +206,6 @@ def main() -> None:
         config_path,
         args.output_dir,
         duration=args.duration,
-        log=lambda message: print(f"[radio] {message}", flush=True),
+        log=lambda message: print(f"[vibefm] {message}", flush=True),
     )
     print(f"Generated episode: {episode_dir}")

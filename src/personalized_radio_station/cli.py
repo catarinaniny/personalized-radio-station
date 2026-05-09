@@ -34,20 +34,20 @@ def main(argv: list[str] | None = None) -> None:
 
 
 def _build_parser() -> ArgumentParser:
-    parser = ArgumentParser(prog="radio", description="Personalized radio backend CLI.")
+    parser = ArgumentParser(prog="vibefm", description="VibeFM backend CLI.")
     subparsers = parser.add_subparsers(dest="command")
 
     check = subparsers.add_parser("check", help="Validate runtime config and credentials.")
     _add_common_options(check)
     check.set_defaults(handler=_handle_check)
 
-    sources = subparsers.add_parser("sources", help="Fetch Google News RSS and weather only.")
+    sources = subparsers.add_parser("sources", help="Fetch RSS news and weather only.")
     sources.add_argument("--config", type=Path, default=DEFAULT_CONFIG, help="Path to config YAML.")
     sources.add_argument(
         "--limit-per-topic",
         type=int,
         default=3,
-        help="Maximum Google News RSS items to keep for each topic.",
+        help="Maximum RSS items to keep for each Google News topic or feed.",
     )
     sources.set_defaults(handler=_handle_sources)
 
@@ -240,21 +240,21 @@ def _validate_duration(duration: str | None) -> None:
 
 
 def _log(message: str) -> None:
-    print(f"[radio] {message}", flush=True)
+    print(f"[vibefm] {message}", flush=True)
 
 
 def _print_episode_summary(episode_dir: Path) -> None:
-    print(f"[radio] Done: {episode_dir}", flush=True)
+    print(f"[vibefm] Done: {episode_dir}", flush=True)
     audio_files = [episode_dir / "episode.mp3", episode_dir / "episode.wav"]
     for audio_file in audio_files:
         if audio_file.exists():
-            print(f"[radio] Audio: {audio_file}", flush=True)
+            print(f"[vibefm] Audio: {audio_file}", flush=True)
             break
     else:
-        print("[radio] Audio: not created", flush=True)
+        print("[vibefm] Audio: not created", flush=True)
 
-    print(f"[radio] Script: {episode_dir / 'script.md'}", flush=True)
-    print(f"[radio] Sources: {episode_dir / 'sources.json'}", flush=True)
+    print(f"[vibefm] Script: {episode_dir / 'script.md'}", flush=True)
+    print(f"[vibefm] Sources: {episode_dir / 'sources.json'}", flush=True)
 
 
 def _resolve_config_path(path: Path) -> Path:
@@ -264,7 +264,7 @@ def _resolve_config_path(path: Path) -> Path:
 
 
 def _state_path(runs_dir: Path) -> Path:
-    return runs_dir / "radio.pid.json"
+    return runs_dir / "vibefm.pid.json"
 
 
 def _pid_is_running(pid: int) -> bool:

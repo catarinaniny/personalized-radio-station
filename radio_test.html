@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Radio API Test</title>
+    <title>VibeFM API Test</title>
     <style>
       :root {
         color-scheme: light dark;
@@ -86,7 +86,8 @@
         color: var(--accent-dark);
       }
 
-      input {
+      input,
+      textarea {
         font: inherit;
       }
 
@@ -105,14 +106,25 @@
         font-weight: 700;
       }
 
-      .field input {
+      .field input,
+      .field textarea {
         width: 100%;
-        min-height: 44px;
         border: 1px solid var(--line);
         border-radius: 8px;
         background: transparent;
         color: var(--ink);
+      }
+
+      .field input {
+        min-height: 44px;
         padding: 0 12px;
+      }
+
+      .field textarea {
+        min-height: 112px;
+        padding: 10px 12px;
+        line-height: 1.35;
+        resize: vertical;
       }
 
       button {
@@ -214,7 +226,7 @@
   <body>
     <main>
       <section class="surface">
-        <h1>Radio API Test</h1>
+        <h1>VibeFM API Test</h1>
         <p class="subhead">
           Open this file directly in the browser. Keep the backend running at
           <code>http://127.0.0.1:8765</code>.
@@ -242,7 +254,14 @@
             <input id="duration" type="number" min="1" max="60" step="1" value="2" />
           </label>
 
-          <button id="play" type="button">Play Test Signal</button>
+          <label class="field">
+            <span>RSS feeds</span>
+            <textarea id="rssFeeds" rows="4" spellcheck="false">https://techcrunch.com/feed/
+https://www.producthunt.com/feed
+https://hnrss.org/frontpage</textarea>
+          </label>
+
+          <button id="play" type="button">Play VibeFM Test Signal</button>
         </div>
 
         <div class="status-row">
@@ -262,6 +281,7 @@
       const apiBaseInput = document.querySelector("#apiBase");
       const playButton = document.querySelector("#play");
       const durationInput = document.querySelector("#duration");
+      const rssFeedsInput = document.querySelector("#rssFeeds");
       const statusNode = document.querySelector("#status");
       const timerNode = document.querySelector("#timer");
       const segmentsNode = document.querySelector("#segments");
@@ -318,12 +338,13 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             mode,
-            station_name: "Codex FM",
+            station_name: "VibeFM",
             style: "warm, direct, late-morning radio",
             duration: `${minutes} minutes`,
             duration_minutes: minutes,
             weather_name: "Lisbon",
             topics: ["artificial intelligence", "startups", "music technology"],
+            rss_feeds: rssFeeds(),
           }),
         });
 
@@ -486,6 +507,13 @@
         const minutes = Math.max(1, Math.min(60, Math.round(Number(durationInput.value) || 2)));
         durationInput.value = String(minutes);
         return minutes;
+      }
+
+      function rssFeeds() {
+        return rssFeedsInput.value
+          .split(/\n|,/)
+          .map((value) => value.trim())
+          .filter(Boolean);
       }
 
       function apiBase() {

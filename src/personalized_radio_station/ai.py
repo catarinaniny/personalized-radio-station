@@ -131,7 +131,7 @@ def _get_value(value: Any, key: str) -> Any:
 
 def _mock_completion(messages: list[Message]) -> str:
     prompt = messages[-1]["content"] if messages else ""
-    station_name = "Personal Radio"
+    station_name = "VibeFM"
     try:
         context = json.loads(prompt.split("Context:\n", 1)[1])
         station_name = context.get("station_name", station_name)

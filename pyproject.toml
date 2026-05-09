@@ -1,7 +1,7 @@
 [project]
-name = "personalized-radio-station"
+name = "vibefm"
 version = "0.1.0"
-description = "A simple personal radio script generator powered by RSS, weather, and LiteLLM."
+description = "VibeFM: a personal radio briefing generator powered by RSS, weather, and LiteLLM."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -10,6 +10,7 @@ dependencies = [
 ]
 
 [project.scripts]
+vibefm = "personalized_radio_station.cli:main"
 radio = "personalized_radio_station.cli:main"
 
 [build-system]

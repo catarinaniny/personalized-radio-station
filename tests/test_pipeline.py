@@ -91,7 +91,7 @@ tts:
             )
 
             with patch(
-                "personalized_radio_station.pipeline.fetch_google_news",
+                "personalized_radio_station.pipeline.fetch_news",
                 return_value=news,
             ), patch(
                 "personalized_radio_station.pipeline.fetch_weather",
@@ -116,7 +116,7 @@ tts:
             self.assertIn("audio_duration_seconds", episode["timing"])
             self.assertIn("measured_words_per_minute", episode["timing"])
             self.assertTrue((output_dir / "latest").is_symlink())
-            self.assertTrue(any("Fetching Google News RSS" in log for log in logs))
+            self.assertTrue(any("Fetching news RSS sources" in log for log in logs))
             self.assertTrue(any("targeting unlimited" in log for log in logs))
             self.assertTrue(any("Rendering TTS" in log for log in logs))
 
