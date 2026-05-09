@@ -1,0 +1,1195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Radio Typ 47 — Stop scrolling. Start listening.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /*
+    RADIO TYP 47 — landing page v1
+    Aesthetic: Bauhaus / Dieter Rams adapted to dark mode.
+    Charcoal panel + cream ink + Braun red. Helvetica/Inter typography.
+    Composition reference: OpusClip (eyebrow, H1, input pill, sources → output visual).
+  */
+
+  :root {
+    --bg:        #0a0a0a;
+    --bg-2:      #111111;
+    --panel:     #161616;
+    --panel-2:   #1d1d1d;
+    --rule:      #262626;
+    --rule-soft: #1f1f1f;
+    --ink:       #f0eee9;       /* cream — never pure white (Rams warmth) */
+    --ink-2:     #b3b1aa;
+    --ink-3:     #6e6c66;
+    --ink-4:     #3a3a37;
+    --braun-red: #e41a1c;       /* the only saturated color, used once or twice */
+    --yellow:    #f4c20d;
+    --olive:     #7a8a5a;
+    --x-blue:    #1d9bf0;
+    --yt-red:    #ff0033;
+    --ig-pink:   #e1306c;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  html { background: var(--bg); }
+
+  body {
+    background:
+      radial-gradient(1200px 600px at 50% -100px, rgba(228,26,28,0.08), transparent 60%),
+      var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  ::selection { background: var(--braun-red); color: var(--ink); }
+
+  .mono { font-family: 'JetBrains Mono', 'SF Mono', Consolas, monospace; }
+
+  /* -------------------- top nav -------------------- */
+  .nav {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    font-size: 15px;
+  }
+
+  .brand-mark {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--bg);
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0;
+    position: relative;
+  }
+
+  .brand-mark::after {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    border: 1px solid var(--bg);
+  }
+
+  .brand-name {
+    line-height: 1;
+  }
+
+  .brand-name small {
+    display: block;
+    color: var(--ink-3);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-top: 4px;
+    font-weight: 500;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    color: var(--ink-2);
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .nav-links a:hover { color: var(--ink); }
+
+  .nav-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: var(--ink);
+    color: var(--bg);
+    font-weight: 600;
+    font-size: 14px;
+    border-radius: 999px;
+    transition: transform .18s ease;
+  }
+
+  .nav-cta:hover { transform: translateY(-1px); }
+
+  /* -------------------- hero -------------------- */
+  .hero {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 72px 32px 24px;
+    text-align: center;
+  }
+
+  .eyebrow {
+    color: var(--ink-2);
+    font-family: 'JetBrains Mono', 'SF Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 14px 6px 8px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: var(--panel);
+  }
+
+  .eyebrow .hash {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--braun-red);
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 11px;
+    letter-spacing: 0;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .hero h1 {
+    margin: 28px auto 18px;
+    font-size: clamp(40px, 6vw, 76px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    font-weight: 700;
+    max-width: 920px;
+  }
+
+  .hero h1 em {
+    font-style: normal;
+    color: var(--braun-red);
+    font-weight: 800;
+  }
+
+  .hero p.lede {
+    color: var(--ink-2);
+    font-size: 18px;
+    line-height: 1.55;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  /* -------------------- input pill -------------------- */
+  .pill {
+    margin: 36px auto 0;
+    max-width: 660px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 8px 8px 22px;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    transition: border-color .2s ease;
+  }
+
+  .pill:focus-within { border-color: var(--ink-3); }
+
+  .pill .link-icon {
+    color: var(--ink-3);
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  .pill input {
+    flex: 1;
+    background: transparent;
+    border: 0;
+    outline: 0;
+    color: var(--ink);
+    font-size: 16px;
+    font-family: inherit;
+    padding: 12px 0;
+    min-width: 0;
+  }
+
+  .pill input::placeholder { color: var(--ink-3); }
+
+  .pill button {
+    background: var(--ink);
+    color: var(--bg);
+    border: 0;
+    border-radius: 999px;
+    padding: 12px 22px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: transform .18s ease, background .18s ease;
+  }
+
+  .pill button:hover {
+    background: var(--braun-red);
+    color: var(--ink);
+  }
+
+  .pill-or {
+    display: inline-block;
+    margin-left: 14px;
+    color: var(--ink-3);
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .secondary-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 10px;
+    padding: 12px 18px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color .18s ease, color .18s ease;
+  }
+
+  .secondary-cta:hover { border-color: var(--ink-3); }
+
+  .pill-row {
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    color: var(--ink-3);
+    font-size: 14px;
+  }
+
+  /* -------------------- hero stage (the visual) -------------------- */
+
+  .stage {
+    position: relative;
+    max-width: 1180px;
+    margin: 56px auto 0;
+    padding: 56px 32px 80px;
+    background:
+      radial-gradient(800px 320px at 50% 0%, rgba(255,255,255,0.04), transparent 70%),
+      var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 28px;
+    overflow: hidden;
+  }
+
+  .stage::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+    background-size: 32px 32px;
+    background-position: -1px -1px;
+    pointer-events: none;
+    mask-image: radial-gradient(800px 600px at 50% 50%, black 0%, transparent 80%);
+    -webkit-mask-image: radial-gradient(800px 600px at 50% 50%, black 0%, transparent 80%);
+  }
+
+  /* sources row at top — they "rain down" toward the audio bar */
+  .sources {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    align-items: end;
+    max-width: 940px;
+    margin: 0 auto;
+    z-index: 2;
+  }
+
+  .source-card {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--panel-2);
+    border: 1px solid var(--rule);
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.6),
+      0 12px 24px -6px rgba(0,0,0,0.5);
+    transition: transform .4s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  /* slight rotation + offset for visual rhythm */
+  .source-card.x-card        { transform: translateY(-12px) rotate(-3.2deg); }
+  .source-card.youtube-card  { transform: translateY(0)     rotate(0.8deg); }
+  .source-card.ig-card       { transform: translateY(-22px) rotate(2.6deg); }
+
+  .source-card:hover { transform: translateY(-4px) rotate(0deg); }
+
+  .source-badge {
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    color: var(--ink);
+    z-index: 3;
+    box-shadow: 0 6px 16px -4px rgba(0,0,0,0.6);
+  }
+
+  .source-badge.x-badge       { background: var(--bg);     color: var(--ink); }
+  .source-badge.youtube-badge { background: var(--yt-red); color: white; }
+  .source-badge.ig-badge      {
+    background: linear-gradient(135deg, #f58529 0%, #dd2a7b 50%, #8134af 100%);
+    color: white;
+  }
+
+  .source-badge svg { width: 16px; height: 16px; }
+
+  /* X / Twitter card content */
+  .x-card .body { padding: 18px; }
+  .x-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .x-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #b08d57 0%, #5a3a22 100%);
+    flex-shrink: 0;
+  }
+  .x-name { font-weight: 700; font-size: 14px; line-height: 1.1; }
+  .x-handle { color: var(--ink-3); font-size: 13px; line-height: 1.1; margin-top: 2px; }
+  .x-text { font-size: 14px; line-height: 1.5; color: var(--ink); }
+  .x-text br { display: block; content: ''; margin-bottom: 6px; }
+  .x-meta {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+    color: var(--ink-3);
+    font-size: 12px;
+  }
+  .x-meta span { display: inline-flex; align-items: center; gap: 6px; }
+
+  /* YouTube / podcast card */
+  .youtube-card .thumb {
+    aspect-ratio: 16 / 9;
+    background:
+      radial-gradient(circle at 30% 40%, #2a2418 0%, #1a1a1a 70%);
+    position: relative;
+    overflow: hidden;
+  }
+  .youtube-card .thumb::before {
+    content: '';
+    position: absolute;
+    left: 18%;
+    top: 22%;
+    width: 28%;
+    height: 36%;
+    background: linear-gradient(160deg, #d6cfb8 0%, #8a8068 100%);
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  }
+  .youtube-card .thumb::after {
+    content: '';
+    position: absolute;
+    right: 22%;
+    top: 30%;
+    width: 24%;
+    height: 30%;
+    background: linear-gradient(160deg, #6a5a4a 0%, #2a2418 100%);
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  }
+  .youtube-card .play-overlay {
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.55);
+    display: grid;
+    place-items: center;
+    z-index: 2;
+    backdrop-filter: blur(6px);
+  }
+  .youtube-card .play-overlay::after {
+    content: '';
+    width: 0; height: 0;
+    border-left: 14px solid var(--ink);
+    border-top: 9px solid transparent;
+    border-bottom: 9px solid transparent;
+    margin-left: 4px;
+  }
+  .youtube-card .duration {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    background: rgba(0,0,0,0.85);
+    color: var(--ink);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 6px;
+    border-radius: 4px;
+    z-index: 2;
+  }
+  .youtube-card .body { padding: 14px 16px 16px; }
+  .youtube-card .title {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.35;
+    margin-bottom: 6px;
+  }
+  .youtube-card .channel {
+    color: var(--ink-3);
+    font-size: 12px;
+  }
+
+  /* Instagram reel card — vertical */
+  .ig-card .reel {
+    aspect-ratio: 9 / 14;
+    background:
+      linear-gradient(180deg, #2a1a2e 0%, #1a0e1f 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .ig-card .reel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 50% 40%, rgba(225,48,108,0.18) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(245,133,41,0.12) 0%, transparent 50%);
+  }
+  .ig-card .reel-content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 14px;
+    z-index: 2;
+  }
+  .ig-card .reel-handle {
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  }
+  .ig-card .reel-caption {
+    color: var(--ink);
+    font-size: 12px;
+    line-height: 1.4;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  }
+  .ig-card .reel-icon {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 700;
+    z-index: 3;
+    opacity: 0.85;
+  }
+  .ig-card .reel-figure {
+    position: absolute;
+    left: 50%;
+    top: 38%;
+    width: 60%;
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    background:
+      radial-gradient(circle at 50% 35%, #d6cfb8 0%, transparent 38%),
+      radial-gradient(ellipse at 50% 70%, #4a3a2a 0%, transparent 60%);
+    border-radius: 50%;
+  }
+
+  /* converging lines from sources to audio bar */
+  .converge {
+    position: relative;
+    height: 80px;
+    margin: 16px auto 4px;
+    max-width: 940px;
+    z-index: 1;
+  }
+
+  .converge svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .converge .label {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    color: var(--ink-2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 999px;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .converge .label .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--braun-red);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50%      { opacity: 1;   transform: scale(1.3); }
+  }
+
+  /* the OUTPUT — single audio bar */
+  .audio-bar {
+    position: relative;
+    max-width: 720px;
+    margin: 0 auto;
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-radius: 18px;
+    padding: 18px 22px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 22px;
+    z-index: 2;
+    box-shadow:
+      0 30px 80px -20px rgba(228,26,28,0.18),
+      0 14px 32px -8px rgba(0,0,0,0.7);
+  }
+
+  .audio-bar .play-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--braun-red);
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    border: 0;
+    transition: transform .2s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow .2s ease;
+    box-shadow: 0 10px 24px -6px rgba(228,26,28,0.5);
+    flex-shrink: 0;
+  }
+
+  .audio-bar .play-btn:hover {
+    transform: scale(1.06);
+    box-shadow: 0 14px 32px -6px rgba(228,26,28,0.7);
+  }
+
+  .audio-bar .play-btn::after {
+    content: '';
+    width: 0; height: 0;
+    border-left: 16px solid currentColor;
+    border-top: 11px solid transparent;
+    border-bottom: 11px solid transparent;
+    margin-left: 4px;
+  }
+
+  .audio-info { min-width: 0; }
+
+  .audio-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--ink-3);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .audio-meta .live {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--braun-red);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+
+  .audio-title {
+    color: var(--ink);
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-bottom: 10px;
+  }
+
+  .audio-title .show-name { color: var(--braun-red); }
+
+  .audio-progress {
+    height: 4px;
+    background: var(--rule);
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .audio-progress .fill {
+    position: absolute;
+    inset: 0 60% 0 0; /* 8:42 of 22:00 ~= 39.5%, leave 60% blank */
+    background: var(--ink);
+    border-radius: 4px;
+  }
+
+  .audio-progress .head {
+    position: absolute;
+    left: 39.5%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--braun-red);
+    box-shadow: 0 0 0 4px rgba(228,26,28,0.18);
+  }
+
+  .audio-times {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    color: var(--ink-3);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-feature-settings: 'tnum';
+  }
+
+  .audio-times .total { color: var(--ink-2); }
+
+  .audio-mix {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    min-width: 132px;
+    color: var(--ink-3);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .mix-bar {
+    height: 6px;
+    width: 132px;
+    display: flex;
+    border-radius: 3px;
+    overflow: hidden;
+    background: var(--rule);
+  }
+  .mix-bar .x       { background: var(--ink);     flex: 0 0 40%; }
+  .mix-bar .pod     { background: var(--ink-2);   flex: 0 0 35%; }
+  .mix-bar .news    { background: var(--ink-3);   flex: 0 0 25%; }
+
+  .mix-legend {
+    display: flex;
+    gap: 10px;
+  }
+
+  .mix-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .mix-legend .swatch {
+    width: 8px; height: 8px;
+    border-radius: 2px;
+  }
+
+  /* -------------------- proof / counters -------------------- */
+  .proof {
+    max-width: 1100px;
+    margin: 96px auto 0;
+    padding: 0 32px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    text-align: left;
+  }
+
+  .proof .stat {
+    border-left: 1px solid var(--rule);
+    padding: 8px 0 8px 18px;
+  }
+  .proof .stat:first-child { border-left: 0; padding-left: 0; }
+
+  .proof .num {
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--ink);
+    font-feature-settings: 'tnum';
+  }
+
+  .proof .num em {
+    font-style: normal;
+    color: var(--braun-red);
+  }
+
+  .proof .lbl {
+    margin-top: 8px;
+    color: var(--ink-3);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* -------------------- manifesto -------------------- */
+  .manifesto {
+    max-width: 880px;
+    margin: 120px auto 0;
+    padding: 64px 32px;
+    text-align: center;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .manifesto .stamp {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 28px;
+  }
+
+  .manifesto h2 {
+    font-size: clamp(28px, 4vw, 44px);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+    margin-bottom: 28px;
+  }
+
+  .manifesto h2 em {
+    font-style: normal;
+    color: var(--braun-red);
+  }
+
+  .manifesto .lines {
+    color: var(--ink-2);
+    font-size: 17px;
+    line-height: 1.65;
+  }
+
+  .manifesto .lines p { margin-bottom: 4px; }
+  .manifesto .lines .em { color: var(--ink); font-weight: 500; }
+  .manifesto .lines .small { font-size: 14px; color: var(--ink-3); margin-top: 16px; }
+
+  /* -------------------- footer ctas -------------------- */
+  .closer {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 96px 32px 32px;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 32px;
+    align-items: center;
+  }
+
+  .closer .left h3 {
+    font-size: clamp(28px, 3.5vw, 40px);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .closer .left p {
+    color: var(--ink-2);
+    font-size: 16px;
+    max-width: 440px;
+  }
+
+  .closer .right {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .closer .cta-card {
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 18px 22px;
+    background: var(--panel);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    transition: border-color .2s ease, background .2s ease;
+  }
+
+  .closer .cta-card:hover {
+    border-color: var(--ink-3);
+    background: var(--panel-2);
+  }
+
+  .closer .cta-card .label {
+    color: var(--ink-3);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .closer .cta-card .text {
+    color: var(--ink);
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  .closer .cta-card .arrow {
+    color: var(--ink-3);
+    font-size: 18px;
+  }
+
+  /* -------------------- footer -------------------- */
+  footer.foot {
+    max-width: 1280px;
+    margin: 64px auto 0;
+    padding: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--rule);
+    color: var(--ink-3);
+    font-size: 13px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  footer.foot .stamp {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  footer.foot .links {
+    display: flex;
+    gap: 22px;
+  }
+
+  footer.foot a:hover { color: var(--ink); }
+
+  /* -------------------- responsive -------------------- */
+  @media (max-width: 880px) {
+    .nav-links { display: none; }
+    .nav-links + .nav-cta { display: inline-flex; }
+    .sources { grid-template-columns: 1fr; gap: 28px; max-width: 360px; }
+    .source-card.x-card,
+    .source-card.youtube-card,
+    .source-card.ig-card { transform: none; }
+    .audio-mix { display: none; }
+    .audio-bar { grid-template-columns: auto 1fr; padding: 16px; }
+    .proof { grid-template-columns: repeat(2, 1fr); }
+    .closer { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="#" class="brand">
+    <span class="brand-mark">47</span>
+    <span class="brand-name">
+      Radio Typ 47
+      <small>Personalized · Made for you</small>
+    </span>
+  </a>
+  <div class="nav-links">
+    <a href="#manifesto">Manifesto</a>
+    <a href="https://github.com/zertyn-ai/personalized-radio-station" target="_blank">Build log</a>
+    <a href="#how">How it works</a>
+    <a href="#sign-in">Sign in</a>
+  </div>
+  <a href="#waitlist" class="nav-cta">Get the radio →</a>
+</nav>
+
+<section class="hero">
+  <span class="eyebrow">
+    <span class="hash">#1</span>
+    Stop&nbsp;Scrolling&nbsp;App
+  </span>
+
+  <h1>Your scroll, <em>boxed</em> into one podcast.</h1>
+
+  <p class="lede">
+    Connect your X timeline, the podcasts you follow, and the news you trust.
+    Pick a duration. Listen, instead of scroll.
+  </p>
+
+  <form class="pill" onsubmit="event.preventDefault(); document.querySelector('.audio-bar').scrollIntoView({behavior:'smooth', block:'center'});">
+    <svg class="link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+    </svg>
+    <input type="text" placeholder="@your-x-handle  ·  podcast RSS  ·  news feed URL" />
+    <button type="submit">Get my radio</button>
+  </form>
+  <div class="pill-row">
+    <span>or</span>
+    <button class="secondary-cta" type="button">
+      Connect X &nbsp;·&nbsp; 2 podcasts &nbsp;·&nbsp; News
+    </button>
+  </div>
+</section>
+
+<!-- =========== HERO STAGE: sources → one podcast =========== -->
+<section class="stage">
+
+  <div class="sources">
+
+    <!-- X / Twitter card -->
+    <div class="source-card x-card">
+      <div class="source-badge x-badge" title="X / Twitter">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      </div>
+      <div class="body">
+        <div class="x-head">
+          <div class="x-avatar"></div>
+          <div>
+            <div class="x-name">Naval</div>
+            <div class="x-handle">@naval · 2h</div>
+          </div>
+        </div>
+        <div class="x-text">
+          The chief enemies of focus aren't the obvious distractions.<br>
+          They're the parts of yourself that prefer comfort over the work.<br>
+          5 things that helped me, in order &darr;
+        </div>
+        <div class="x-meta">
+          <span>↻ 2.1k</span>
+          <span>♡ 18.4k</span>
+          <span>views 1.2M</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- YouTube / Podcast card -->
+    <div class="source-card youtube-card">
+      <div class="source-badge youtube-badge" title="YouTube / Podcast">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.582 6.186a2.506 2.506 0 0 0-1.768-1.768C18.254 4 12 4 12 4s-6.254 0-7.814.418A2.506 2.506 0 0 0 2.418 6.186C2 7.746 2 12 2 12s0 4.254.418 5.814a2.506 2.506 0 0 0 1.768 1.768C5.746 20 12 20 12 20s6.254 0 7.814-.418a2.506 2.506 0 0 0 1.768-1.768C22 16.254 22 12 22 12s0-4.254-.418-5.814zM10 15V9l5.196 3z"/></svg>
+      </div>
+      <div class="thumb">
+        <span class="play-overlay" aria-hidden="true"></span>
+        <span class="duration">49:50</span>
+      </div>
+      <div class="body">
+        <div class="title">Lex Fridman × Mira Murati — what scares me about AI</div>
+        <div class="channel">Lex Fridman Podcast · #443</div>
+      </div>
+    </div>
+
+    <!-- Instagram reel card -->
+    <div class="source-card ig-card">
+      <div class="source-badge ig-badge" title="Instagram Reel">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+      </div>
+      <div class="reel">
+        <span class="reel-icon">REEL</span>
+        <span class="reel-figure"></span>
+        <div class="reel-content">
+          <div class="reel-handle">@chamath</div>
+          <div class="reel-caption">"The thing nobody tells you about compound interest..."</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- converging lines -->
+  <div class="converge">
+    <svg viewBox="0 0 940 80" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="line-fade" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#3a3a37" stop-opacity="0"/>
+          <stop offset="50%"  stop-color="#6e6c66" stop-opacity="0.7"/>
+          <stop offset="100%" stop-color="#e41a1c" stop-opacity="0.6"/>
+        </linearGradient>
+      </defs>
+      <!-- left line -->
+      <path d="M 130 0 Q 130 40 470 76" stroke="url(#line-fade)" stroke-width="1.5" fill="none" stroke-dasharray="4 4">
+        <animate attributeName="stroke-dashoffset" from="0" to="-16" dur="1.6s" repeatCount="indefinite"/>
+      </path>
+      <!-- middle line -->
+      <path d="M 470 0 L 470 76" stroke="url(#line-fade)" stroke-width="1.5" fill="none" stroke-dasharray="4 4">
+        <animate attributeName="stroke-dashoffset" from="0" to="-16" dur="1.6s" repeatCount="indefinite"/>
+      </path>
+      <!-- right line -->
+      <path d="M 810 0 Q 810 40 470 76" stroke="url(#line-fade)" stroke-width="1.5" fill="none" stroke-dasharray="4 4">
+        <animate attributeName="stroke-dashoffset" from="0" to="-16" dur="1.6s" repeatCount="indefinite"/>
+      </path>
+    </svg>
+    <span class="label"><span class="dot"></span>Generating · 22 min</span>
+  </div>
+
+  <!-- the OUTPUT — single audio bar -->
+  <div class="audio-bar" role="region" aria-label="Now playing — Adrian's daily radio">
+    <button class="play-btn" aria-label="Play"></button>
+
+    <div class="audio-info">
+      <div class="audio-meta">
+        <span class="live"></span>
+        <span>Now playing · From X</span>
+      </div>
+      <div class="audio-title">
+        <span class="show-name">Adrian's Daily ·</span>&nbsp;Naval — 5 tweets on focus
+      </div>
+      <div class="audio-progress">
+        <span class="fill"></span>
+        <span class="head"></span>
+      </div>
+      <div class="audio-times">
+        <span>08:42</span>
+        <span class="total">22:00 · today</span>
+      </div>
+    </div>
+
+    <div class="audio-mix">
+      <div class="mix-bar"><span class="x"></span><span class="pod"></span><span class="news"></span></div>
+      <div class="mix-legend">
+        <span><span class="swatch" style="background:var(--ink);"></span>X 40</span>
+        <span><span class="swatch" style="background:var(--ink-2);"></span>POD 35</span>
+        <span><span class="swatch" style="background:var(--ink-3);"></span>NEWS 25</span>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- =========== PROOF / COUNTERS =========== -->
+<div class="proof">
+  <div class="stat">
+    <div class="num">22<em> min</em></div>
+    <div class="lbl">average daily commute</div>
+  </div>
+  <div class="stat">
+    <div class="num">2.5<em> hr</em></div>
+    <div class="lbl">average daily scrolling</div>
+  </div>
+  <div class="stat">
+    <div class="num">1<em> ear</em></div>
+    <div class="lbl">that you already use anyway</div>
+  </div>
+  <div class="stat">
+    <div class="num">0<em> apps</em></div>
+    <div class="lbl">to delete to feel better</div>
+  </div>
+</div>
+
+<!-- =========== MANIFESTO =========== -->
+<section class="manifesto" id="manifesto">
+  <span class="stamp">// the build log · day 01 · 10:00 saturday</span>
+
+  <h2>This is <em>not</em> a highlight reel. This is a live experiment. And you get to watch it happen.</h2>
+
+  <div class="lines">
+    <p class="em">Simple on the surface.</p>
+    <p>Our own real user pain underneath.</p>
+    <p>The kind of thing you can explain in one sentence and people immediately get it.</p>
+    <p>&nbsp;</p>
+    <p class="em">And right now, 10am Saturday, we are building it.</p>
+    <p>We will post every step.</p>
+    <p>The wins. The blockers. The moments we nearly pivoted.</p>
+    <p class="small">Follow the build at <a href="https://github.com/zertyn-ai/personalized-radio-station" target="_blank" style="color:var(--ink); border-bottom:1px solid var(--rule);">github.com/zertyn-ai/personalized-radio-station</a></p>
+  </div>
+</section>
+
+<!-- =========== CLOSER =========== -->
+<section class="closer" id="waitlist">
+  <div class="left">
+    <h3>Get a head start.</h3>
+    <p>Two ways in. Drop your email — first 1,000 listeners get the early build. Or follow the repo and watch us build it live, today.</p>
+  </div>
+  <div class="right">
+    <a class="cta-card" href="#email">
+      <div>
+        <div class="label">Waitlist</div>
+        <div class="text">your@email.com</div>
+      </div>
+      <span class="arrow">→</span>
+    </a>
+    <a class="cta-card" href="https://github.com/zertyn-ai/personalized-radio-station" target="_blank">
+      <div>
+        <div class="label">GitHub</div>
+        <div class="text">zertyn-ai/personalized-radio-station</div>
+      </div>
+      <span class="arrow">↗</span>
+    </a>
+  </div>
+</section>
+
+<footer class="foot">
+  <span class="stamp">RADIO TYP 47 · 2026 · MADE FOR YOU</span>
+  <div class="links">
+    <a href="#">Manifesto</a>
+    <a href="https://github.com/zertyn-ai/personalized-radio-station" target="_blank">Repo</a>
+    <a href="#">@personalized_radio</a>
+  </div>
+</footer>
+
+</body>
+</html>

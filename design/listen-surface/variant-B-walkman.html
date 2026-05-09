@@ -1,0 +1,1472 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1280" />
+<title>FM-WALK — Adrian's Daily Mix Vol. 47</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+  /* ---------- base ---------- */
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  :root{
+    --yellow:        #ffd400;
+    --yellow-deep:   #e8b800;
+    --yellow-shade:  #b78700;
+    --rubber:        #2a2a2a;
+    --rubber-hi:     #3a3a3a;
+    --rubber-lo:     #161616;
+    --plastic-cream: #f0e8d6;
+    --label-paper:   #efe6c8;
+    --tape-brown:    #4a2a1a;
+    --tape-brown-2:  #2a160c;
+    --cyan:          #0bd2d2;
+    --magenta:       #e0237a;
+    --orange:        #ff7a1a;
+    --ink:           #161112;
+    --lcd-bg:        #0c1410;
+    --lcd-fg:        #7cf09c;
+    --lcd-dim:       rgba(124,240,156,0.20);
+    --geo-font:      "Eurostile", "Bahnschrift", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --type-font:     "Special Elite", "Courier New", ui-monospace, monospace;
+    --lcd-font:      "VT323", ui-monospace, monospace;
+  }
+
+  body{
+    min-height: 100vh;
+    background:
+      radial-gradient(1200px 600px at 18% -10%, #2a2622 0%, transparent 60%),
+      radial-gradient(900px 500px at 110% 110%, #1d1b18 0%, transparent 55%),
+      linear-gradient(180deg, #1a1714 0%, #0e0c0a 100%);
+    color: #f4efe5;
+    font-family: var(--geo-font);
+    -webkit-font-smoothing: antialiased;
+    padding: 56px 32px 72px;
+  }
+
+  /* faint paper/grain noise overlay on whole page */
+  body::before{
+    content:"";
+    position: fixed; inset:0;
+    pointer-events:none;
+    opacity:.18;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    z-index: 0;
+  }
+
+  .stage{
+    position: relative;
+    width: 1216px;
+    margin: 0 auto;
+    z-index: 1;
+  }
+
+  /* ---------- top brand bar ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 0 6px 22px;
+    color: #cfc7b6;
+    letter-spacing: 0.18em;
+    font-size: 11px;
+    text-transform: uppercase;
+  }
+  .topbar .lhs{ display:flex; align-items:center; gap:14px; }
+  .topbar .dot{
+    width:8px; height:8px; border-radius:50%;
+    background: var(--magenta);
+    box-shadow: 0 0 8px rgba(224,35,122,.7);
+  }
+  .topbar .station{
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.32em;
+  }
+  .topbar .rhs{ display:flex; gap:18px; opacity:.85; }
+
+  /* ---------- memphis confetti, restrained ---------- */
+  .memphis{ position:absolute; inset:0; pointer-events:none; z-index:0; overflow:visible; }
+  .memphis svg{ position:absolute; }
+  .m-squig-1{ top: -38px; left: 70px;  transform: rotate(-12deg); }
+  .m-squig-2{ bottom: -18px; right: 220px; transform: rotate(8deg); }
+  .m-tri-1  { top: 40px;  right: -22px; transform: rotate(20deg); }
+  .m-dots-1 { bottom: 80px; left: -28px; }
+
+  /* ---------- main body of walkman ---------- */
+  .walkman{
+    position: relative;
+    border-radius: 38px;
+    padding: 26px;
+    background:
+      /* outer rubber bumper */
+      linear-gradient(180deg, #2f2f2f 0%, #1c1c1c 100%);
+    box-shadow:
+      0 1px 0 #4a4a4a inset,
+      0 -2px 0 #0b0b0b inset,
+      0 30px 60px -20px rgba(0,0,0,0.8),
+      0 60px 120px -30px rgba(0,0,0,0.6);
+    z-index: 1;
+  }
+
+  /* yellow inner panel */
+  .panel{
+    position: relative;
+    border-radius: 22px;
+    padding: 30px 30px 28px;
+    background:
+      /* matte plastic mottling */
+      radial-gradient(800px 380px at 30% 0%, #ffe04a 0%, transparent 55%),
+      radial-gradient(600px 380px at 100% 100%, #d8a900 0%, transparent 60%),
+      linear-gradient(180deg, var(--yellow) 0%, var(--yellow-deep) 100%);
+    box-shadow:
+      0 2px 0 rgba(255,255,255,0.45) inset,
+      0 -3px 0 rgba(120,84,0,0.55) inset,
+      0 0 0 2px #1a1a1a inset,
+      0 18px 36px -16px rgba(0,0,0,.55);
+    overflow: hidden;
+  }
+  /* matte grain on the yellow */
+  .panel::after{
+    content:"";
+    position:absolute; inset:0;
+    pointer-events:none;
+    mix-blend-mode: multiply;
+    opacity:.25;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.3' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.34  0 0 0 0 0.27  0 0 0 0 0  0 0 0 0.55 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    border-radius: 22px;
+  }
+  /* a few scuffs */
+  .panel .scuff{
+    position:absolute;
+    pointer-events:none;
+    background:
+      radial-gradient(closest-side, rgba(0,0,0,.18), transparent 70%);
+    border-radius: 50%;
+    mix-blend-mode: multiply;
+  }
+  .panel .scuff.s1{ width: 90px; height: 14px; top: 18px; left: 320px; transform: rotate(-6deg); }
+  .panel .scuff.s2{ width: 60px; height: 8px;  bottom: 90px; right: 110px; transform: rotate(3deg); }
+  .panel .scuff.s3{ width: 30px; height: 30px; top: 60%; left: 12px; opacity:.5; }
+
+  /* ---------- header on yellow: brand + badges + LCD ---------- */
+  .panel-header{
+    display:grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 22px;
+  }
+  .brand-block{
+    display:flex; align-items:center; gap:12px;
+  }
+  .brand-mark{
+    width: 46px; height: 46px; border-radius: 12px;
+    background:
+      linear-gradient(135deg, #1a1a1a 0%, #303030 100%);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.18) inset,
+      0 -2px 0 rgba(0,0,0,.55) inset,
+      0 4px 8px rgba(0,0,0,.35);
+    display:grid; place-items:center;
+    color: var(--yellow);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    font-size: 14px;
+    transform: rotate(-2deg);
+    border: 2px solid #0d0d0d;
+  }
+  .brand-name{
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    color: #1a1208;
+    font-size: 22px;
+    text-shadow: 0 1px 0 rgba(255,255,255,.35);
+  }
+  .brand-sub{
+    font-family: var(--type-font);
+    color: #3a2a08;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    margin-top: 2px;
+    opacity: .75;
+  }
+  .brand-text{ display:flex; flex-direction:column; line-height:1; }
+
+  .badges{ display:flex; gap:8px; align-items:center; }
+  .badge{
+    font-family: var(--geo-font);
+    font-weight: 700;
+    font-size: 9.5px;
+    letter-spacing: 0.16em;
+    color: #f4f4f4;
+    padding: 6px 9px;
+    border-radius: 4px;
+    background:
+      linear-gradient(180deg, #3a3a3a 0%, #1a1a1a 100%);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.22) inset,
+      0 -1px 0 rgba(0,0,0,.6) inset,
+      0 2px 0 #0a0a0a;
+    text-transform: uppercase;
+    border: 1px solid #0a0a0a;
+  }
+  .badge.metal{ color: #ffe28a; }
+  .badge.dolby{
+    color:#fff;
+    position:relative;
+    padding-left: 22px;
+  }
+  .badge.dolby::before{
+    content:"";
+    position:absolute;
+    left: 6px; top: 50%; transform: translateY(-50%);
+    width: 12px; height: 10px;
+    background:
+      radial-gradient(ellipse at center, #fff 0 50%, transparent 51%) left center/6px 10px no-repeat,
+      radial-gradient(ellipse at center, #fff 0 50%, transparent 51%) right center/6px 10px no-repeat;
+  }
+
+  /* LCD time readout */
+  .lcd{
+    background: var(--lcd-bg);
+    border-radius: 6px;
+    padding: 9px 14px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.4) inset,
+      0 -2px 0 rgba(0,0,0,.7) inset,
+      0 2px 0 #1a1100,
+      0 0 0 2px #0a0a0a;
+    border: 2px solid #0a0a0a;
+    position:relative;
+    min-width: 220px;
+    font-family: var(--lcd-font);
+  }
+  .lcd::before{
+    /* subtle scanline / glass tint */
+    content:"";
+    position:absolute; inset:0;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.10), transparent 30%),
+      repeating-linear-gradient(0deg, rgba(124,240,156,.05) 0 1px, transparent 1px 3px);
+    border-radius: 6px;
+    pointer-events:none;
+  }
+  .lcd-row{ display:flex; align-items:center; justify-content:space-between; gap:14px; }
+  .lcd .ghost{
+    color: var(--lcd-dim);
+    font-size: 22px;
+    line-height: 1;
+    letter-spacing: 0.04em;
+  }
+  .lcd .live{
+    color: var(--lcd-fg);
+    font-size: 28px;
+    line-height: 1;
+    letter-spacing: 0.06em;
+    text-shadow: 0 0 8px rgba(124,240,156,.65);
+  }
+  .lcd-meta{
+    display:flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    color: var(--lcd-fg);
+    font-size: 13px;
+    letter-spacing: 0.18em;
+  }
+  .lcd-meta .small{ color: var(--lcd-dim); }
+
+  /* ---------- cassette window ---------- */
+  .cassette-window{
+    position: relative;
+    border-radius: 14px;
+    padding: 22px 22px 26px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.55) 0%, rgba(255,255,255,.18) 100%);
+    box-shadow:
+      0 0 0 2px #1a1a1a inset,
+      0 4px 0 rgba(120,84,0,0.55) inset,
+      0 -2px 0 rgba(255,255,255,.55) inset,
+      0 18px 40px -20px rgba(0,0,0,.45);
+    backdrop-filter: blur(0.5px);
+    overflow: hidden;
+  }
+  /* clear-plastic gloss streaks */
+  .cassette-window::before{
+    content:"";
+    position:absolute;
+    top: 0; left: 0; right: 0; height: 60%;
+    background:
+      linear-gradient(110deg, rgba(255,255,255,.55) 0%, rgba(255,255,255,0) 35%, rgba(255,255,255,.25) 60%, rgba(255,255,255,0) 75%);
+    pointer-events:none;
+  }
+  .cassette-window::after{
+    content:"";
+    position:absolute; right: 8px; top: 8px; bottom: 8px; width: 1px;
+    background: linear-gradient(180deg, rgba(0,0,0,.0), rgba(0,0,0,.18), rgba(0,0,0,0));
+  }
+
+  .cassette-inner{
+    position: relative;
+    background:
+      linear-gradient(180deg, #1a1816 0%, #0c0a09 100%);
+    border-radius: 10px;
+    padding: 18px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.12) inset,
+      0 -2px 0 rgba(0,0,0,.6) inset,
+      0 8px 20px rgba(0,0,0,.4);
+    overflow: hidden;
+  }
+  .cassette-inner::before{
+    /* faint cassette shell mottling */
+    content:"";
+    position:absolute; inset:0;
+    background:
+      radial-gradient(220px 90px at 20% 20%, rgba(255,255,255,.06), transparent 70%),
+      radial-gradient(200px 80px at 80% 80%, rgba(255,255,255,.04), transparent 70%);
+    pointer-events:none;
+  }
+
+  .cassette-grid{
+    display: grid;
+    grid-template-columns: 220px 1fr 220px;
+    gap: 18px;
+    align-items: center;
+  }
+
+  /* Spool well */
+  .spool-well{
+    position: relative;
+    aspect-ratio: 1 / 1;
+    width: 220px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 50% 50%, #0d0d0d 0%, #1c1c1c 60%, #0a0a0a 100%);
+    box-shadow:
+      0 0 0 2px rgba(255,255,255,.06) inset,
+      0 0 0 6px #050505 inset,
+      0 8px 20px rgba(0,0,0,.5) inset;
+    display:grid; place-items:center;
+  }
+  .spool-well::after{
+    /* hub screw hole label like "L" / "R" */
+    content: attr(data-side);
+    position:absolute; bottom: -22px; left: 50%; transform: translateX(-50%);
+    color: #6c5500;
+    font-family: var(--type-font);
+    font-size: 11px;
+    letter-spacing: 0.4em;
+  }
+
+  /* the spinning spool itself */
+  .spool{
+    position: relative;
+    width: 80%;
+    height: 80%;
+    animation: spin 4.6s linear infinite;
+    transform-origin: 50% 50%;
+  }
+  .spool.left{ animation-duration: 3.2s; }   /* still has a lot of tape, spins slower */
+  .spool.right{ animation-duration: 6.0s; }  /* less tape wound on, spins faster... we invert later */
+
+  /* Actually for a cassette, the take-up reel (right) ROTATES FASTER per second
+     once it's nearly full, but most of the time the reel with LESS tape spins
+     faster. At 8:42 / 22:00 -> left (supply) is fuller, right (take-up) has
+     less. So right spins faster than left. Above values are correct. */
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- tape stretched between spools (progress) ---------- */
+  .tape-bridge{
+    position: relative;
+    height: 64px;
+    border-radius: 4px;
+    background:
+      linear-gradient(180deg, var(--tape-brown) 0%, var(--tape-brown-2) 100%);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.05) inset,
+      0 -1px 0 rgba(0,0,0,.6) inset,
+      0 0 0 1px #0a0605 inset;
+    overflow: hidden;
+  }
+  .tape-bridge::before{
+    /* shimmery oxide stripe */
+    content:"";
+    position:absolute; inset: 18px 0;
+    background:
+      repeating-linear-gradient(90deg,
+        rgba(255,200,140,.10) 0 2px,
+        transparent 2px 5px);
+    pointer-events:none;
+    opacity:.6;
+  }
+  /* progress fill = elapsed mass on right reel; here we paint a subtle
+     overlay showing how far along we are so progress is legible at a glance. */
+  .tape-bridge .progress{
+    position:absolute; left:0; top:0; bottom:0;
+    width: 39.5%; /* 8:42 / 22:00 ≈ 0.395 */
+    background:
+      linear-gradient(180deg, rgba(255,212,0,.18), rgba(255,122,26,.30));
+    box-shadow:
+      inset -2px 0 0 rgba(255,212,0,.7),
+      inset 0 0 30px rgba(0,0,0,.3);
+  }
+  .tape-bridge .ticks{
+    position:absolute; inset:0;
+    background:
+      repeating-linear-gradient(90deg,
+        rgba(255,255,255,.10) 0 1px,
+        transparent 1px 64px);
+    pointer-events:none;
+  }
+  .tape-bridge .head{
+    position:absolute; top: -6px; bottom: -6px;
+    left: 39.5%;
+    width: 2px;
+    background: var(--magenta);
+    box-shadow: 0 0 8px rgba(224,35,122,.7);
+  }
+  .tape-bridge .head::after{
+    content:"";
+    position:absolute; top:-6px; left:-5px;
+    width:12px; height:6px; border-radius:2px;
+    background: var(--magenta);
+    box-shadow: 0 0 8px rgba(224,35,122,.7);
+  }
+
+  /* ---------- spool SVG styling ---------- */
+  .spool svg{ width:100%; height:100%; display:block; }
+
+  /* ---------- cassette "label" inlay ---------- */
+  .label-inlay{
+    position: absolute;
+    left: 50%;
+    bottom: -1px;
+    transform: translateX(-50%) rotate(-0.6deg);
+    width: 86%;
+    padding: 12px 16px 14px;
+    background:
+      /* hand-typed paper */
+      linear-gradient(180deg, #f3ead0 0%, #e7dab3 100%);
+    border-radius: 3px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.6) inset,
+      0 -1px 0 rgba(0,0,0,.10) inset,
+      0 6px 12px rgba(0,0,0,.4);
+    font-family: var(--type-font);
+    color: #2c2208;
+  }
+  .label-inlay::before{
+    /* paper grain */
+    content:"";
+    position:absolute; inset:0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='2.0' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.18  0 0 0 0 0.13  0 0 0 0 0.04  0 0 0 0.55 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    mix-blend-mode: multiply;
+    opacity:.35;
+    pointer-events:none;
+  }
+  .label-inlay::after{
+    /* magnetic-strip warning bar at top */
+    content:"";
+    position:absolute; left:0; right:0; top:0; height:5px;
+    background: repeating-linear-gradient(45deg, #c9402a 0 6px, #1a1a1a 6px 12px);
+  }
+  .label-inlay .row1{
+    display:flex; align-items:baseline; justify-content:space-between;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .label-inlay .row1 .who{ font-weight: 700; }
+  .label-inlay .row1 .vol{ font-size: 11px; opacity:.7; }
+  .label-inlay .row2{
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .label-inlay .row3{
+    display:flex; gap: 14px; margin-top: 8px;
+    font-size: 11px;
+    color: #5a4513;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ---------- now playing / center info ---------- */
+  .now{
+    color: #f3ead0;
+    text-align: center;
+    font-family: var(--geo-font);
+    padding: 4px 4px 0;
+  }
+  .now .source-row{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    margin-bottom: 8px;
+  }
+  .source-pill{
+    display:inline-flex; align-items:center; gap:6px;
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-weight: 800;
+    font-size: 10.5px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #0a0a0a;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.5) inset,
+      0 -2px 0 rgba(0,0,0,.25) inset,
+      0 2px 0 rgba(0,0,0,.5);
+    border: 1.5px solid #0a0a0a;
+    transform: rotate(-1.4deg);
+  }
+  .source-pill.x      { background: #fff; }
+  .source-pill.x .x   { font-weight: 900; }
+  .source-pill.pod    { background: var(--cyan); color:#062525; }
+  .source-pill.news   { background: var(--magenta); color:#fff; }
+
+  .now .live-tag{
+    color: #fff;
+    background: #c9402a;
+    padding: 3px 7px;
+    border-radius: 3px;
+    font-size: 9.5px;
+    letter-spacing: 0.18em;
+    box-shadow: 0 0 8px rgba(255,80,40,.4);
+    border: 1px solid #2a0d05;
+  }
+
+  .now .title{
+    font-family: var(--type-font);
+    font-size: 22px;
+    line-height: 1.3;
+    color: #fff;
+    text-shadow: 0 1px 0 rgba(0,0,0,.25), 0 0 22px rgba(255,255,255,.05);
+    margin: 6px auto 4px;
+    max-width: 540px;
+  }
+  .now .syn{
+    font-family: var(--geo-font);
+    color: #d8cfb0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    letter-spacing: 0.04em;
+    max-width: 520px;
+    margin: 0 auto 14px;
+    opacity: .9;
+  }
+
+  /* segment progress underneath the now-playing */
+  .seg{
+    display:flex; align-items:center; gap:10px; justify-content:center;
+    color: #cdc294;
+    font-family: var(--lcd-font);
+    font-size: 16px;
+    letter-spacing: 0.06em;
+  }
+  .seg-bar{
+    width: 220px;
+    height: 6px;
+    background: #1a1a1a;
+    border-radius: 999px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.06) inset,
+      0 -1px 0 rgba(0,0,0,.6) inset;
+    overflow: hidden;
+    position: relative;
+  }
+  .seg-bar > span{
+    display:block; height:100%; width: 44.7%; /* 1:24 / 3:08 */
+    background: linear-gradient(90deg, var(--orange) 0%, var(--magenta) 100%);
+    box-shadow: 0 0 8px rgba(224,35,122,.5);
+  }
+
+  /* ---------- transport keys ---------- */
+  .deck-bay{
+    margin-top: 20px;
+    display:grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 24px;
+  }
+  .keys{
+    display:flex; gap: 10px;
+    justify-content:center;
+  }
+  .key{
+    appearance: none;
+    border: 2px solid #0a0a0a;
+    cursor: pointer;
+    width: 64px; height: 56px;
+    border-radius: 8px;
+    font-family: var(--geo-font);
+    font-weight: 800;
+    color: #1a1208;
+    font-size: 18px;
+    letter-spacing: 0.04em;
+    background:
+      linear-gradient(180deg, #f4f4f4 0%, #c9c9c9 60%, #9b9b9b 100%);
+    box-shadow:
+      0 2px 0 rgba(255,255,255,.85) inset,
+      0 -3px 0 rgba(0,0,0,.35) inset,
+      0 5px 0 #4a4a4a,
+      0 8px 14px rgba(0,0,0,.5);
+    transform: translateY(0);
+    transition: transform .06s ease, box-shadow .06s ease;
+    display:grid; place-items:center;
+    position: relative;
+  }
+  .key:active{
+    transform: translateY(3px);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.7) inset,
+      0 -2px 0 rgba(0,0,0,.35) inset,
+      0 2px 0 #4a4a4a,
+      0 4px 8px rgba(0,0,0,.5);
+  }
+  .key .glyph{
+    font-size: 18px;
+    transform: translateY(-1px);
+  }
+  .key.play{
+    width: 78px;
+    background:
+      linear-gradient(180deg, #ff6a00 0%, #c63a00 100%);
+    color: #fff;
+    box-shadow:
+      0 2px 0 rgba(255,200,170,.85) inset,
+      0 -3px 0 rgba(60,15,0,.55) inset,
+      0 5px 0 #2a0a00,
+      0 10px 18px rgba(0,0,0,.55);
+  }
+  .key.play.on::after{
+    /* red REC-ish dot indicating playing state */
+    content:"";
+    position:absolute; top:-9px; right:-8px;
+    width:14px; height:14px; border-radius:50%;
+    background: var(--magenta);
+    border: 2px solid #1a1a1a;
+    box-shadow: 0 0 10px rgba(224,35,122,.7);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{ transform: scale(1); } 50%{ transform: scale(1.18); } }
+
+  .key.stop{
+    background:
+      linear-gradient(180deg, #2a2a2a 0%, #0a0a0a 100%);
+    color: #fff;
+  }
+
+  /* ---------- volume wheel ---------- */
+  .volume{
+    display:flex; align-items:center; gap: 12px;
+    color: #1a1208;
+    justify-self: end;
+  }
+  .vol-label{
+    font-size: 10.5px;
+    letter-spacing: 0.22em;
+    font-weight: 800;
+    text-transform: uppercase;
+    opacity: .75;
+  }
+  .wheel{
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background:
+      conic-gradient(from 0deg,
+        #2a2a2a 0deg 12deg, #1a1a1a 12deg 30deg,
+        #2a2a2a 30deg 42deg, #1a1a1a 42deg 60deg,
+        #2a2a2a 60deg 72deg, #1a1a1a 72deg 90deg,
+        #2a2a2a 90deg 102deg, #1a1a1a 102deg 120deg,
+        #2a2a2a 120deg 132deg, #1a1a1a 132deg 150deg,
+        #2a2a2a 150deg 162deg, #1a1a1a 162deg 180deg,
+        #2a2a2a 180deg 192deg, #1a1a1a 192deg 210deg,
+        #2a2a2a 210deg 222deg, #1a1a1a 222deg 240deg,
+        #2a2a2a 240deg 252deg, #1a1a1a 252deg 270deg,
+        #2a2a2a 270deg 282deg, #1a1a1a 282deg 300deg,
+        #2a2a2a 300deg 312deg, #1a1a1a 312deg 330deg,
+        #2a2a2a 330deg 342deg, #1a1a1a 342deg 360deg);
+    box-shadow:
+      0 0 0 2px #0a0a0a,
+      0 4px 0 #0a0a0a,
+      0 9px 16px rgba(0,0,0,.55),
+      0 1px 0 rgba(255,255,255,.45) inset,
+      0 -3px 0 rgba(0,0,0,.6) inset;
+    position: relative;
+    display:grid; place-items:center;
+  }
+  .wheel::after{
+    content:"";
+    position:absolute; top: 4px; left: 50%;
+    width: 3px; height: 14px; border-radius: 2px;
+    background: var(--magenta);
+    transform: translateX(-50%);
+    box-shadow: 0 0 6px rgba(224,35,122,.7);
+  }
+  .wheel-cap{
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 35% 30%, #ffe06a 0%, #c08a00 70%, #6a4a00 100%);
+    box-shadow: 0 1px 2px rgba(0,0,0,.5);
+  }
+  .vol-scale{
+    display:flex; flex-direction: column; align-items: stretch; gap: 3px;
+    font-family: var(--lcd-font);
+    color: #1a1208;
+    font-size: 12px;
+    line-height: 1;
+    margin-left: 4px;
+  }
+  .vol-scale .nums{
+    display:flex; justify-content: space-between; opacity:.6;
+    width: 70px;
+  }
+  .vol-scale .meter{
+    width: 70px; height: 8px;
+    background: #1a1208;
+    border-radius: 2px;
+    box-shadow: 0 1px 0 rgba(255,255,255,.3) inset, 0 -1px 0 rgba(0,0,0,.6) inset;
+    position: relative;
+    overflow: hidden;
+  }
+  .vol-scale .meter > span{
+    display:block; height:100%; width: 60%;
+    background: linear-gradient(90deg, var(--lcd-fg), #f7c000);
+    box-shadow: 0 0 6px rgba(124,240,156,.5);
+  }
+
+  /* the source-mix stickers row across the bottom of yellow panel */
+  .stickers{
+    margin-top: 22px;
+    display:grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    padding: 0 4px;
+  }
+  .sticker{
+    position: relative;
+    padding: 14px 16px 16px;
+    border-radius: 4px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.6) inset,
+      0 -1px 0 rgba(0,0,0,.18) inset,
+      0 6px 14px rgba(0,0,0,.35);
+    font-family: var(--type-font);
+    color: #14110a;
+    overflow: hidden;
+  }
+  .sticker::after{
+    /* paper grain */
+    content:"";
+    position:absolute; inset:0; pointer-events:none; opacity:.35;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='2.4' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.16  0 0 0 0 0.10  0 0 0 0 0.04  0 0 0 0.5 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+  .sticker.x      { background: #f3ead0; transform: rotate(-1.6deg); }
+  .sticker.pod    { background: var(--cyan); transform: rotate(1.1deg); color: #062525;}
+  .sticker.news   { background: var(--magenta); transform: rotate(-0.7deg); color: #fff;}
+  .sticker .top{
+    display:flex; align-items:center; justify-content:space-between;
+    font-size: 10.5px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    font-family: var(--geo-font);
+    font-weight: 800;
+  }
+  .sticker .pct{
+    font-family: var(--geo-font);
+    font-weight: 900;
+    font-size: 36px;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+  .sticker .desc{
+    font-size: 11px;
+    line-height: 1.4;
+    opacity: .9;
+  }
+  .sticker .corner{
+    position:absolute;
+    top:6px; right:6px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 35% 30%, #fff 0%, #0a0a0a 70%, #0a0a0a 100%);
+    box-shadow: 0 0 0 2px rgba(0,0,0,.2) inset;
+    opacity: .6;
+  }
+
+  /* ---------- Memphis squiggles + dots inline svg lay (just CSS friendly) ---------- */
+
+  /* ---------- TRAY: up next cassettes ---------- */
+  .tray{
+    margin-top: 28px;
+    position: relative;
+    border-radius: 22px;
+    background:
+      linear-gradient(180deg, #1c1c1c 0%, #0c0c0c 100%);
+    padding: 22px 22px 26px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.06) inset,
+      0 -2px 0 rgba(0,0,0,.7) inset,
+      0 0 0 2px #050505 inset,
+      0 18px 36px -16px rgba(0,0,0,.6);
+  }
+  .tray-head{
+    display:flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 14px;
+    color: #cfc7b6;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-size: 11px;
+  }
+  .tray-head .label{ color:#fff; font-weight: 800; letter-spacing: 0.32em; }
+  .tray-head .info{ font-family: var(--lcd-font); color: var(--lcd-fg); font-size: 14px; letter-spacing: 0.1em; }
+
+  .tape-rack{
+    display:grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+
+  /* mini cassette */
+  .mini-cassette{
+    position: relative;
+    border-radius: 8px;
+    height: 124px;
+    padding: 12px;
+    overflow: hidden;
+    color: #1a1208;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.18) inset,
+      0 -2px 0 rgba(0,0,0,.55) inset,
+      0 0 0 2px #050505 inset,
+      0 8px 18px rgba(0,0,0,.5);
+    display:grid;
+    grid-template-columns: 50px 1fr 50px;
+    grid-template-rows: 1fr auto;
+    column-gap: 10px;
+    row-gap: 6px;
+    align-items: center;
+  }
+  .mc-shell-1{ background: linear-gradient(180deg, #efe2bd 0%, #d2c188 100%); }
+  .mc-shell-2{ background: linear-gradient(180deg, #c5e8e3 0%, #88c1bb 100%); }
+  .mc-shell-3{ background: linear-gradient(180deg, #efb9c9 0%, #d77da0 100%); }
+
+  .mini-cassette::before{
+    /* matte plastic mottling */
+    content:"";
+    position:absolute; inset:0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.6' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.16  0 0 0 0 0.10  0 0 0 0 0.04  0 0 0 0.45 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    mix-blend-mode: multiply;
+    opacity:.5;
+    pointer-events:none;
+  }
+  .mc-spool{
+    grid-row: 1;
+    width: 50px; height: 50px; border-radius: 50%;
+    background:
+      radial-gradient(circle at 50% 50%, #0e0e0e 0%, #1c1c1c 60%, #050505 100%);
+    box-shadow:
+      0 0 0 2px rgba(255,255,255,.06) inset,
+      0 4px 6px rgba(0,0,0,.5) inset;
+    display:grid; place-items:center;
+    position:relative;
+  }
+  .mc-spool .h{
+    width: 16px; height: 16px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #aaa 0%, #444 100%);
+    box-shadow: 0 0 0 2px #0a0a0a inset;
+    position: relative;
+  }
+  .mc-spool .h::before, .mc-spool .h::after{
+    content:""; position:absolute; left:50%; top:50%;
+    width: 9px; height: 1.5px; background:#0a0a0a;
+    transform: translate(-50%,-50%);
+  }
+  .mc-spool .h::after{ transform: translate(-50%,-50%) rotate(60deg); }
+  .mc-spool .h2{ box-shadow: none; }
+  .mc-tape{
+    grid-row: 1; grid-column: 1 / -1;
+    align-self: end;
+    height: 8px;
+    margin: 0 18px 16px;
+    background: linear-gradient(180deg, var(--tape-brown), var(--tape-brown-2));
+    border-radius: 1px;
+    box-shadow: 0 0 0 1px #0a0605 inset;
+    z-index: 0;
+  }
+  .mc-meta{
+    grid-row: 2; grid-column: 1 / -1;
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 10px;
+    font-family: var(--type-font);
+    line-height: 1.2;
+  }
+  .mc-meta .lhs-meta{ display:flex; flex-direction:column; min-width:0; flex:1; }
+  .mc-meta .src{
+    font-family: var(--geo-font);
+    font-weight: 800;
+    font-size: 9.5px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    opacity: .7;
+    margin-bottom: 2px;
+  }
+  .mc-meta .ttl{
+    font-size: 13px;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .mc-meta .len{
+    font-family: var(--lcd-font);
+    font-size: 18px;
+    color: #1a1208;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+  }
+  .mc-num{
+    position:absolute;
+    top:8px; right:10px;
+    font-family: var(--geo-font);
+    font-weight: 800;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: rgba(0,0,0,.45);
+  }
+  .mc-rule{
+    /* the diagonal red/black warning stripe at top, like cassette card */
+    position:absolute;
+    top: 0; left: 0; right: 0; height: 4px;
+    background: repeating-linear-gradient(45deg, #c9402a 0 6px, #1a1a1a 6px 12px);
+    opacity: .85;
+  }
+
+  /* ---------- footer (rubber chin) ---------- */
+  .chin{
+    margin-top: 18px;
+    display:flex; align-items: center; justify-content: space-between;
+    color: #888;
+    letter-spacing: 0.22em;
+    font-size: 10px;
+    text-transform: uppercase;
+    padding: 0 8px;
+  }
+  .chin .made{ display:flex; align-items:center; gap:8px; }
+  .chin .pin{
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #5a5a5a;
+    box-shadow: 0 0 0 1px #0a0a0a;
+  }
+
+  /* a few bolts on the panel corners */
+  .bolt{
+    position:absolute;
+    width: 12px; height: 12px; border-radius: 50%;
+    background:
+      radial-gradient(circle at 35% 35%, #d2d2d2 0%, #6a6a6a 60%, #1a1a1a 100%);
+    box-shadow:
+      0 0 0 1px #0a0a0a,
+      0 1px 2px rgba(0,0,0,.6);
+  }
+  .bolt::after{
+    content:"";
+    position:absolute; top:50%; left:50%; transform: translate(-50%,-50%);
+    width: 8px; height: 1.5px; background:#1a1a1a;
+  }
+  .bolt.tl{ top: 12px; left: 12px; }
+  .bolt.tr{ top: 12px; right: 12px; }
+  .bolt.bl{ bottom: 12px; left: 12px; }
+  .bolt.br{ bottom: 12px; right: 12px; }
+
+  /* ---------- big yellow side bumps (sport walkman vibe) ---------- */
+  .walkman::before, .walkman::after{
+    content:"";
+    position: absolute;
+    top: 80px; bottom: 80px;
+    width: 24px;
+    background:
+      linear-gradient(180deg, var(--yellow) 0%, var(--yellow-deep) 100%);
+    box-shadow:
+      0 0 0 2px #0a0a0a inset,
+      0 0 8px rgba(0,0,0,.4);
+    border-radius: 14px;
+    z-index: 0;
+  }
+  .walkman::before{ left: -10px; }
+  .walkman::after{  right: -10px; }
+
+</style>
+</head>
+<body>
+
+  <div class="stage">
+
+    <!-- TOP BRANDING BAR -->
+    <div class="topbar">
+      <div class="lhs">
+        <span class="dot"></span>
+        <span class="station">FM-WALK · 102.4</span>
+        <span style="opacity:.6">FOR ADRIAN</span>
+      </div>
+      <div class="rhs">
+        <span>SIDE A</span>
+        <span>·</span>
+        <span>22:00 RUNTIME</span>
+        <span>·</span>
+        <span>DAILY MIX</span>
+      </div>
+    </div>
+
+    <!-- WALKMAN BODY -->
+    <div class="walkman">
+
+      <!-- decorative bolts -->
+      <span class="bolt tl"></span>
+      <span class="bolt tr"></span>
+      <span class="bolt bl"></span>
+      <span class="bolt br"></span>
+
+      <!-- yellow panel -->
+      <div class="panel">
+
+        <!-- subtle Memphis confetti, restrained -->
+        <div class="memphis">
+          <!-- squiggle 1, cyan, top-left -->
+          <svg class="m-squig-1" width="120" height="34" viewBox="0 0 120 34" fill="none" aria-hidden="true">
+            <path d="M2 17 C 14 2, 26 32, 38 17 C 50 2, 62 32, 74 17 C 86 2, 98 32, 110 17"
+                  stroke="#0bd2d2" stroke-width="4" stroke-linecap="round" fill="none"/>
+          </svg>
+          <!-- triangle, magenta, top-right -->
+          <svg class="m-tri-1" width="64" height="64" viewBox="0 0 64 64" aria-hidden="true">
+            <polygon points="32,4 60,56 4,56" fill="none" stroke="#e0237a" stroke-width="4"/>
+            <circle cx="32" cy="40" r="3" fill="#e0237a"/>
+          </svg>
+          <!-- dot field, magenta+black, bottom-left -->
+          <svg class="m-dots-1" width="120" height="60" viewBox="0 0 120 60" aria-hidden="true">
+            <g fill="#1a1a1a">
+              <circle cx="6" cy="6" r="3"/><circle cx="22" cy="6" r="3"/><circle cx="38" cy="6" r="3"/>
+              <circle cx="14" cy="20" r="3"/><circle cx="30" cy="20" r="3"/>
+              <circle cx="6" cy="34" r="3"/><circle cx="22" cy="34" r="3"/>
+            </g>
+            <g fill="#e0237a">
+              <circle cx="60" cy="14" r="4"/><circle cx="78" cy="32" r="4"/>
+            </g>
+          </svg>
+          <!-- bottom squiggle, magenta -->
+          <svg class="m-squig-2" width="160" height="22" viewBox="0 0 160 22" aria-hidden="true">
+            <path d="M2 11 Q 20 -4, 40 11 T 80 11 T 120 11 T 158 11"
+                  stroke="#e0237a" stroke-width="3" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <!-- scuffs -->
+        <div class="scuff s1"></div>
+        <div class="scuff s2"></div>
+        <div class="scuff s3"></div>
+
+        <!-- HEADER: brand + badges + LCD -->
+        <div class="panel-header">
+          <div class="brand-block">
+            <div class="brand-mark">FM</div>
+            <div class="brand-text">
+              <div class="brand-name">ADRIAN'S DAILY MIX</div>
+              <div class="brand-sub">a personal radio cassette · vol. 47 · auto-mixed 06:30</div>
+            </div>
+          </div>
+
+          <div class="badges">
+            <span class="badge dolby">DOLBY B NR</span>
+            <span class="badge metal">METAL TAPE</span>
+            <span class="badge">AUTO-REVERSE</span>
+          </div>
+
+          <div class="lcd" aria-label="time elapsed of total">
+            <div class="lcd-row">
+              <!-- ghost segments + live segments overlay -->
+              <div style="position:relative;">
+                <div class="ghost">88:88 / 88:88</div>
+                <div class="live" style="position:absolute; top:0; left:0;">08:42 / 22:00</div>
+              </div>
+              <div style="display:flex; flex-direction:column; align-items:flex-end; line-height:1;">
+                <div style="color:var(--lcd-fg); font-size:14px; letter-spacing:0.12em;">► PLAY</div>
+                <div style="color:var(--lcd-dim); font-size:12px; letter-spacing:0.18em; margin-top:3px;">SIDE A · NORM</div>
+              </div>
+            </div>
+            <div class="lcd-meta">
+              <span><span class="small">SEG</span> 01:24 / 03:08</span>
+              <span><span class="small">UP</span> 03 LEFT</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CASSETTE WINDOW -->
+        <div class="cassette-window">
+
+          <div class="cassette-inner">
+
+            <div class="cassette-grid">
+
+              <!-- LEFT SPOOL -->
+              <div class="spool-well" data-side="L · SUPPLY">
+                <div class="spool left">
+                  <svg viewBox="0 0 100 100" aria-hidden="true">
+                    <defs>
+                      <radialGradient id="hubL" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%"  stop-color="#aaa"/>
+                        <stop offset="55%" stop-color="#666"/>
+                        <stop offset="100%" stop-color="#1a1a1a"/>
+                      </radialGradient>
+                      <radialGradient id="reelL" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%"  stop-color="#3a3a3a"/>
+                        <stop offset="60%" stop-color="#202020"/>
+                        <stop offset="100%" stop-color="#0a0a0a"/>
+                      </radialGradient>
+                    </defs>
+
+                    <!-- wound tape stack (thicker for supply at 8:42/22) -->
+                    <circle cx="50" cy="50" r="44" fill="#3a2010"/>
+                    <circle cx="50" cy="50" r="40" fill="#4a2818"/>
+                    <circle cx="50" cy="50" r="36" fill="#5a3120"/>
+
+                    <!-- reel body -->
+                    <circle cx="50" cy="50" r="30" fill="url(#reelL)"/>
+
+                    <!-- spoke slots -->
+                    <g fill="#0a0a0a">
+                      <rect x="48" y="14" width="4" height="18" rx="2"/>
+                      <rect x="48" y="68" width="4" height="18" rx="2"/>
+                      <rect x="14" y="48" width="18" height="4" rx="2"/>
+                      <rect x="68" y="48" width="18" height="4" rx="2"/>
+                      <g transform="rotate(45 50 50)">
+                        <rect x="48" y="14" width="4" height="18" rx="2"/>
+                        <rect x="48" y="68" width="4" height="18" rx="2"/>
+                        <rect x="14" y="48" width="18" height="4" rx="2"/>
+                        <rect x="68" y="48" width="18" height="4" rx="2"/>
+                      </g>
+                    </g>
+
+                    <!-- center hub w/ teeth -->
+                    <circle cx="50" cy="50" r="14" fill="url(#hubL)"/>
+                    <g fill="#0a0a0a">
+                      <rect x="49" y="38" width="2" height="6"/>
+                      <rect x="49" y="56" width="2" height="6"/>
+                      <rect x="38" y="49" width="6" height="2"/>
+                      <rect x="56" y="49" width="6" height="2"/>
+                      <g transform="rotate(45 50 50)">
+                        <rect x="49" y="38" width="2" height="6"/>
+                        <rect x="49" y="56" width="2" height="6"/>
+                        <rect x="38" y="49" width="6" height="2"/>
+                        <rect x="56" y="49" width="6" height="2"/>
+                      </g>
+                    </g>
+                    <circle cx="50" cy="50" r="4" fill="#0a0a0a"/>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- TAPE / NOW PLAYING column -->
+              <div>
+                <div class="now">
+                  <div class="source-row">
+                    <span class="source-pill x">𝕏 · X TIMELINE</span>
+                    <span class="live-tag">● ON AIR</span>
+                  </div>
+                  <div class="title">"Anthropic raised at a $X billion valuation"</div>
+                  <div class="syn">
+                    Aggregated takes from Adrian's X timeline — the round size, who led,
+                    what the cap-table chatter says, and why the AI lab market keeps
+                    repricing upward. Read by your A.I. host.
+                  </div>
+                </div>
+
+                <!-- the stretched tape between the two spools -->
+                <div class="tape-bridge" aria-label="episode progress 8:42 of 22:00">
+                  <div class="ticks"></div>
+                  <div class="progress"></div>
+                  <div class="head" aria-hidden="true"></div>
+                </div>
+
+                <div class="seg" style="margin-top:10px;">
+                  <span style="color:#9b9268; letter-spacing:0.18em; font-size:10px; font-family:var(--geo-font);">SEG</span>
+                  <span>01:24</span>
+                  <div class="seg-bar"><span></span></div>
+                  <span>03:08</span>
+                </div>
+
+              </div>
+
+              <!-- RIGHT SPOOL -->
+              <div class="spool-well" data-side="R · TAKE-UP">
+                <div class="spool right">
+                  <svg viewBox="0 0 100 100" aria-hidden="true">
+                    <defs>
+                      <radialGradient id="hubR" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%"  stop-color="#aaa"/>
+                        <stop offset="55%" stop-color="#666"/>
+                        <stop offset="100%" stop-color="#1a1a1a"/>
+                      </radialGradient>
+                      <radialGradient id="reelR" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%"  stop-color="#3a3a3a"/>
+                        <stop offset="60%" stop-color="#202020"/>
+                        <stop offset="100%" stop-color="#0a0a0a"/>
+                      </radialGradient>
+                    </defs>
+
+                    <!-- wound tape stack — thinner on take-up at 8:42/22 -->
+                    <circle cx="50" cy="50" r="36" fill="#3a2010"/>
+                    <circle cx="50" cy="50" r="33" fill="#4a2818"/>
+
+                    <!-- reel body -->
+                    <circle cx="50" cy="50" r="30" fill="url(#reelR)"/>
+
+                    <g fill="#0a0a0a">
+                      <rect x="48" y="14" width="4" height="18" rx="2"/>
+                      <rect x="48" y="68" width="4" height="18" rx="2"/>
+                      <rect x="14" y="48" width="18" height="4" rx="2"/>
+                      <rect x="68" y="48" width="18" height="4" rx="2"/>
+                      <g transform="rotate(45 50 50)">
+                        <rect x="48" y="14" width="4" height="18" rx="2"/>
+                        <rect x="48" y="68" width="4" height="18" rx="2"/>
+                        <rect x="14" y="48" width="18" height="4" rx="2"/>
+                        <rect x="68" y="48" width="18" height="4" rx="2"/>
+                      </g>
+                    </g>
+
+                    <circle cx="50" cy="50" r="14" fill="url(#hubR)"/>
+                    <g fill="#0a0a0a">
+                      <rect x="49" y="38" width="2" height="6"/>
+                      <rect x="49" y="56" width="2" height="6"/>
+                      <rect x="38" y="49" width="6" height="2"/>
+                      <rect x="56" y="49" width="6" height="2"/>
+                      <g transform="rotate(45 50 50)">
+                        <rect x="49" y="38" width="2" height="6"/>
+                        <rect x="49" y="56" width="2" height="6"/>
+                        <rect x="38" y="49" width="6" height="2"/>
+                        <rect x="56" y="49" width="6" height="2"/>
+                      </g>
+                    </g>
+                    <circle cx="50" cy="50" r="4" fill="#0a0a0a"/>
+                  </svg>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- the cassette label inlay sitting along the bottom edge of the window -->
+            <div class="label-inlay">
+              <div class="row1">
+                <span class="who">ADRIAN — DAILY MIX</span>
+                <span class="vol">VOL. 47 · 09 MAY 2026 · SIDE A</span>
+              </div>
+              <div class="row2">
+                "now playing : Anthropic raised at a $X billion valuation"
+              </div>
+              <div class="row3">
+                <span>22:00 RUNTIME</span>
+                <span>·</span>
+                <span>X · POD · NEWS</span>
+                <span>·</span>
+                <span>RECORDED 06:30</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- TRANSPORT + VOLUME ROW -->
+        <div class="deck-bay">
+          <!-- left filler: a tiny battery indicator + reverse switch -->
+          <div style="display:flex; align-items:center; gap:14px;">
+            <div style="display:flex; flex-direction:column; gap:4px; font-family:var(--geo-font); color:#1a1208;">
+              <div style="font-size:9.5px; letter-spacing:0.22em; font-weight:800; text-transform:uppercase; opacity:.75;">Battery</div>
+              <div style="display:flex; gap:3px;">
+                <span style="display:inline-block; width:8px; height:14px; border:1.5px solid #1a1208; background:#1a1208;"></span>
+                <span style="display:inline-block; width:8px; height:14px; border:1.5px solid #1a1208; background:#1a1208;"></span>
+                <span style="display:inline-block; width:8px; height:14px; border:1.5px solid #1a1208; background:#1a1208;"></span>
+                <span style="display:inline-block; width:8px; height:14px; border:1.5px solid #1a1208; background:transparent;"></span>
+              </div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:4px; font-family:var(--geo-font); color:#1a1208;">
+              <div style="font-size:9.5px; letter-spacing:0.22em; font-weight:800; text-transform:uppercase; opacity:.75;">Mode</div>
+              <div style="display:flex; gap:6px;">
+                <span style="font-family:var(--lcd-font); padding:2px 8px; background:#1a1208; color:var(--lcd-fg); border-radius:3px; font-size:13px; letter-spacing:0.1em;">NORM</span>
+                <span style="font-family:var(--lcd-font); padding:2px 8px; background:transparent; color:#1a1208; border:1.5px solid #1a1208; border-radius:3px; font-size:13px; letter-spacing:0.1em;">CrO₂</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- transport keys (the heart) -->
+          <div class="keys" role="group" aria-label="transport">
+            <button class="key stop" title="Skip back" aria-label="skip back">
+              <span class="glyph">◄◄</span>
+            </button>
+            <button class="key play on" title="Playing — tap to pause" aria-label="pause">
+              <span class="glyph">►</span>
+            </button>
+            <button class="key stop" title="Skip forward" aria-label="skip forward">
+              <span class="glyph">►►</span>
+            </button>
+          </div>
+
+          <!-- volume -->
+          <div class="volume">
+            <div class="vol-scale" aria-label="volume level">
+              <div class="nums"><span>0</span><span>5</span><span>10</span></div>
+              <div class="meter"><span></span></div>
+              <div style="display:flex; justify-content:space-between; font-size:9px; letter-spacing:0.16em; opacity:.6;">
+                <span>MIN</span><span>VOL</span><span>MAX</span>
+              </div>
+            </div>
+            <div class="wheel" aria-label="volume wheel">
+              <div class="wheel-cap"></div>
+            </div>
+            <div class="vol-label">VOL</div>
+          </div>
+        </div>
+
+        <!-- SOURCE-MIX STICKERS (40 / 35 / 25) -->
+        <div class="stickers" aria-label="source mix this episode">
+          <div class="sticker x">
+            <div class="corner"></div>
+            <div class="top">
+              <span>SIDE A · TRACK 01</span>
+              <span>𝕏 TIMELINE</span>
+            </div>
+            <div class="pct">40%</div>
+            <div class="desc">From the people Adrian follows on X — VC drama, AI lab rumors, taste threads.</div>
+          </div>
+          <div class="sticker pod">
+            <div class="corner"></div>
+            <div class="top">
+              <span>SIDE A · TRACK 02</span>
+              <span>PODCASTS</span>
+            </div>
+            <div class="pct">35%</div>
+            <div class="desc">Best moments from the shows in your feed. Auto-clipped down to the good parts.</div>
+          </div>
+          <div class="sticker news">
+            <div class="corner"></div>
+            <div class="top">
+              <span>SIDE A · TRACK 03</span>
+              <span>NEWS BEAT</span>
+            </div>
+            <div class="pct">25%</div>
+            <div class="desc">Markets close, the major headlines, anything that moved while you slept.</div>
+          </div>
+        </div>
+
+      </div><!-- /panel -->
+
+    </div><!-- /walkman -->
+
+
+    <!-- TRAY: stacked cassettes for UP NEXT -->
+    <div class="tray" aria-label="up next">
+      <div class="tray-head">
+        <span class="label">UP NEXT · TAPE TRAY</span>
+        <span class="info">3 CASSETTES · 09:00 REMAIN</span>
+      </div>
+
+      <div class="tape-rack">
+
+        <!-- cassette 1 — podcast -->
+        <div class="mini-cassette mc-shell-1">
+          <div class="mc-rule"></div>
+          <div class="mc-num">N° 02</div>
+          <div class="mc-spool"><span class="h"></span></div>
+          <div></div>
+          <div class="mc-spool"><span class="h"></span></div>
+          <div class="mc-tape"></div>
+          <div class="mc-meta">
+            <div class="lhs-meta">
+              <div class="src">Podcast Clip</div>
+              <div class="ttl">Lex Fridman × Mira Murati: what scares me about AI</div>
+            </div>
+            <div class="len">04:00</div>
+          </div>
+        </div>
+
+        <!-- cassette 2 — news -->
+        <div class="mini-cassette mc-shell-2">
+          <div class="mc-rule"></div>
+          <div class="mc-num">N° 03</div>
+          <div class="mc-spool"><span class="h"></span></div>
+          <div></div>
+          <div class="mc-spool"><span class="h"></span></div>
+          <div class="mc-tape"></div>
+          <div class="mc-meta">
+            <div class="lhs-meta">
+              <div class="src">News Beat</div>
+              <div class="ttl">Markets close: tech rally continues</div>
+            </div>
+            <div class="len">02:00</div>
+          </div>
+        </div>
+
+        <!-- cassette 3 — X timeline -->
+        <div class="mini-cassette mc-shell-3">
+          <div class="mc-rule"></div>
+          <div class="mc-num">N° 04</div>
+          <div class="mc-spool"><span class="h"></span></div>
+          <div></div>
+          <div class="mc-spool"><span class="h"></span></div>
+          <div class="mc-tape"></div>
+          <div class="mc-meta">
+            <div class="lhs-meta">
+              <div class="src">𝕏 Timeline</div>
+              <div class="ttl">Naval Ravikant: 5 tweets on focus</div>
+            </div>
+            <div class="len">03:00</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- bottom rubber chin / serial -->
+    <div class="chin">
+      <div class="made">
+        <span class="pin"></span>
+        <span class="pin"></span>
+        <span>FM-WALK · MODEL WMA-22 · MADE FOR DAILY USE</span>
+      </div>
+      <div>SER. NO. ADR-47-XPN-25 · STEREO HEADPHONE CASSETTE PLAYER</div>
+    </div>
+
+  </div>
+
+  <script>
+    // tiny vanilla JS: pulse the play key and let users toggle play/pause visually
+    (function(){
+      var play = document.querySelector('.key.play');
+      if(!play) return;
+      var spools = document.querySelectorAll('.spool');
+      var glyph = play.querySelector('.glyph');
+      var playing = true;
+      play.addEventListener('click', function(){
+        playing = !playing;
+        play.classList.toggle('on', playing);
+        glyph.textContent = playing ? '►' : '⏸';
+        spools.forEach(function(s){
+          s.style.animationPlayState = playing ? 'running' : 'paused';
+        });
+      });
+    })();
+  </script>
+
+</body>
+</html>

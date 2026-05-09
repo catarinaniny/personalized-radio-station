@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ADRIANAMP v0.1 :: PERSONALIZED RADIO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<style>
+  /* ================================================================
+     ADRIANAMP — WINAMP 2.x ERA SKIN
+     ================================================================ */
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    height: 100%;
+    background: #0a0a0a;
+    font-family: "SF Mono", "Consolas", "Menlo", "Courier New", monospace;
+    color: #c8c8c8;
+    overflow-x: hidden;
+    -webkit-font-smoothing: none;
+    font-smooth: never;
+  }
+
+  body {
+    min-height: 100vh;
+    padding: 36px 24px 64px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    background:
+      radial-gradient(ellipse at 50% 30%, #0f1612 0%, #050505 60%, #000 100%);
+    position: relative;
+  }
+
+  /* CRT scanlines overlay */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 999;
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0) 0px,
+        rgba(0, 0, 0, 0) 2px,
+        rgba(0, 0, 0, 0.18) 3px,
+        rgba(0, 0, 0, 0.18) 3px
+      );
+    mix-blend-mode: multiply;
+  }
+
+  /* Subtle CRT vignette */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 998;
+    background:
+      radial-gradient(ellipse at center,
+        rgba(0,0,0,0) 55%,
+        rgba(0,0,0,0.55) 100%);
+  }
+
+  /* ================================================================
+     PLAYER WINDOW
+     ================================================================ */
+  .player {
+    width: 1232px;
+    max-width: 100%;
+    background: #2a2a2a;
+    border-top: 1px solid #4a4a4a;
+    border-left: 1px solid #4a4a4a;
+    border-right: 1px solid #1a1a1a;
+    border-bottom: 1px solid #1a1a1a;
+    box-shadow:
+      inset 1px 1px 0 #555,
+      inset -1px -1px 0 #161616,
+      0 0 0 1px #000,
+      0 12px 28px rgba(0, 0, 0, 0.8);
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ================================================================
+     TITLE BAR
+     ================================================================ */
+  .titlebar {
+    height: 22px;
+    background:
+      linear-gradient(to bottom, #1a3a25 0%, #0c1f15 50%, #061008 100%);
+    border-bottom: 1px solid #000;
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
+    position: relative;
+    box-shadow: inset 0 1px 0 #2c5a3a, inset 0 -1px 0 #000;
+  }
+
+  .titlebar .grip {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    margin-right: 6px;
+  }
+  .titlebar .grip i {
+    width: 2px;
+    height: 12px;
+    background: #00ff7f;
+    box-shadow: 0 0 4px #00ff7f, 0 0 1px #00ff7f;
+    opacity: 0.55;
+    display: block;
+  }
+
+  .titlebar .title {
+    font-family: "VT323", monospace;
+    font-size: 16px;
+    color: #00ff7f;
+    text-shadow: 0 0 4px #00ff7f, 0 0 1px #00ff7f;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    text-transform: uppercase;
+    flex: 1;
+    user-select: none;
+  }
+
+  .titlebar .title .dim {
+    color: #008f47;
+    text-shadow: 0 0 3px #008f47;
+  }
+
+  .titlebar .winbtns {
+    display: flex;
+    gap: 2px;
+  }
+  .titlebar .winbtn {
+    width: 14px;
+    height: 14px;
+    background: linear-gradient(to bottom, #4a4a4a 0%, #2a2a2a 100%);
+    border-top: 1px solid #6a6a6a;
+    border-left: 1px solid #6a6a6a;
+    border-right: 1px solid #1a1a1a;
+    border-bottom: 1px solid #1a1a1a;
+    color: #c8c8c8;
+    font-family: "VT323", monospace;
+    font-size: 11px;
+    line-height: 12px;
+    text-align: center;
+    cursor: default;
+  }
+
+  /* ================================================================
+     MAIN PLAYER BODY
+     ================================================================ */
+  .body {
+    display: grid;
+    grid-template-columns: 1fr 460px;
+    gap: 0;
+    background: #1c1c1c;
+    border-top: 1px solid #0a0a0a;
+  }
+
+  .col-left {
+    border-right: 1px solid #000;
+    box-shadow: inset -1px 0 0 #383838;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .col-right {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* ----- Generic recessed (sunken) panel ----- */
+  .sunken {
+    background: #0a0a0a;
+    border-top: 1px solid #050505;
+    border-left: 1px solid #050505;
+    border-right: 1px solid #3a3a3a;
+    border-bottom: 1px solid #3a3a3a;
+    box-shadow:
+      inset 2px 2px 0 #000,
+      inset -1px -1px 0 #2a2a2a;
+    padding: 8px 10px;
+  }
+
+  /* ----- Generic raised (chrome) panel ----- */
+  .raised {
+    background: linear-gradient(to bottom, #3a3a3a 0%, #2a2a2a 100%);
+    border-top: 1px solid #5a5a5a;
+    border-left: 1px solid #5a5a5a;
+    border-right: 1px solid #161616;
+    border-bottom: 1px solid #161616;
+  }
+
+  /* ================================================================
+     LCD STRIP — TIME + STATUS
+     ================================================================ */
+  .lcd-strip {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .lcd-time {
+    padding: 6px 14px 4px;
+    min-width: 220px;
+    text-align: center;
+  }
+
+  .lcd-time .label {
+    font-family: "VT323", monospace;
+    font-size: 13px;
+    color: #007a3c;
+    text-shadow: 0 0 3px #007a3c;
+    letter-spacing: 2px;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+
+  .lcd-time .digits {
+    font-family: "VT323", monospace;
+    font-size: 64px;
+    line-height: 0.85;
+    color: #00ff7f;
+    text-shadow:
+      0 0 6px #00ff7f,
+      0 0 14px rgba(0, 255, 127, 0.6),
+      0 0 24px rgba(0, 255, 127, 0.25);
+    letter-spacing: 2px;
+    font-feature-settings: "tnum";
+  }
+  .lcd-time .digits .sep { opacity: 0.6; padding: 0 1px; }
+  .lcd-time .digits .total {
+    color: #ffaa00;
+    text-shadow:
+      0 0 5px #ffaa00,
+      0 0 12px rgba(255, 170, 0, 0.5);
+    font-size: 30px;
+    vertical-align: top;
+    margin-left: 6px;
+  }
+
+  .lcd-time .sub {
+    font-family: "VT323", monospace;
+    font-size: 14px;
+    color: #00b25a;
+    text-shadow: 0 0 3px #00b25a;
+    letter-spacing: 1px;
+    margin-top: 4px;
+    line-height: 1;
+  }
+
+  /* status block (modes) */
+  .lcd-status {
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 4px;
+  }
+  .lcd-status .row {
+    display: flex;
+    gap: 8px;
+    font-family: "VT323", monospace;
+    font-size: 14px;
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+  .lcd-status .pill {
+    color: #008f47;
+    text-shadow: 0 0 2px #008f47;
+  }
+  .lcd-status .pill.on {
+    color: #00ff7f;
+    text-shadow: 0 0 4px #00ff7f, 0 0 10px rgba(0,255,127,0.5);
+  }
+  .lcd-status .marquee-wrap {
+    overflow: hidden;
+    border-top: 1px solid #002912;
+    padding-top: 6px;
+  }
+  .lcd-status .marquee {
+    display: inline-block;
+    white-space: nowrap;
+    font-family: "VT323", monospace;
+    font-size: 18px;
+    color: #00ff7f;
+    text-shadow: 0 0 4px #00ff7f, 0 0 8px rgba(0,255,127,0.5);
+    letter-spacing: 1px;
+    animation: marquee 22s linear infinite;
+    padding-left: 100%;
+  }
+  @keyframes marquee {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+  }
+
+  /* kbps / khz / stereo */
+  .lcd-meta {
+    padding: 8px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    min-width: 120px;
+  }
+  .lcd-meta .item {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .lcd-meta .v {
+    font-family: "VT323", monospace;
+    font-size: 22px;
+    color: #00ff7f;
+    text-shadow: 0 0 4px #00ff7f, 0 0 10px rgba(0,255,127,0.4);
+    line-height: 1;
+  }
+  .lcd-meta .k {
+    font-family: "VT323", monospace;
+    font-size: 13px;
+    color: #007a3c;
+    text-shadow: 0 0 2px #007a3c;
+    letter-spacing: 1px;
+  }
+  .lcd-meta .stereo {
+    display: flex;
+    gap: 6px;
+    margin-top: 2px;
+  }
+  .lcd-meta .stereo span {
+    font-family: "VT323", monospace;
+    font-size: 13px;
+    color: #007a3c;
+    text-shadow: 0 0 2px #007a3c;
+    letter-spacing: 1px;
+  }
+  .lcd-meta .stereo span.on {
+    color: #ffaa00;
+    text-shadow: 0 0 4px #ffaa00;
+  }
+
+  /* ================================================================
+     EQUALIZER
+     ================================================================ */
+  .eq-wrap {
+    padding: 10px 12px 8px;
+    position: relative;
+  }
+  .eq {
+    display: grid;
+    grid-template-columns: repeat(16, 1fr);
+    gap: 6px;
+    align-items: end;
+    height: 92px;
+  }
+  .eq .bar {
+    width: 100%;
+    background:
+      linear-gradient(to top,
+        #00ff7f 0%,
+        #00ff7f 30%,
+        #b4ff00 55%,
+        #ffaa00 80%,
+        #ff5a00 100%);
+    box-shadow:
+      0 0 6px rgba(0, 255, 127, 0.45),
+      inset 0 0 0 1px rgba(0, 0, 0, 0.4);
+    transform-origin: bottom;
+    animation: eqbar 1.2s ease-in-out infinite alternate;
+    image-rendering: pixelated;
+  }
+
+  /* Per-bar phase + height variance */
+  .eq .bar:nth-child(1)  { animation-duration: 0.62s; animation-delay: -0.10s; }
+  .eq .bar:nth-child(2)  { animation-duration: 0.85s; animation-delay: -0.45s; }
+  .eq .bar:nth-child(3)  { animation-duration: 0.71s; animation-delay: -0.20s; }
+  .eq .bar:nth-child(4)  { animation-duration: 0.95s; animation-delay: -0.60s; }
+  .eq .bar:nth-child(5)  { animation-duration: 0.58s; animation-delay: -0.30s; }
+  .eq .bar:nth-child(6)  { animation-duration: 0.78s; animation-delay: -0.05s; }
+  .eq .bar:nth-child(7)  { animation-duration: 0.88s; animation-delay: -0.70s; }
+  .eq .bar:nth-child(8)  { animation-duration: 0.66s; animation-delay: -0.25s; }
+  .eq .bar:nth-child(9)  { animation-duration: 0.92s; animation-delay: -0.55s; }
+  .eq .bar:nth-child(10) { animation-duration: 0.74s; animation-delay: -0.40s; }
+  .eq .bar:nth-child(11) { animation-duration: 0.83s; animation-delay: -0.15s; }
+  .eq .bar:nth-child(12) { animation-duration: 0.69s; animation-delay: -0.65s; }
+  .eq .bar:nth-child(13) { animation-duration: 0.91s; animation-delay: -0.35s; }
+  .eq .bar:nth-child(14) { animation-duration: 0.56s; animation-delay: -0.50s; }
+  .eq .bar:nth-child(15) { animation-duration: 0.79s; animation-delay: -0.08s; }
+  .eq .bar:nth-child(16) { animation-duration: 0.86s; animation-delay: -0.42s; }
+
+  @keyframes eqbar {
+    0%   { height: 12%; }
+    20%  { height: 65%; }
+    40%  { height: 38%; }
+    60%  { height: 92%; }
+    80%  { height: 52%; }
+    100% { height: 78%; }
+  }
+
+  .eq-label {
+    position: absolute;
+    top: 6px;
+    left: 14px;
+    font-family: "VT323", monospace;
+    font-size: 12px;
+    color: #007a3c;
+    text-shadow: 0 0 3px #007a3c;
+    letter-spacing: 2px;
+    pointer-events: none;
+  }
+  .eq-label.r {
+    left: auto;
+    right: 14px;
+    color: #b87a00;
+    text-shadow: 0 0 3px #b87a00;
+  }
+
+  /* ================================================================
+     NOW PLAYING SEGMENT BAR + TRACK PROGRESS
+     ================================================================ */
+  .nowplaying {
+    padding: 10px 12px 12px;
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .badge {
+    width: 56px;
+    height: 56px;
+    background: #0a0a0a;
+    border-top: 1px solid #050505;
+    border-left: 1px solid #050505;
+    border-right: 1px solid #3a3a3a;
+    border-bottom: 1px solid #3a3a3a;
+    box-shadow:
+      inset 2px 2px 0 #000,
+      inset -1px -1px 0 #2a2a2a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: "VT323", monospace;
+    line-height: 1;
+  }
+  .badge .x {
+    font-size: 30px;
+    color: #00ff7f;
+    text-shadow: 0 0 6px #00ff7f, 0 0 12px rgba(0,255,127,0.5);
+    font-weight: bold;
+    letter-spacing: 0;
+  }
+  .badge .src {
+    font-size: 11px;
+    color: #007a3c;
+    text-shadow: 0 0 2px #007a3c;
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+
+  .np-info {
+    min-width: 0;
+  }
+  .np-info .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 2px;
+  }
+  .np-info .src-tag {
+    font-family: "VT323", monospace;
+    font-size: 13px;
+    color: #007a3c;
+    text-shadow: 0 0 2px #007a3c;
+    letter-spacing: 2px;
+  }
+  .np-info .seg-time {
+    font-family: "VT323", monospace;
+    font-size: 14px;
+    color: #ffaa00;
+    text-shadow: 0 0 3px #ffaa00;
+    letter-spacing: 1px;
+    font-feature-settings: "tnum";
+  }
+  .np-info .title {
+    font-family: "VT323", monospace;
+    font-size: 22px;
+    color: #00ff7f;
+    text-shadow: 0 0 4px #00ff7f, 0 0 10px rgba(0,255,127,0.3);
+    letter-spacing: 0.5px;
+    line-height: 1.05;
+    margin-bottom: 4px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .np-info .synopsis {
+    font-family: "SF Mono", "Consolas", monospace;
+    font-size: 11px;
+    color: #888;
+    line-height: 1.35;
+    letter-spacing: 0.3px;
+  }
+
+  /* segment progress (within current item) */
+  .seg-progress {
+    margin-top: 8px;
+    height: 10px;
+    background: #050505;
+    border-top: 1px solid #000;
+    border-left: 1px solid #000;
+    border-right: 1px solid #383838;
+    border-bottom: 1px solid #383838;
+    position: relative;
+    overflow: hidden;
+  }
+  .seg-progress .fill {
+    position: absolute;
+    inset: 1px auto 1px 1px;
+    width: calc(45% - 2px); /* 1:24 of 3:08 ≈ 44.7% */
+    background:
+      linear-gradient(to bottom, #00ff7f 0%, #00b25a 100%);
+    box-shadow: 0 0 6px rgba(0,255,127,0.6);
+  }
+  .seg-progress .fill::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(
+        90deg,
+        rgba(0,0,0,0.35) 0px,
+        rgba(0,0,0,0.35) 2px,
+        rgba(0,0,0,0) 2px,
+        rgba(0,0,0,0) 4px);
+  }
+  .seg-progress .knob {
+    position: absolute;
+    top: -3px;
+    left: calc(45% - 3px);
+    width: 6px;
+    height: 16px;
+    background: linear-gradient(to bottom, #4a4a4a, #1a1a1a);
+    border-top: 1px solid #6a6a6a;
+    border-left: 1px solid #6a6a6a;
+    border-right: 1px solid #050505;
+    border-bottom: 1px solid #050505;
+    box-shadow: 0 0 4px rgba(0,255,127,0.6);
+  }
+
+  /* ================================================================
+     EPISODE PROGRESS (overall 22:00)
+     ================================================================ */
+  .ep-progress {
+    padding: 10px 12px 12px;
+  }
+  .ep-progress .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .ep-progress .lbl {
+    font-family: "VT323", monospace;
+    font-size: 13px;
+    color: #007a3c;
+    text-shadow: 0 0 2px #007a3c;
+    letter-spacing: 2px;
+  }
+  .ep-progress .val {
+    font-family: "VT323", monospace;
+    font-size: 15px;
+    color: #00ff7f;
+    text-shadow: 0 0 3px #00ff7f;
+    letter-spacing: 1px;
+    font-feature-settings: "tnum";
+  }
+  .ep-progress .val .dim { color: #008f47; }
+
+  .seek {
+    height: 14px;
+    background: #050505;
+    border-top: 1px solid #000;
+    border-left: 1px solid #000;
+    border-right: 1px solid #383838;
+    border-bottom: 1px solid #383838;
+    position: relative;
+    overflow: hidden;
+  }
+  .seek .ticks {
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(
+        90deg,
+        rgba(0,255,127,0.08) 0,
+        rgba(0,255,127,0.08) 1px,
+        transparent 1px,
+        transparent calc(100% / 22));
+  }
+  .seek .fill {
+    position: absolute;
+    top: 1px;
+    bottom: 1px;
+    left: 1px;
+    width: calc(39.5% - 2px); /* 8:42 of 22:00 ≈ 39.5% */
+    background:
+      linear-gradient(to bottom, #b4ff00 0%, #00ff7f 50%, #007a3c 100%);
+    box-shadow:
+      0 0 8px rgba(0,255,127,0.7),
+      inset 0 1px 0 rgba(255,255,255,0.18);
+  }
+  .seek .fill::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(
+        90deg,
+        rgba(0,0,0,0.3) 0px,
+        rgba(0,0,0,0.3) 1px,
+        rgba(0,0,0,0) 1px,
+        rgba(0,0,0,0) 3px);
+  }
+  .seek .knob {
+    position: absolute;
+    top: -2px;
+    left: calc(39.5% - 4px);
+    width: 8px;
+    height: 18px;
+    background: linear-gradient(to bottom, #6a6a6a 0%, #2a2a2a 100%);
+    border-top: 1px solid #8a8a8a;
+    border-left: 1px solid #8a8a8a;
+    border-right: 1px solid #050505;
+    border-bottom: 1px solid #050505;
+    box-shadow:
+      0 0 6px rgba(0,255,127,0.5);
+  }
+
+  /* segment markers across episode */
+  .seg-marks {
+    display: grid;
+    grid-template-columns: 18% 14% 12% 18% 9% 14% 15%;
+    gap: 0;
+    margin-top: 6px;
+    font-family: "VT323", monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: #555;
+    line-height: 1;
+    border-top: 1px solid #1a1a1a;
+    padding-top: 4px;
+  }
+  .seg-marks span {
+    border-right: 1px dashed #2a2a2a;
+    padding: 0 4px;
+    text-align: left;
+    text-transform: uppercase;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .seg-marks span:last-child { border-right: none; }
+  .seg-marks span.done { color: #007a3c; }
+  .seg-marks span.now  {
+    color: #ffaa00;
+    text-shadow: 0 0 3px #ffaa00;
+  }
+
+  /* ================================================================
+     TRANSPORT
+     ================================================================ */
+  .transport {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    align-items: center;
+    padding: 8px 10px;
+  }
+
+  .transport-buttons {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+  }
+
+  .tbtn {
+    width: 56px;
+    height: 38px;
+    background: linear-gradient(to bottom, #3a3a3a 0%, #2a2a2a 50%, #1f1f1f 100%);
+    border-top: 1px solid #5a5a5a;
+    border-left: 1px solid #5a5a5a;
+    border-right: 1px solid #161616;
+    border-bottom: 1px solid #161616;
+    color: #c8c8c8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+    position: relative;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .tbtn .glyph {
+    font-size: 14px;
+    line-height: 1;
+    letter-spacing: 2px;
+  }
+  .tbtn.play {
+    width: 76px;
+    height: 38px;
+    background: linear-gradient(to bottom, #2c5a3a 0%, #163a22 50%, #0c2415 100%);
+    border-top: 1px solid #4a8a5a;
+    border-left: 1px solid #4a8a5a;
+    border-right: 1px solid #050505;
+    border-bottom: 1px solid #050505;
+    color: #00ff7f;
+    text-shadow: 0 0 6px #00ff7f, 0 0 12px rgba(0,255,127,0.5);
+  }
+  .tbtn.play .glyph {
+    font-size: 16px;
+    letter-spacing: 1px;
+  }
+
+  .tbtn .lbl {
+    position: absolute;
+    bottom: 1px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-family: "VT323", monospace;
+    font-size: 9px;
+    color: #707070;
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+  .tbtn.play .lbl { color: #00b25a; text-shadow: 0 0 3px #00b25a; }
+
+  .led-strip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 8px;
+    height: 38px;
+  }
+  .led {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: "VT323", monospace;
+    font-size: 12px;
+    color: #555;
+    letter-spacing: 1px;
+  }
+  .led .dot {
+    width: 6px;
+    height: 6px;
+    background: #1a1a1a;
+    border: 1px solid #050505;
+    box-shadow: inset 1px 1px 0 #000;
+  }
+  .led.on { color: #00ff7f; text-shadow: 0 0 3px #00ff7f; }
+  .led.on .dot {
+    background: #00ff7f;
+    border-color: #00ff7f;
+    box-shadow:
+      0 0 4px #00ff7f,
+      0 0 8px rgba(0,255,127,0.6),
+      inset 0 0 1px #ffffff;
+  }
+  .led.amber.on { color: #ffaa00; text-shadow: 0 0 3px #ffaa00; }
+  .led.amber.on .dot {
+    background: #ffaa00;
+    border-color: #ffaa00;
+    box-shadow:
+      0 0 4px #ffaa00,
+      0 0 8px rgba(255,170,0,0.6),
+      inset 0 0 1px #ffffff;
+  }
+
+  /* ================================================================
+     VOLUME / BALANCE STRIP
+     ================================================================ */
+  .vol-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto auto;
+    gap: 12px;
+    align-items: center;
+    padding: 8px 12px;
+  }
+
+  .knob-label {
+    font-family: "VT323", monospace;
+    font-size: 13px;
+    color: #007a3c;
+    text-shadow: 0 0 2px #007a3c;
+    letter-spacing: 2px;
+  }
+
+  .slider {
+    height: 18px;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .slider .track {
+    width: 100%;
+    height: 6px;
+    background:
+      linear-gradient(to bottom, #050505 0%, #1a1a1a 100%);
+    border-top: 1px solid #000;
+    border-left: 1px solid #000;
+    border-right: 1px solid #383838;
+    border-bottom: 1px solid #383838;
+    position: relative;
+  }
+  .slider .track .fill {
+    position: absolute;
+    inset: 1px auto 1px 1px;
+    width: calc(72% - 2px);
+    background: linear-gradient(to bottom, #00ff7f 0%, #007a3c 100%);
+    box-shadow: 0 0 4px rgba(0,255,127,0.6);
+  }
+  .slider .knob {
+    position: absolute;
+    top: 0;
+    left: calc(72% - 9px);
+    width: 18px;
+    height: 18px;
+    background:
+      linear-gradient(to bottom, #6a6a6a 0%, #4a4a4a 30%, #2a2a2a 70%, #1a1a1a 100%);
+    border-top: 1px solid #8a8a8a;
+    border-left: 1px solid #8a8a8a;
+    border-right: 1px solid #050505;
+    border-bottom: 1px solid #050505;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.2),
+      0 0 6px rgba(0,255,127,0.4);
+  }
+  .slider .knob::after {
+    content: "";
+    position: absolute;
+    top: 4px; bottom: 4px; left: 50%;
+    width: 1px;
+    background: #050505;
+    box-shadow: -2px 0 0 #050505, 2px 0 0 #050505;
+  }
+  .slider.balance .track .fill {
+    width: 12%;
+    left: 50%;
+    background: linear-gradient(to bottom, #ffaa00 0%, #b87a00 100%);
+    box-shadow: 0 0 4px rgba(255,170,0,0.6);
+  }
+  .slider.balance .knob {
+    left: calc(62% - 9px);
+  }
+
+  .vol-readout {
+    font-family: "VT323", monospace;
+    font-size: 18px;
+    color: #00ff7f;
+    text-shadow: 0 0 3px #00ff7f;
+    letter-spacing: 1px;
+    min-width: 44px;
+    text-align: right;
+  }
+
+  /* ================================================================
+     RIGHT COLUMN — SOURCE MIX + UP NEXT
+     ================================================================ */
+
+  .panel-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 4px 6px 6px;
+    font-family: "VT323", monospace;
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: #007a3c;
+    text-shadow: 0 0 2px #007a3c;
+    text-transform: uppercase;
+    border-bottom: 1px solid #1a1a1a;
+    margin-bottom: 6px;
+  }
+  .panel-title .right {
+    color: #b87a00;
+    text-shadow: 0 0 2px #b87a00;
+  }
+
+  /* ----- Source mix channels ----- */
+  .mix {
+    padding: 10px 10px 12px;
+  }
+  .channels {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .channel {
+    padding: 8px 8px 10px;
+    background: #0a0a0a;
+    border-top: 1px solid #050505;
+    border-left: 1px solid #050505;
+    border-right: 1px solid #2a2a2a;
+    border-bottom: 1px solid #2a2a2a;
+    box-shadow: inset 1px 1px 0 #000;
+    position: relative;
+  }
+  .channel .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+    font-family: "VT323", monospace;
+    line-height: 1;
+  }
+  .channel .name {
+    font-size: 14px;
+    letter-spacing: 1px;
+  }
+  .channel .pct {
+    font-size: 22px;
+    font-feature-settings: "tnum";
+    line-height: 1;
+  }
+  .channel .sub {
+    font-family: "VT323", monospace;
+    font-size: 11px;
+    color: #555;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    line-height: 1;
+  }
+  /* mini meter */
+  .meter {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 2px;
+    height: 28px;
+    align-items: end;
+  }
+  .meter .seg {
+    height: 100%;
+    background: #050505;
+    box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #1f1f1f;
+  }
+  /* Channel X — green */
+  .channel.x .name, .channel.x .pct { color: #00ff7f; text-shadow: 0 0 3px #00ff7f, 0 0 8px rgba(0,255,127,0.4); }
+  .channel.x .meter .seg.on {
+    background: linear-gradient(to top, #00ff7f, #b4ff00);
+    box-shadow: 0 0 4px #00ff7f, inset 0 0 0 1px rgba(0,0,0,0.4);
+  }
+  .channel.x .bar-anim { animation: meterX 1.6s ease-in-out infinite alternate; transform-origin: bottom; }
+  @keyframes meterX {
+    0%  { opacity: 0.55; transform: scaleY(0.45); }
+    100%{ opacity: 1;    transform: scaleY(1); }
+  }
+  /* Channel POD — cyan */
+  .channel.pod .name, .channel.pod .pct { color: #00e0ff; text-shadow: 0 0 3px #00e0ff, 0 0 8px rgba(0,224,255,0.4); }
+  .channel.pod .meter .seg.on {
+    background: linear-gradient(to top, #00e0ff, #88f0ff);
+    box-shadow: 0 0 4px #00e0ff, inset 0 0 0 1px rgba(0,0,0,0.4);
+  }
+  .channel.pod .bar-anim { animation: meterPod 1.4s ease-in-out infinite alternate; transform-origin: bottom; }
+  @keyframes meterPod {
+    0%  { opacity: 0.5;  transform: scaleY(0.35); }
+    100%{ opacity: 1;    transform: scaleY(0.9); }
+  }
+  /* Channel NWS — amber */
+  .channel.nws .name, .channel.nws .pct { color: #ffaa00; text-shadow: 0 0 3px #ffaa00, 0 0 8px rgba(255,170,0,0.4); }
+  .channel.nws .meter .seg.on {
+    background: linear-gradient(to top, #ffaa00, #ffe066);
+    box-shadow: 0 0 4px #ffaa00, inset 0 0 0 1px rgba(0,0,0,0.4);
+  }
+  .channel.nws .bar-anim { animation: meterNws 1.8s ease-in-out infinite alternate; transform-origin: bottom; }
+  @keyframes meterNws {
+    0%  { opacity: 0.4;  transform: scaleY(0.25); }
+    100%{ opacity: 0.95; transform: scaleY(0.7); }
+  }
+
+  /* tiny ratio bar under all 3 */
+  .ratio-bar {
+    height: 8px;
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: 40fr 35fr 25fr;
+    border-top: 1px solid #000;
+    border-left: 1px solid #000;
+    border-right: 1px solid #383838;
+    border-bottom: 1px solid #383838;
+  }
+  .ratio-bar div { height: 100%; }
+  .ratio-bar .rx   { background: linear-gradient(to bottom, #00ff7f, #007a3c); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.4); }
+  .ratio-bar .rpod { background: linear-gradient(to bottom, #00e0ff, #006e8c); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.4); }
+  .ratio-bar .rnws { background: linear-gradient(to bottom, #ffaa00, #b87a00); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.4); }
+
+  .ratio-key {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    font-family: "VT323", monospace;
+    font-size: 11px;
+    color: #707070;
+    letter-spacing: 1px;
+  }
+
+  /* ----- Up Next playlist ----- */
+  .playlist {
+    padding: 0 10px 10px;
+  }
+  .pl-head {
+    display: grid;
+    grid-template-columns: 22px 38px 1fr 56px;
+    gap: 8px;
+    padding: 4px 8px;
+    background: #1a1a1a;
+    border-top: 1px solid #2a2a2a;
+    border-bottom: 1px solid #050505;
+    font-family: "VT323", monospace;
+    font-size: 11px;
+    color: #707070;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+  .pl-row {
+    display: grid;
+    grid-template-columns: 22px 38px 1fr 56px;
+    gap: 8px;
+    padding: 8px 8px;
+    align-items: center;
+    border-bottom: 1px solid #050505;
+    background: #0d0d0d;
+  }
+  .pl-row.alt { background: #121212; }
+  .pl-row.now {
+    background: linear-gradient(to right, #1a3a25 0%, #0c1f15 100%);
+    border-top: 1px solid #2c5a3a;
+    border-bottom: 1px solid #061008;
+  }
+  .pl-row .num {
+    font-family: "VT323", monospace;
+    font-size: 16px;
+    color: #555;
+    line-height: 1;
+    text-align: right;
+  }
+  .pl-row .src {
+    font-family: "VT323", monospace;
+    font-size: 12px;
+    letter-spacing: 1px;
+    line-height: 1;
+    text-align: center;
+    padding: 3px 4px;
+    border-top: 1px solid #2a2a2a;
+    border-left: 1px solid #2a2a2a;
+    border-right: 1px solid #050505;
+    border-bottom: 1px solid #050505;
+  }
+  .pl-row .src.x   { color: #00ff7f; text-shadow: 0 0 3px #00ff7f; }
+  .pl-row .src.pod { color: #00e0ff; text-shadow: 0 0 3px #00e0ff; }
+  .pl-row .src.nws { color: #ffaa00; text-shadow: 0 0 3px #ffaa00; }
+  .pl-row .title {
+    font-family: "VT323", monospace;
+    font-size: 16px;
+    color: #c8c8c8;
+    line-height: 1.05;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .pl-row .title .arrow {
+    color: #ffaa00;
+    text-shadow: 0 0 4px #ffaa00;
+    margin-right: 4px;
+  }
+  .pl-row .len {
+    font-family: "VT323", monospace;
+    font-size: 16px;
+    color: #00ff7f;
+    text-shadow: 0 0 3px #00ff7f;
+    text-align: right;
+    font-feature-settings: "tnum";
+    letter-spacing: 1px;
+  }
+  .pl-row.now .num { color: #ffaa00; text-shadow: 0 0 3px #ffaa00; }
+  .pl-row.now .title { color: #fff5d6; }
+
+  /* ================================================================
+     STATUS / FOOTER
+     ================================================================ */
+  .footer {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 12px;
+    align-items: center;
+    background: #1a1a1a;
+    border-top: 1px solid #050505;
+    padding: 6px 12px;
+    box-shadow: inset 0 1px 0 #2a2a2a;
+  }
+  .footer .msg {
+    font-family: "VT323", monospace;
+    font-size: 13px;
+    color: #00ff7f;
+    text-shadow: 0 0 3px #00ff7f;
+    letter-spacing: 1px;
+  }
+  .footer .msg .dim { color: #007a3c; }
+  .footer .pill2 {
+    font-family: "VT323", monospace;
+    font-size: 12px;
+    color: #b87a00;
+    text-shadow: 0 0 2px #b87a00;
+    border-top: 1px solid #383838;
+    border-left: 1px solid #383838;
+    border-right: 1px solid #050505;
+    border-bottom: 1px solid #050505;
+    padding: 2px 8px;
+    background: #0d0d0d;
+    letter-spacing: 1px;
+  }
+
+  /* ================================================================
+     PLAY GLYPH SVG-FREE TRIANGLE
+     ================================================================ */
+  .triangle {
+    display: inline-block;
+    width: 0; height: 0;
+    border-top: 7px solid transparent;
+    border-bottom: 7px solid transparent;
+    border-left: 11px solid currentColor;
+    margin-right: 2px;
+  }
+  .square {
+    display: inline-block;
+    width: 11px; height: 11px;
+    background: currentColor;
+  }
+  .bar-glyph {
+    display: inline-flex; gap: 2px;
+  }
+  .bar-glyph i {
+    display: block;
+    width: 3px; height: 12px;
+    background: currentColor;
+  }
+
+  /* ================================================================
+     SECONDARY MINI-WINDOW (PLAYLIST EDITOR title)
+     ================================================================ */
+  .titlebar.alt {
+    background: linear-gradient(to bottom, #2a2a2a 0%, #1a1a1a 100%);
+    border-bottom: 1px solid #000;
+  }
+  .titlebar.alt .title {
+    color: #b87a00;
+    text-shadow: 0 0 4px #b87a00;
+  }
+  .titlebar.alt .title .dim { color: #6b4500; text-shadow: 0 0 3px #6b4500; }
+
+  .subwindow {
+    background: #2a2a2a;
+    border-top: 1px solid #4a4a4a;
+    border-left: 1px solid #4a4a4a;
+    border-right: 1px solid #1a1a1a;
+    border-bottom: 1px solid #1a1a1a;
+    box-shadow:
+      inset 1px 1px 0 #555,
+      inset -1px -1px 0 #161616;
+    margin-top: 12px;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="player">
+
+  <!-- ============== TITLE BAR ============== -->
+  <div class="titlebar">
+    <div class="grip">
+      <i></i><i></i><i></i><i></i><i></i><i></i>
+    </div>
+    <div class="title">
+      <span>ADRIANAMP</span>
+      <span class="dim"> v0.1 :: PERSONALIZED RADIO ::</span>
+      <span> [PLAYING]</span>
+    </div>
+    <div class="winbtns">
+      <div class="winbtn" title="minimize">_</div>
+      <div class="winbtn" title="shade">▢</div>
+      <div class="winbtn" title="close">X</div>
+    </div>
+  </div>
+
+  <!-- ============== BODY (2 COLUMNS) ============== -->
+  <div class="body">
+
+    <!-- =================================================
+         LEFT COLUMN — main player chrome
+         ================================================= -->
+    <div class="col-left">
+
+      <!-- LCD STRIP: TIME + STATUS + META -->
+      <div class="lcd-strip">
+
+        <div class="sunken lcd-time">
+          <div class="label">EPISODE TIME</div>
+          <div class="digits">
+            08<span class="sep">:</span>42<span class="total">/ 22:00</span>
+          </div>
+          <div class="sub">+13:18 REMAINING &middot; 39%</div>
+        </div>
+
+        <div class="sunken lcd-status">
+          <div class="row">
+            <span class="pill on">► PLAY</span>
+            <span class="pill">■ STOP</span>
+            <span class="pill">|| PAUSE</span>
+            <span class="pill on">◉ REC</span>
+            <span class="pill">SHUF</span>
+            <span class="pill on">RPT 1</span>
+          </div>
+          <div class="marquee-wrap">
+            <div class="marquee">
+              ★ NOW BROADCASTING — X / TIMELINE :: "ANTHROPIC RAISED AT A $X BILLION VALUATION" — SEGMENT 03 OF 11 — DAILY MIX FOR ADRIAN — 22:00 EDITION — 40% X / 35% PODCASTS / 25% NEWS — TRANSMITTING FROM ADRIANAMP &nbsp;&nbsp;&nbsp;★&nbsp;&nbsp;&nbsp;
+            </div>
+          </div>
+        </div>
+
+        <div class="sunken lcd-meta">
+          <div class="item">
+            <span class="v">128</span><span class="k">KBPS</span>
+          </div>
+          <div class="item">
+            <span class="v">44</span><span class="k">KHZ</span>
+          </div>
+          <div class="stereo">
+            <span class="on">MONO</span>
+            <span>STEREO</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- EQUALIZER -->
+      <div class="sunken eq-wrap">
+        <div class="eq-label">EQ &middot; FFT 16</div>
+        <div class="eq-label r">-3.0 dB</div>
+        <div class="eq">
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+        </div>
+      </div>
+
+      <!-- NOW PLAYING -->
+      <div class="sunken nowplaying">
+        <div class="badge">
+          <div class="x">𝕏</div>
+          <div class="src">TIMELINE</div>
+        </div>
+        <div class="np-info">
+          <div class="top">
+            <div class="src-tag">SRC: X / TIMELINE &middot; SEG 03/11</div>
+            <div class="seg-time">01:24 / 03:08</div>
+          </div>
+          <div class="title">► Anthropic raised at a $X billion valuation</div>
+          <div class="synopsis">
+            From your timeline this morning. Ten posts compiled and narrated:
+            funding round size, lead investor, post-money implications, and the
+            three threads you bookmarked overnight.
+          </div>
+          <div class="seg-progress">
+            <div class="fill"></div>
+            <div class="knob"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EPISODE PROGRESS / SEEK -->
+      <div class="sunken ep-progress">
+        <div class="row">
+          <div class="lbl">SEEK :: EPISODE TIMELINE</div>
+          <div class="val">08:42 <span class="dim">/</span> 22:00</div>
+        </div>
+        <div class="seek">
+          <div class="ticks"></div>
+          <div class="fill"></div>
+          <div class="knob"></div>
+        </div>
+        <div class="seg-marks">
+          <span class="done">INTRO</span>
+          <span class="done">X &middot; OPENAI</span>
+          <span class="done">PCT &middot; STRATECHERY</span>
+          <span class="now">► X &middot; ANTHROPIC</span>
+          <span>NWS &middot; MKT</span>
+          <span>PCT &middot; LEX</span>
+          <span>X &middot; NAVAL &middot; OUT</span>
+        </div>
+      </div>
+
+      <!-- TRANSPORT BAR -->
+      <div class="sunken transport">
+
+        <div class="led-strip">
+          <div class="led on">
+            <span class="dot"></span><span>SIGNAL</span>
+          </div>
+          <div class="led on">
+            <span class="dot"></span><span>BUFFER 100%</span>
+          </div>
+          <div class="led amber on">
+            <span class="dot"></span><span>LIVE MIX</span>
+          </div>
+        </div>
+
+        <div class="transport-buttons">
+          <div class="tbtn" title="prev segment">
+            <span class="glyph">|◄◄</span>
+            <span class="lbl">PREV</span>
+          </div>
+          <div class="tbtn" title="rewind 15">
+            <span class="glyph">◄◄ 15</span>
+            <span class="lbl">RWND</span>
+          </div>
+          <div class="tbtn play" title="playing">
+            <span class="glyph"><span class="triangle"></span> PLAY</span>
+            <span class="lbl">[ PLAYING ]</span>
+          </div>
+          <div class="tbtn" title="pause">
+            <span class="glyph"><span class="bar-glyph"><i></i><i></i></span></span>
+            <span class="lbl">PAUSE</span>
+          </div>
+          <div class="tbtn" title="stop">
+            <span class="glyph"><span class="square"></span></span>
+            <span class="lbl">STOP</span>
+          </div>
+          <div class="tbtn" title="forward 15">
+            <span class="glyph">15 ►►</span>
+            <span class="lbl">FWD</span>
+          </div>
+          <div class="tbtn" title="skip">
+            <span class="glyph">►►|</span>
+            <span class="lbl">SKIP</span>
+          </div>
+        </div>
+
+        <div class="led-strip" style="justify-content:flex-end;">
+          <div class="led on">
+            <span class="dot"></span><span>22:00 MODE</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- VOLUME / BALANCE -->
+      <div class="sunken vol-row">
+        <div class="knob-label">VOL</div>
+        <div class="slider">
+          <div class="track">
+            <div class="fill"></div>
+          </div>
+          <div class="knob"></div>
+        </div>
+        <div class="vol-readout">72%</div>
+        <div class="knob-label">BAL</div>
+        <div class="slider balance" style="width:120px;">
+          <div class="track">
+            <div class="fill"></div>
+          </div>
+          <div class="knob"></div>
+        </div>
+      </div>
+
+    </div><!-- /col-left -->
+
+
+    <!-- =================================================
+         RIGHT COLUMN — Source mix + Up Next
+         ================================================= -->
+    <div class="col-right">
+
+      <!-- SOURCE MIX -->
+      <div class="sunken mix">
+        <div class="panel-title">
+          <span>:: SOURCE MIX :: TODAY</span>
+          <span class="right">100%</span>
+        </div>
+
+        <div class="channels">
+
+          <!-- X CHANNEL -->
+          <div class="channel x">
+            <div class="head">
+              <span class="name">CH-1 :: X</span>
+              <span class="pct">40%</span>
+            </div>
+            <div class="sub">TIMELINE / POSTS</div>
+            <div class="meter">
+              <div class="seg on bar-anim" style="height:55%; animation-delay:-0.0s"></div>
+              <div class="seg on bar-anim" style="height:80%; animation-delay:-0.3s"></div>
+              <div class="seg on bar-anim" style="height:95%; animation-delay:-0.5s"></div>
+              <div class="seg on bar-anim" style="height:70%; animation-delay:-0.1s"></div>
+              <div class="seg on bar-anim" style="height:88%; animation-delay:-0.4s"></div>
+              <div class="seg on bar-anim" style="height:60%; animation-delay:-0.6s"></div>
+              <div class="seg on bar-anim" style="height:75%; animation-delay:-0.2s"></div>
+              <div class="seg on bar-anim" style="height:92%; animation-delay:-0.7s"></div>
+              <div class="seg" style="height:35%"></div>
+              <div class="seg" style="height:25%"></div>
+            </div>
+          </div>
+
+          <!-- PODCAST CHANNEL -->
+          <div class="channel pod">
+            <div class="head">
+              <span class="name">CH-2 :: POD</span>
+              <span class="pct">35%</span>
+            </div>
+            <div class="sub">SHOWS YOU FOLLOW</div>
+            <div class="meter">
+              <div class="seg on bar-anim" style="height:48%; animation-delay:-0.2s"></div>
+              <div class="seg on bar-anim" style="height:72%; animation-delay:-0.5s"></div>
+              <div class="seg on bar-anim" style="height:65%; animation-delay:-0.0s"></div>
+              <div class="seg on bar-anim" style="height:85%; animation-delay:-0.3s"></div>
+              <div class="seg on bar-anim" style="height:55%; animation-delay:-0.6s"></div>
+              <div class="seg on bar-anim" style="height:78%; animation-delay:-0.1s"></div>
+              <div class="seg on bar-anim" style="height:62%; animation-delay:-0.4s"></div>
+              <div class="seg" style="height:30%"></div>
+              <div class="seg" style="height:22%"></div>
+              <div class="seg" style="height:18%"></div>
+            </div>
+          </div>
+
+          <!-- NEWS CHANNEL -->
+          <div class="channel nws">
+            <div class="head">
+              <span class="name">CH-3 :: NWS</span>
+              <span class="pct">25%</span>
+            </div>
+            <div class="sub">TODAY'S HEADLINES</div>
+            <div class="meter">
+              <div class="seg on bar-anim" style="height:35%; animation-delay:-0.3s"></div>
+              <div class="seg on bar-anim" style="height:55%; animation-delay:-0.0s"></div>
+              <div class="seg on bar-anim" style="height:48%; animation-delay:-0.4s"></div>
+              <div class="seg on bar-anim" style="height:62%; animation-delay:-0.2s"></div>
+              <div class="seg on bar-anim" style="height:42%; animation-delay:-0.5s"></div>
+              <div class="seg" style="height:28%"></div>
+              <div class="seg" style="height:22%"></div>
+              <div class="seg" style="height:18%"></div>
+              <div class="seg" style="height:14%"></div>
+              <div class="seg" style="height:10%"></div>
+            </div>
+          </div>
+
+        </div><!-- /channels -->
+
+        <div class="ratio-bar">
+          <div class="rx"></div>
+          <div class="rpod"></div>
+          <div class="rnws"></div>
+        </div>
+        <div class="ratio-key">
+          <span>X 40%</span>
+          <span>POD 35%</span>
+          <span>NWS 25%</span>
+        </div>
+
+      </div>
+
+      <!-- UP NEXT -->
+      <div class="sunken playlist" style="padding:0;">
+        <div class="panel-title" style="margin:0;">
+          <span style="padding:8px 10px 6px;">:: UP NEXT :: PLAYLIST.M3U</span>
+          <span class="right" style="padding:8px 10px 6px;">3 ITEMS &middot; 09:00</span>
+        </div>
+
+        <div class="pl-head">
+          <span>#</span>
+          <span>SRC</span>
+          <span>TITLE</span>
+          <span style="text-align:right;">LEN</span>
+        </div>
+
+        <div class="pl-row now">
+          <div class="num">04</div>
+          <div class="src pod">POD</div>
+          <div class="title"><span class="arrow">►</span>Lex Fridman × Mira Murati: what scares me about AI</div>
+          <div class="len">04:00</div>
+        </div>
+
+        <div class="pl-row alt">
+          <div class="num">05</div>
+          <div class="src nws">NWS</div>
+          <div class="title">Markets close: tech rally continues</div>
+          <div class="len">02:00</div>
+        </div>
+
+        <div class="pl-row">
+          <div class="num">06</div>
+          <div class="src x">X</div>
+          <div class="title">Naval Ravikant: 5 tweets on focus</div>
+          <div class="len">03:00</div>
+        </div>
+
+        <div class="pl-row alt" style="opacity:0.55;">
+          <div class="num">07</div>
+          <div class="src" style="color:#555;">---</div>
+          <div class="title" style="color:#555;">[ END OF MIX &middot; OUTRO ]</div>
+          <div class="len" style="color:#555;text-shadow:none;">00:30</div>
+        </div>
+
+      </div>
+
+    </div><!-- /col-right -->
+
+  </div><!-- /body -->
+
+
+  <!-- ============== FOOTER STATUS ============== -->
+  <div class="footer">
+    <div class="msg">
+      <span class="dim">[STATUS]</span>
+      Daily mix generated 06:47 AM &middot; sources scraped: 412 posts / 7 podcast feeds / 38 news headlines &middot;
+      compiled into <span style="color:#ffaa00;text-shadow:0 0 3px #ffaa00;">22:00.00</span>
+      &middot; voice = ADRIAN_DEFAULT_v3 &middot; bitrate 128 CBR
+    </div>
+    <div class="pill2">CACHED</div>
+    <div class="pill2">CRT 86°F</div>
+  </div>
+
+</div><!-- /player -->
+
+
+<!-- =================================================
+     SECONDARY WINDOW — DAILY SCHEDULE / EQ-PRESET
+     (small extra panel below for Winamp's "stack of windows" feel)
+     ================================================= -->
+<!-- removed to keep one tight player window — comment kept for ref -->
+
+<script>
+// Tiny vanilla JS: nudge the marquee element slightly so paused-title illusion is alive.
+// (Animations themselves are CSS — this just primes scroll position.)
+(function(){
+  var m = document.querySelector('.marquee');
+  if (!m) return;
+  // Force layout so the keyframe animation kicks off cleanly on page load.
+  void m.offsetWidth;
+})();
+</script>
+
+</body>
+</html>

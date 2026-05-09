@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Station One-Nine — The Adrian Hour</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Special+Elite&display=swap');
+
+/* ========================================================================
+   STATION ONE-NINE — Mid-Century Hi-Fi (1958)
+   ======================================================================== */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  min-height: 100vh;
+  font-family: 'Playfair Display', 'Times New Roman', Georgia, serif;
+  color: #2a1a0a;
+  background:
+    radial-gradient(ellipse at 30% 20%, #5a4838 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 80%, #3a2a1a 0%, transparent 70%),
+    linear-gradient(135deg, #2a1a0a 0%, #1a1008 100%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  padding: 40px 20px 60px;
+  display: flex;
+  justify-content: center;
+}
+
+/* Subtle film-grain over everything */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.45 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/></svg>");
+  opacity: 0.4;
+  mix-blend-mode: overlay;
+  z-index: 1000;
+}
+
+/* ========================================================================
+   THE CABINET
+   ======================================================================== */
+
+.cabinet {
+  position: relative;
+  width: 1200px;
+  max-width: 100%;
+  padding: 38px 38px 32px;
+  border-radius: 14px;
+  background:
+    /* darker shadows on edges for cabinet depth */
+    radial-gradient(ellipse at 50% 100%, rgba(0,0,0,0.45) 0%, transparent 55%),
+    /* wood grain — vertical streaks */
+    repeating-linear-gradient(
+      92deg,
+      transparent 0px,
+      rgba(0,0,0,0.06) 1px,
+      transparent 2px,
+      transparent 6px,
+      rgba(110, 70, 40, 0.08) 7px,
+      transparent 11px
+    ),
+    repeating-linear-gradient(
+      88deg,
+      transparent 0px,
+      rgba(255, 220, 180, 0.04) 1px,
+      transparent 3px,
+      transparent 14px,
+      rgba(0, 0, 0, 0.05) 15px,
+      transparent 22px
+    ),
+    /* base walnut color blend */
+    linear-gradient(160deg, #6e4a2e 0%, #5a3a22 25%, #4a2e1a 60%, #3a2418 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 200, 150, 0.08),
+    inset 0 0 0 4px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 5px rgba(176, 141, 87, 0.4),
+    inset 0 0 60px rgba(0, 0, 0, 0.5),
+    0 30px 60px rgba(0, 0, 0, 0.6),
+    0 12px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* Wood grain noise overlay */
+.cabinet::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border-radius: 10px;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='600'><filter id='wg'><feTurbulence type='turbulence' baseFrequency='0.012 0.6' numOctaves='3' seed='4'/><feColorMatrix values='0 0 0 0 0.18  0 0 0 0 0.10  0 0 0 0 0.04  0 0 0 0.5 0'/></filter><rect width='100%25' height='100%25' filter='url(%23wg)'/></svg>");
+  background-size: cover;
+  mix-blend-mode: multiply;
+  opacity: 0.55;
+}
+
+/* Inner brass frame */
+.cabinet::after {
+  content: '';
+  position: absolute;
+  inset: 14px;
+  border-radius: 8px;
+  pointer-events: none;
+  background: linear-gradient(135deg,
+    #d4af6a 0%, #b08d57 22%, #8b6f3e 50%, #b08d57 78%, #d4af6a 100%);
+  -webkit-mask:
+    linear-gradient(#000, #000) content-box,
+    linear-gradient(#000, #000);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  padding: 2px;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.35);
+  opacity: 0.85;
+}
+
+/* ========================================================================
+   HEADER ROW — call letters plate + brass plate label
+   ======================================================================== */
+
+.cabinet-header {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  padding: 0 4px;
+}
+
+.station-mark {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+
+.station-mark .callsign {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 32px;
+  letter-spacing: 0.18em;
+  color: #f0e9d2;
+  text-shadow:
+    0 1px 0 rgba(0,0,0,0.6),
+    0 2px 4px rgba(0,0,0,0.4);
+}
+
+.station-mark .ampersand {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-weight: 400;
+  color: #b08d57;
+  font-size: 22px;
+  margin: 0 2px;
+}
+
+.station-mark .frequency-tag {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 13px;
+  letter-spacing: 0.15em;
+  color: #e2c98e;
+  text-transform: uppercase;
+}
+
+/* Brass plate */
+.brass-plate {
+  position: relative;
+  padding: 8px 18px 9px;
+  border-radius: 3px;
+  background: linear-gradient(180deg,
+    #e6c787 0%, #c9a565 30%, #a3814a 55%, #c9a565 78%, #e6c787 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.5),
+    inset 0 -1px 0 rgba(0,0,0,0.4),
+    inset 0 0 0 1px rgba(0,0,0,0.25),
+    0 2px 4px rgba(0,0,0,0.45);
+  font-family: 'Playfair Display', serif;
+  text-align: center;
+  min-width: 220px;
+}
+
+.brass-plate::before, .brass-plate::after {
+  content: '';
+  position: absolute;
+  width: 5px; height: 5px;
+  background: radial-gradient(circle, #5a4020 30%, #2a1810 70%);
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+  box-shadow: inset 0 1px 1px rgba(0,0,0,0.6), 0 0 1px rgba(255,255,255,0.2);
+}
+.brass-plate::before { left: 5px; }
+.brass-plate::after  { right: 5px; }
+
+.brass-plate .ep-label {
+  font-size: 9px;
+  letter-spacing: 0.32em;
+  color: #3a2a1a;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-style: italic;
+  opacity: 0.8;
+  display: block;
+}
+.brass-plate .ep-title {
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.05em;
+  color: #2a1a0a;
+  font-variant: small-caps;
+  margin-top: 1px;
+}
+
+.lamp-cluster {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.lamp {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #ffb070 0%, #d05a20 60%, #4a1a08 100%);
+  box-shadow:
+    0 0 8px rgba(255,145,69,0.7),
+    inset 0 -1px 1px rgba(0,0,0,0.5);
+}
+.lamp.dim {
+  background: radial-gradient(circle at 30% 30%, #6a3a20 0%, #2a1808 70%);
+  box-shadow: inset 0 -1px 1px rgba(0,0,0,0.6);
+}
+.lamp-label {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: #c9a565;
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+
+/* ========================================================================
+   MAIN GRID
+   ======================================================================== */
+
+.main-grid {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 22px;
+}
+
+/* ---- Left column: dial + grille area ---- */
+.dial-column {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* ========================================================================
+   THE DIAL (frequency scale + needle)
+   ======================================================================== */
+
+.dial-housing {
+  position: relative;
+  padding: 18px 22px 22px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #2a1810 0%, #1a0e06 100%);
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,0.7),
+    inset 0 0 0 1px rgba(176,141,87,0.4),
+    inset 0 0 0 3px rgba(0,0,0,0.4),
+    inset 0 0 0 4px rgba(176,141,87,0.6),
+    0 2px 6px rgba(0,0,0,0.5);
+}
+
+.dial-face {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  border-radius: 6px;
+  background:
+    radial-gradient(ellipse at 50% 100%, #f5eed5 0%, #e8dcb8 60%, #d4c694 100%);
+  box-shadow:
+    inset 0 0 30px rgba(120, 80, 30, 0.18),
+    inset 0 2px 6px rgba(0,0,0,0.15),
+    inset 0 -2px 4px rgba(120,80,30,0.12);
+  overflow: hidden;
+}
+
+/* Dial paper grain */
+.dial-face::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='1.4' numOctaves='2'/><feColorMatrix values='0 0 0 0 0.32  0 0 0 0 0.22  0 0 0 0 0.10  0 0 0 0.18 0'/></filter><rect width='100%25' height='100%25' filter='url(%23p)'/></svg>");
+  mix-blend-mode: multiply;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.dial-svg {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* Tube glow behind right side of dial */
+.dial-face::after {
+  content: '';
+  position: absolute;
+  right: -10%;
+  top: 30%;
+  width: 60%;
+  height: 80%;
+  background: radial-gradient(ellipse at center,
+    rgba(255,145,69,0.22) 0%,
+    rgba(255,120,40,0.12) 30%,
+    transparent 65%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.band-label {
+  position: absolute;
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  color: #6a4a28;
+  text-transform: uppercase;
+  z-index: 2;
+}
+.band-label.tl { top: 10px; left: 18px; }
+.band-label.tr { top: 10px; right: 18px; }
+.band-label.bl { bottom: 10px; left: 18px; }
+.band-label.br { bottom: 10px; right: 18px; }
+
+/* ========================================================================
+   GRILLE + NOW PLAYING
+   ======================================================================== */
+
+.grille-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.grille {
+  position: relative;
+  height: 240px;
+  border-radius: 6px;
+  background:
+    /* fabric weave — diagonal cross hatch */
+    repeating-linear-gradient(45deg,
+      rgba(60, 30, 14, 0.9) 0px,
+      rgba(60, 30, 14, 0.9) 1px,
+      rgba(110, 70, 40, 0.55) 1px,
+      rgba(110, 70, 40, 0.55) 3px),
+    repeating-linear-gradient(-45deg,
+      rgba(40, 20, 10, 0.5) 0px,
+      rgba(40, 20, 10, 0.5) 1px,
+      transparent 1px,
+      transparent 3px),
+    linear-gradient(135deg, #6a3a20 0%, #4a2818 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(0,0,0,0.5),
+    inset 0 0 0 4px rgba(176,141,87,0.55),
+    inset 0 0 0 5px rgba(0,0,0,0.3),
+    inset 0 0 30px rgba(0,0,0,0.4);
+  overflow: hidden;
+}
+
+/* Tube glow seeping through grille */
+.grille::before {
+  content: '';
+  position: absolute;
+  width: 75%;
+  height: 75%;
+  left: 15%;
+  top: 10%;
+  background: radial-gradient(ellipse at center,
+    rgba(255, 165, 90, 0.55) 0%,
+    rgba(255, 130, 50, 0.32) 22%,
+    rgba(255, 110, 40, 0.18) 40%,
+    transparent 65%);
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+/* Grille center medallion (brass) */
+.grille::after {
+  content: '';
+  position: absolute;
+  width: 64px; height: 64px;
+  left: calc(50% - 32px);
+  top: calc(50% - 32px);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 35%,
+      #e6c787 0%, #c9a565 35%, #8b6f3e 70%, #5a4020 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.4),
+    inset 0 -2px 3px rgba(0,0,0,0.5),
+    0 2px 6px rgba(0,0,0,0.6),
+    0 0 18px rgba(255,145,69,0.35);
+}
+
+/* now playing card sits beside grille */
+.now-playing {
+  position: relative;
+  height: 240px;
+  padding: 20px 22px;
+  border-radius: 6px;
+  background:
+    radial-gradient(ellipse at top, #faf3da 0%, #f0e9d2 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(176,141,87,0.5),
+    inset 0 0 0 3px rgba(0,0,0,0.25),
+    inset 0 0 0 4px rgba(176,141,87,0.6),
+    0 2px 6px rgba(0,0,0,0.45);
+  display: flex;
+  flex-direction: column;
+}
+
+.now-playing::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='c'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2'/><feColorMatrix values='0 0 0 0 0.32  0 0 0 0 0.22  0 0 0 0 0.10  0 0 0 0.12 0'/></filter><rect width='100%25' height='100%25' filter='url(%23c)'/></svg>");
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  border-radius: 6px;
+  opacity: 0.7;
+}
+
+.np-toprow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  position: relative; z-index: 1;
+}
+
+.np-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 11px 5px;
+  background: #8b3a3a;
+  color: #f0e9d2;
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  font-variant: small-caps;
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.3);
+}
+.np-source .dot {
+  width: 5px; height: 5px;
+  background: #f0e9d2;
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(255,235,200,0.7);
+}
+
+.np-segno {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 11px;
+  color: #6a4a28;
+  letter-spacing: 0.1em;
+}
+
+.np-title {
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 1.18;
+  color: #2a1a0a;
+  letter-spacing: 0.005em;
+  margin-bottom: 8px;
+  position: relative; z-index: 1;
+  font-style: italic;
+}
+.np-title em {
+  font-style: normal;
+  color: #8b3a3a;
+}
+
+.np-synopsis {
+  font-family: 'Playfair Display', serif;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #4a3622;
+  position: relative; z-index: 1;
+  margin-bottom: auto;
+  padding-bottom: 4px;
+}
+
+.np-synopsis::first-letter {
+  font-size: 32px;
+  font-weight: 600;
+  float: left;
+  line-height: 0.9;
+  margin: 4px 6px 0 0;
+  color: #8b3a3a;
+}
+
+/* segment progress strip — looks like a tape gauge */
+.seg-bar {
+  position: relative; z-index: 1;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.seg-bar .label {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #6a4a28;
+  min-width: 64px;
+}
+.seg-bar .track {
+  flex: 1;
+  height: 8px;
+  background: linear-gradient(180deg, #d4c694 0%, #b8a674 100%);
+  border-radius: 1px;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+  position: relative;
+  overflow: hidden;
+}
+.seg-bar .fill {
+  position: absolute; inset: 0;
+  width: 44.7%; /* 1:24 of 3:08 */
+  background: linear-gradient(180deg, #c97c45 0%, #8b3a3a 100%);
+  box-shadow: inset 0 1px 0 rgba(255,200,140,0.4), 0 0 4px rgba(255,120,50,0.4);
+}
+.seg-bar .fill::after {
+  content: '';
+  position: absolute; right: -1px; top: -2px; bottom: -2px;
+  width: 2px;
+  background: #f0e9d2;
+  box-shadow: 0 0 6px rgba(255,200,140,0.9);
+}
+.seg-bar .seg-time {
+  font-family: 'Playfair Display', serif;
+  font-size: 12px;
+  font-variant: tabular-nums;
+  color: #4a3622;
+  min-width: 80px;
+  text-align: right;
+  letter-spacing: 0.04em;
+}
+
+/* ========================================================================
+   TIME DISPLAY + TRANSPORT (under dial)
+   ======================================================================== */
+
+.transport-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  align-items: stretch;
+}
+
+.time-panel {
+  position: relative;
+  padding: 16px 22px 16px;
+  border-radius: 6px;
+  background:
+    linear-gradient(180deg, #faf3da 0%, #ece2bd 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(176,141,87,0.55),
+    inset 0 0 0 3px rgba(0,0,0,0.25),
+    inset 0 0 0 4px rgba(176,141,87,0.6),
+    0 2px 6px rgba(0,0,0,0.45);
+  text-align: center;
+}
+
+.time-panel .label {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  color: #6a4a28;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.time-panel .clock {
+  font-family: 'Playfair Display', serif;
+  font-weight: 500;
+  font-size: 56px;
+  line-height: 1;
+  color: #2a1a0a;
+  font-variant: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.time-panel .clock .total {
+  color: #8b6f3e;
+  font-style: italic;
+  font-size: 32px;
+  font-weight: 400;
+}
+.time-panel .clock .slash {
+  color: #b08d57;
+  font-style: italic;
+  font-size: 38px;
+  margin: 0 4px;
+}
+.time-panel .stamp {
+  margin-top: 8px;
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 11px;
+  color: #6a4a28;
+  letter-spacing: 0.08em;
+}
+
+/* The full-show progress as ticker dots (per minute) */
+.minute-strip {
+  margin-top: 10px;
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+}
+.minute-strip i {
+  display: block;
+  width: 5px;
+  height: 14px;
+  background: linear-gradient(180deg, #c4b482, #a08c5c);
+  border-radius: 0.5px;
+  box-shadow: inset 0 0 0 0.5px rgba(0,0,0,0.18);
+}
+.minute-strip i.passed {
+  background: linear-gradient(180deg, #8b3a3a 0%, #5a2522 100%);
+  box-shadow: inset 0 0 0 0.5px rgba(0,0,0,0.3);
+}
+.minute-strip i.current {
+  background: linear-gradient(180deg, #ffb070 0%, #c97c45 100%);
+  box-shadow:
+    inset 0 0 0 0.5px rgba(0,0,0,0.3),
+    0 0 6px rgba(255,145,69,0.9);
+  height: 18px;
+  margin-top: -2px;
+}
+
+/* Transport (knobs row) */
+.transport-panel {
+  position: relative;
+  padding: 18px 22px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #4a2e1a 0%, #2a1810 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,200,150,0.12),
+    inset 0 0 0 1px rgba(176,141,87,0.45),
+    inset 0 0 0 3px rgba(0,0,0,0.45),
+    inset 0 0 0 4px rgba(176,141,87,0.6),
+    0 2px 6px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 6px;
+}
+
+.transport-panel::before {
+  content: '';
+  position: absolute; inset: 6px;
+  border-radius: 4px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='wood'><feTurbulence type='turbulence' baseFrequency='0.02 0.5' numOctaves='3'/><feColorMatrix values='0 0 0 0 0.20  0 0 0 0 0.10  0 0 0 0 0.04  0 0 0 0.45 0'/></filter><rect width='100%25' height='100%25' filter='url(%23wood)'/></svg>");
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.knob {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 40% 35%,
+      #f4e3a8 0%, #d4ae5e 25%, #8b6f3e 60%, #4a3015 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.3),
+    inset 0 -2px 3px rgba(0,0,0,0.5),
+    inset 0 0 0 1px rgba(0,0,0,0.4),
+    0 4px 8px rgba(0,0,0,0.6),
+    0 1px 2px rgba(0,0,0,0.4);
+  cursor: pointer;
+  z-index: 1;
+}
+
+/* concentric rings */
+.knob::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg,
+    rgba(0,0,0,0.18) 0deg,
+    rgba(0,0,0,0.18) 0.5deg,
+    transparent 0.5deg,
+    transparent 3deg);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.3);
+}
+
+.knob::after {
+  content: '';
+  position: absolute;
+  width: 44%; height: 44%;
+  left: 28%; top: 28%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 30%,
+      #2a1810 0%, #1a0e06 60%, #0a0604 100%);
+  box-shadow:
+    inset 0 1px 1px rgba(255,180,90,0.2),
+    inset 0 -1px 1px rgba(0,0,0,0.7);
+}
+
+.knob.bakelite {
+  background:
+    radial-gradient(circle at 38% 30%,
+      #5a3028 0%, #3a1818 30%, #1a0808 70%, #0a0404 100%);
+}
+.knob.bakelite::after {
+  background:
+    radial-gradient(circle at 35% 30%,
+      #f4e3a8 0%, #d4ae5e 30%, #8b6f3e 70%);
+  box-shadow: inset 0 1px 1px rgba(255,220,140,0.3);
+}
+
+/* play knob with a tube-glow */
+.knob.playing {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.3),
+    inset 0 -2px 3px rgba(0,0,0,0.5),
+    inset 0 0 0 1px rgba(0,0,0,0.4),
+    0 4px 8px rgba(0,0,0,0.6),
+    0 0 24px rgba(255,145,69,0.55);
+}
+.knob.playing::after {
+  background:
+    radial-gradient(circle at 35% 30%,
+      #ffb070 0%, #ff7a30 35%, #b04510 75%, #5a1804 100%);
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,200,0.6),
+    0 0 12px rgba(255,145,69,0.7);
+}
+
+/* tick mark on knob */
+.knob .tick {
+  position: absolute;
+  width: 2px; height: 12px;
+  background: #2a1810;
+  top: 4px; left: calc(50% - 1px);
+  border-radius: 1px;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.2);
+}
+.knob.playing .tick { background: #2a1810; }
+
+.knob-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.knob-cell .knob-label {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 9px;
+  letter-spacing: 0.32em;
+  color: #d4c08a;
+  text-transform: uppercase;
+}
+.knob-cell .knob-label.bright { color: #ffb878; text-shadow: 0 0 6px rgba(255,145,69,0.6); }
+
+.knob.small { width: 50px; height: 50px; }
+.knob.small::after { width: 38%; height: 38%; left: 31%; top: 31%; }
+
+/* triangle indicators on the rim */
+.rim-marker {
+  position: absolute;
+  font-family: 'Playfair Display', serif;
+  font-size: 14px;
+  color: #8b6f3e;
+  font-weight: 600;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.5);
+}
+
+/* ========================================================================
+   RIGHT COLUMN — VU meters + queue + volume
+   ======================================================================== */
+
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Source mix VU panel */
+.vu-panel {
+  position: relative;
+  padding: 16px 18px 18px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #2a1810 0%, #1a0e06 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(176,141,87,0.45),
+    inset 0 0 0 3px rgba(0,0,0,0.45),
+    inset 0 0 0 4px rgba(176,141,87,0.6),
+    0 2px 6px rgba(0,0,0,0.5);
+}
+
+.panel-heading {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  color: #d4c08a;
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed rgba(176,141,87,0.45);
+}
+
+.vu-trio {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.vu-meter {
+  position: relative;
+  height: 100px;
+  border-radius: 4px;
+  background: radial-gradient(ellipse at 50% 100%, #f5eed5 0%, #e2d5a8 70%, #c4b078 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(176,141,87,0.6),
+    inset 0 1px 3px rgba(0,0,0,0.25),
+    inset 0 0 0 2px rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+
+.vu-meter svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.vu-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.vu-label {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #d4c08a;
+  text-align: center;
+}
+.vu-pct {
+  font-family: 'Playfair Display', serif;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: #f0e9d2;
+  text-align: center;
+  font-variant: tabular-nums;
+}
+
+/* Queue panel — wooden tray with paper cards */
+.queue-panel {
+  position: relative;
+  padding: 16px 18px 18px;
+  border-radius: 6px;
+  background:
+    /* wood grain */
+    repeating-linear-gradient(92deg,
+      transparent 0px,
+      rgba(0,0,0,0.05) 1px,
+      transparent 2px,
+      transparent 8px,
+      rgba(110, 70, 40, 0.08) 9px,
+      transparent 14px),
+    linear-gradient(160deg, #5a3a22 0%, #3a2418 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(176,141,87,0.5),
+    inset 0 0 0 3px rgba(0,0,0,0.45),
+    inset 0 0 0 4px rgba(176,141,87,0.6),
+    0 2px 6px rgba(0,0,0,0.5);
+}
+
+.queue-panel::before {
+  content: '';
+  position: absolute; inset: 4px;
+  border-radius: 4px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='400'><filter id='wd'><feTurbulence type='turbulence' baseFrequency='0.018 0.5' numOctaves='3'/><feColorMatrix values='0 0 0 0 0.18  0 0 0 0 0.10  0 0 0 0 0.04  0 0 0 0.4 0'/></filter><rect width='100%25' height='100%25' filter='url(%23wd)'/></svg>");
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+.queue-cards {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.q-card {
+  position: relative;
+  padding: 10px 12px 11px 14px;
+  background:
+    linear-gradient(180deg, #faf3da 0%, #ece2bd 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(176,141,87,0.4),
+    0 2px 4px rgba(0,0,0,0.45),
+    0 1px 0 rgba(255,255,255,0.05);
+  border-radius: 1.5px;
+  /* slight rotation per card (typed cards in wooden slots) */
+}
+
+.q-card::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='80'><filter id='cp'><feTurbulence type='fractalNoise' baseFrequency='1.4' numOctaves='2'/><feColorMatrix values='0 0 0 0 0.32  0 0 0 0 0.22  0 0 0 0 0.10  0 0 0 0.10 0'/></filter><rect width='100%25' height='100%25' filter='url(%23cp)'/></svg>");
+  mix-blend-mode: multiply;
+  border-radius: 1.5px;
+  pointer-events: none;
+}
+
+.q-card:nth-child(1) { transform: rotate(-0.3deg); }
+.q-card:nth-child(2) { transform: rotate(0.5deg); }
+.q-card:nth-child(3) { transform: rotate(-0.4deg); }
+
+.q-card .row {
+  position: relative; z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.q-card .meta {
+  display: flex; align-items: center; gap: 8px;
+}
+.q-card .num {
+  font-family: 'Special Elite', 'Courier New', monospace;
+  font-size: 13px;
+  color: #6a4a28;
+  letter-spacing: 0;
+}
+.q-card .src {
+  font-family: 'Special Elite', 'Courier New', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 2px 7px 3px;
+  background: #2a1810;
+  color: #f0e9d2;
+  border-radius: 1px;
+}
+.q-card .src.x { background: #5a6647; }
+.q-card .src.podcast { background: #8b3a3a; }
+.q-card .src.news { background: #3a4a5a; }
+
+.q-card .len {
+  font-family: 'Special Elite', 'Courier New', monospace;
+  font-size: 11px;
+  color: #4a3622;
+  font-variant: tabular-nums;
+}
+
+.q-card .title {
+  position: relative; z-index: 1;
+  font-family: 'Special Elite', 'Courier New', monospace;
+  font-size: 12.5px;
+  line-height: 1.3;
+  color: #2a1a0a;
+}
+
+/* Volume panel */
+.volume-panel {
+  position: relative;
+  padding: 14px 18px 16px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #2a1810 0%, #1a0e06 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(176,141,87,0.45),
+    inset 0 0 0 3px rgba(0,0,0,0.45),
+    inset 0 0 0 4px rgba(176,141,87,0.6),
+    0 2px 6px rgba(0,0,0,0.5);
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  gap: 14px;
+  align-items: center;
+}
+
+.volume-panel .knob-cell { padding-top: 2px; }
+
+.vol-scale {
+  position: relative;
+  height: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.vol-arc {
+  position: relative;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.vol-arc i {
+  display: block;
+  width: 4px;
+  background: linear-gradient(180deg, #6a4a28, #4a3015);
+  border-radius: 0.5px;
+}
+.vol-arc i:nth-child(1)  { height: 6px;  }
+.vol-arc i:nth-child(2)  { height: 7px;  }
+.vol-arc i:nth-child(3)  { height: 8px;  }
+.vol-arc i:nth-child(4)  { height: 9px;  }
+.vol-arc i:nth-child(5)  { height: 10px; }
+.vol-arc i:nth-child(6)  { height: 11px; }
+.vol-arc i:nth-child(7)  { height: 12px; background: linear-gradient(180deg, #c97c45, #8b3a22); }
+.vol-arc i:nth-child(8)  { height: 13px; background: linear-gradient(180deg, #c97c45, #8b3a22); }
+.vol-arc i:nth-child(9)  { height: 14px; background: linear-gradient(180deg, #ffb070, #c97c45); box-shadow: 0 0 6px rgba(255,145,69,0.7); }
+.vol-arc i:nth-child(10) { height: 9px; opacity: 0.4; }
+.vol-arc i:nth-child(11) { height: 10px; opacity: 0.4; }
+.vol-arc i:nth-child(12) { height: 12px; opacity: 0.4; }
+.vol-arc i:nth-child(13) { height: 13px; opacity: 0.4; }
+.vol-arc i:nth-child(14) { height: 14px; opacity: 0.4; }
+.vol-arc i:nth-child(15) { height: 15px; opacity: 0.4; }
+
+.vol-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.vol-meta .vol-label {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  color: #d4c08a;
+  text-transform: uppercase;
+}
+.vol-meta .vol-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 13px;
+  color: #f0e9d2;
+  font-variant: tabular-nums;
+}
+
+/* ========================================================================
+   FOOTER STRIP — schedule, tube-glow, signature
+   ======================================================================== */
+
+.footer-strip {
+  position: relative;
+  z-index: 2;
+  margin-top: 24px;
+  padding: 14px 22px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #1a0e06 0%, #0a0604 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,180,100,0.08),
+    inset 0 0 0 1px rgba(176,141,87,0.45),
+    inset 0 0 0 2px rgba(0,0,0,0.4),
+    inset 0 0 0 3px rgba(176,141,87,0.5),
+    0 2px 6px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  font-family: 'Playfair Display', serif;
+}
+
+.footer-strip .ticker {
+  font-style: italic;
+  font-size: 12px;
+  color: #d4c08a;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.footer-strip .ticker .accent {
+  color: #ffb070;
+  font-style: normal;
+  font-weight: 600;
+  text-shadow: 0 0 6px rgba(255,145,69,0.5);
+}
+
+.footer-strip .signature {
+  font-style: italic;
+  font-size: 11px;
+  color: #8b6f3e;
+  letter-spacing: 0.18em;
+  font-variant: small-caps;
+  white-space: nowrap;
+}
+.footer-strip .signature em {
+  color: #b08d57;
+  font-style: normal;
+}
+
+/* tiny brass screws at corners of cabinet */
+.screw {
+  position: absolute;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #e6c787 0%, #8b6f3e 60%, #4a3015 100%);
+  box-shadow:
+    inset 0 0 0 0.5px rgba(0,0,0,0.5),
+    0 1px 2px rgba(0,0,0,0.5);
+  z-index: 3;
+}
+.screw::before {
+  content: '';
+  position: absolute;
+  width: 70%;
+  height: 1px;
+  background: rgba(0,0,0,0.5);
+  top: 50%; left: 15%;
+  transform: rotate(35deg);
+}
+.screw.tl { top: 18px; left: 18px; }
+.screw.tr { top: 18px; right: 18px; }
+.screw.bl { bottom: 16px; left: 18px; }
+.screw.br { bottom: 16px; right: 18px; }
+</style>
+</head>
+<body>
+
+<div class="cabinet">
+
+  <!-- corner screws -->
+  <span class="screw tl"></span>
+  <span class="screw tr"></span>
+  <span class="screw bl"></span>
+  <span class="screw br"></span>
+
+  <!-- ============================================================
+       HEADER: Station mark + brass plate + lamps
+       ============================================================ -->
+  <header class="cabinet-header">
+    <div class="station-mark">
+      <span class="callsign">STATION ONE-NINE</span>
+      <span class="ampersand">&middot;</span>
+      <span class="frequency-tag">High Fidelity Broadcasting</span>
+    </div>
+
+    <div class="brass-plate" aria-label="episode plate">
+      <span class="ep-label">Wed Eve · The Adrian Hour</span>
+      <span class="ep-title">Volume XXII · A Twenty-Two Minute Programme</span>
+    </div>
+
+    <div class="lamp-cluster">
+      <span class="lamp-label">Tubes Warm</span>
+      <span class="lamp"></span>
+      <span class="lamp"></span>
+      <span class="lamp dim"></span>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       MAIN GRID
+       ============================================================ -->
+  <div class="main-grid">
+
+    <!-- ===================== LEFT COLUMN ===================== -->
+    <section class="dial-column">
+
+      <!-- DIAL HOUSING -->
+      <div class="dial-housing">
+        <div class="dial-face">
+          <span class="band-label tl">Programme Tuner</span>
+          <span class="band-label tr">22-Min. Band</span>
+          <span class="band-label bl">— elapsed —</span>
+          <span class="band-label br">— remaining —</span>
+
+          <svg class="dial-svg" viewBox="0 0 800 220" preserveAspectRatio="xMidYMid meet">
+            <!-- Definitions -->
+            <defs>
+              <radialGradient id="needleGlow" cx="50%" cy="100%" r="55%">
+                <stop offset="0%" stop-color="#ff9145" stop-opacity="0.45"/>
+                <stop offset="35%" stop-color="#ff7a30" stop-opacity="0.18"/>
+                <stop offset="100%" stop-color="#ff7a30" stop-opacity="0"/>
+              </radialGradient>
+              <linearGradient id="needleGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#8b3a3a"/>
+                <stop offset="50%" stop-color="#5a1818"/>
+                <stop offset="100%" stop-color="#3a0808"/>
+              </linearGradient>
+              <linearGradient id="brassRail" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#e6c787"/>
+                <stop offset="50%" stop-color="#a3814a"/>
+                <stop offset="100%" stop-color="#5a4020"/>
+              </linearGradient>
+            </defs>
+
+            <!-- Tube glow oval (subtle) -->
+            <ellipse cx="600" cy="220" rx="260" ry="120" fill="url(#needleGlow)"/>
+
+            <!-- The curved scale -->
+            <!-- Outer brass arc -->
+            <path d="M 80 180 Q 400 -40 720 180"
+                  stroke="url(#brassRail)" stroke-width="3" fill="none" opacity="0.85"/>
+
+            <!-- Major tick marks: positions correspond to 540, 600, 800, 1000, 1200, 1400, 1600 kHz mapped to minutes 0-22 -->
+            <!-- We use frequency labels for atmosphere but their positions trace the 22-minute arc -->
+            <!-- Function: minute m maps to angle theta along an arc of 180-degree-ish coverage from x=80..720 -->
+            <!-- Compute for 8 evenly spaced frequencies -->
+
+            <g font-family="Playfair Display, serif" font-size="14" fill="#3a2a1a" text-anchor="middle" font-weight="600">
+
+              <!-- 540 kHz / 0 min -->
+              <line x1="100" y1="156" x2="100" y2="138" stroke="#3a2a1a" stroke-width="1.5"/>
+              <text x="100" y="178" font-style="italic" font-size="11" fill="#6a4a28">540</text>
+
+              <!-- minor ticks between 540-600 -->
+              <line x1="123" y1="142" x2="123" y2="132" stroke="#6a4a28" stroke-width="0.8"/>
+              <line x1="146" y1="130" x2="146" y2="121" stroke="#6a4a28" stroke-width="0.8"/>
+
+              <!-- 600 / 3 min -->
+              <line x1="170" y1="118" x2="170" y2="100" stroke="#3a2a1a" stroke-width="1.5"/>
+              <text x="170" y="92" font-style="italic" font-size="11" fill="#6a4a28">600</text>
+
+              <line x1="195" y1="95" x2="195" y2="86" stroke="#6a4a28" stroke-width="0.8"/>
+              <line x1="222" y1="78" x2="222" y2="69" stroke="#6a4a28" stroke-width="0.8"/>
+
+              <!-- 800 / 7 min -->
+              <line x1="252" y1="58" x2="252" y2="40" stroke="#3a2a1a" stroke-width="1.5"/>
+              <text x="252" y="32" font-style="italic" font-size="11" fill="#6a4a28">800</text>
+
+              <line x1="288" y1="38" x2="288" y2="29" stroke="#6a4a28" stroke-width="0.8"/>
+              <line x1="324" y1="22" x2="324" y2="13" stroke="#6a4a28" stroke-width="0.8"/>
+
+              <!-- 1000 / 11 min (top) -->
+              <line x1="400" y1="6" x2="400" y2="-12" stroke="#3a2a1a" stroke-width="1.5"/>
+              <text x="400" y="-20" font-style="italic" font-size="12" fill="#6a4a28">1000</text>
+
+              <line x1="476" y1="22" x2="476" y2="13" stroke="#6a4a28" stroke-width="0.8"/>
+              <line x1="512" y1="38" x2="512" y2="29" stroke="#6a4a28" stroke-width="0.8"/>
+
+              <!-- 1200 / 15 min -->
+              <line x1="548" y1="58" x2="548" y2="40" stroke="#3a2a1a" stroke-width="1.5"/>
+              <text x="548" y="32" font-style="italic" font-size="11" fill="#6a4a28">1200</text>
+
+              <line x1="578" y1="78" x2="578" y2="69" stroke="#6a4a28" stroke-width="0.8"/>
+              <line x1="605" y1="95" x2="605" y2="86" stroke="#6a4a28" stroke-width="0.8"/>
+
+              <!-- 1400 / 19 min -->
+              <line x1="630" y1="118" x2="630" y2="100" stroke="#3a2a1a" stroke-width="1.5"/>
+              <text x="630" y="92" font-style="italic" font-size="11" fill="#6a4a28">1400</text>
+
+              <line x1="654" y1="130" x2="654" y2="121" stroke="#6a4a28" stroke-width="0.8"/>
+              <line x1="677" y1="142" x2="677" y2="132" stroke="#6a4a28" stroke-width="0.8"/>
+
+              <!-- 1600 / 22 min -->
+              <line x1="700" y1="156" x2="700" y2="138" stroke="#3a2a1a" stroke-width="1.5"/>
+              <text x="700" y="178" font-style="italic" font-size="11" fill="#6a4a28">1600</text>
+            </g>
+
+            <!-- Minute markers (smaller) below -->
+            <g font-family="Playfair Display, serif" font-size="9" fill="#8b3a3a" text-anchor="middle" font-style="italic">
+              <text x="100" y="200">0:00</text>
+              <text x="252" y="200">7:00</text>
+              <text x="400" y="200">11:00</text>
+              <text x="548" y="200">15:00</text>
+              <text x="700" y="200">22:00</text>
+            </g>
+
+            <!-- The horizontal sliding rail (where the needle rides) -->
+            <line x1="80" y1="200" x2="720" y2="200" stroke="#8b6f3e" stroke-width="0.8" opacity="0.6"/>
+
+            <!-- THE NEEDLE — points to 8:42 -->
+            <!-- 8:42 = 8.7 / 22 = 0.395 along the arc -->
+            <!-- Approximate position: x ≈ 80 + (720-80)*0.395 = 80 + 252.8 = 332.8 -->
+            <!-- To make it ride the curve, we compute y from arc -->
+
+            <!-- Needle base on the rail -->
+            <g transform="translate(333, 200)">
+              <!-- needle line going up to the arc -->
+              <!-- arc y at x=333 is ~ -40 + (some calc); approximate to y=22 above origin -->
+              <!-- Going from (0,0) to (0, -188) -->
+              <line x1="0" y1="0" x2="0" y2="-188" stroke="url(#needleGrad)" stroke-width="2.5" stroke-linecap="round"/>
+              <!-- needle highlight -->
+              <line x1="-1" y1="-2" x2="-1" y2="-185" stroke="#c97c45" stroke-width="0.6" opacity="0.7"/>
+              <!-- pivot base (brass) -->
+              <circle cx="0" cy="0" r="9" fill="url(#brassRail)" stroke="#3a2a1a" stroke-width="0.8"/>
+              <circle cx="0" cy="0" r="3" fill="#1a0808"/>
+              <!-- pointer head -->
+              <polygon points="0,-188 -4,-180 4,-180" fill="#8b3a3a" stroke="#3a0a0a" stroke-width="0.5"/>
+              <!-- glow -->
+              <circle cx="0" cy="-188" r="6" fill="#ff9145" opacity="0.4"/>
+            </g>
+
+            <!-- Frequency reading aligned with needle -->
+            <g font-family="Playfair Display, serif" font-size="11" fill="#8b3a3a" text-anchor="middle" font-style="italic" font-weight="600">
+              <text x="333" y="218">▼ TUNED · 8:42</text>
+            </g>
+
+            <!-- Decorative small medallion bottom-left -->
+            <g transform="translate(40, 200)">
+              <circle cx="0" cy="0" r="14" fill="url(#brassRail)" stroke="#3a2a1a" stroke-width="0.8"/>
+              <text x="0" y="3" font-family="Playfair Display, serif" font-size="8" fill="#3a2a1a" text-anchor="middle" font-style="italic" font-weight="600">VHF</text>
+            </g>
+            <g transform="translate(760, 200)">
+              <circle cx="0" cy="0" r="14" fill="url(#brassRail)" stroke="#3a2a1a" stroke-width="0.8"/>
+              <text x="0" y="3" font-family="Playfair Display, serif" font-size="8" fill="#3a2a1a" text-anchor="middle" font-style="italic" font-weight="600">UHF</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <!-- GRILLE + NOW PLAYING ROW -->
+      <div class="grille-row">
+        <div class="grille" aria-label="speaker grille"></div>
+
+        <article class="now-playing">
+          <div class="np-toprow">
+            <span class="np-source">
+              <span class="dot"></span>
+              X · Timeline
+            </span>
+            <span class="np-segno">Segment iv. of xi</span>
+          </div>
+          <h2 class="np-title">"Anthropic raised at a $billion‑plus valuation."</h2>
+          <p class="np-synopsis">Word from the Bay this evening: investors are pouring fresh capital into the makers of Claude, with rumours of a valuation north of one hundred billion. Adrian's timeline calls it the start of an enterprise era for AI labs.</p>
+
+          <div class="seg-bar">
+            <span class="label">— in segment —</span>
+            <div class="track"><div class="fill"></div></div>
+            <span class="seg-time">1:24 / 3:08</span>
+          </div>
+        </article>
+      </div>
+
+      <!-- TIME + TRANSPORT ROW -->
+      <div class="transport-row">
+
+        <div class="time-panel">
+          <div class="label">Now Listening</div>
+          <div class="clock">
+            <span class="elapsed">8:42</span><span class="slash">/</span><span class="total">22:00</span>
+          </div>
+          <div class="stamp">— forty per cent through the programme —</div>
+
+          <!-- 22 minute markers, current is ~9th -->
+          <div class="minute-strip">
+            <i class="passed"></i><i class="passed"></i><i class="passed"></i>
+            <i class="passed"></i><i class="passed"></i><i class="passed"></i>
+            <i class="passed"></i><i class="passed"></i>
+            <i class="current"></i>
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            <i></i><i></i><i></i><i></i><i></i><i></i>
+          </div>
+        </div>
+
+        <div class="transport-panel">
+          <!-- Skip back -->
+          <div class="knob-cell">
+            <div class="knob bakelite small">
+              <span class="tick" style="transform: rotate(-45deg); transform-origin: 50% 28px;"></span>
+            </div>
+            <span class="knob-label">— Back —</span>
+          </div>
+
+          <!-- Play -->
+          <div class="knob-cell">
+            <div class="knob playing">
+              <span class="tick"></span>
+            </div>
+            <span class="knob-label bright">▶ On Air</span>
+          </div>
+
+          <!-- Skip forward -->
+          <div class="knob-cell">
+            <div class="knob bakelite small">
+              <span class="tick" style="transform: rotate(45deg); transform-origin: 50% 28px;"></span>
+            </div>
+            <span class="knob-label">— Skip —</span>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===================== RIGHT COLUMN ===================== -->
+    <aside class="right-column">
+
+      <!-- VU PANEL: Source Mix -->
+      <div class="vu-panel">
+        <div class="panel-heading">Source Composition · This Programme</div>
+        <div class="vu-trio">
+
+          <div class="vu-cell">
+            <div class="vu-meter">
+              <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+                <defs>
+                  <linearGradient id="vuFace" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#f5eed5"/>
+                    <stop offset="100%" stop-color="#d4c694"/>
+                  </linearGradient>
+                </defs>
+                <!-- arc background -->
+                <path d="M 12 92 A 38 38 0 0 1 88 92" stroke="#8b6f3e" stroke-width="0.6" fill="none"/>
+                <!-- minor ticks -->
+                <g stroke="#5a4020" stroke-width="0.5">
+                  <line x1="12" y1="92" x2="14" y2="86"/>
+                  <line x1="22" y1="74" x2="25" y2="69"/>
+                  <line x1="38" y1="60" x2="40" y2="56"/>
+                  <line x1="50" y1="54" x2="50" y2="50"/>
+                  <line x1="62" y1="60" x2="60" y2="56"/>
+                  <line x1="78" y1="74" x2="75" y2="69"/>
+                  <line x1="88" y1="92" x2="86" y2="86"/>
+                </g>
+                <!-- red zone right -->
+                <path d="M 65 60 A 38 38 0 0 1 88 92" stroke="#8b3a3a" stroke-width="2" fill="none" opacity="0.85"/>
+                <!-- numbers -->
+                <g font-family="Playfair Display, serif" font-size="6" fill="#3a2a1a" text-anchor="middle" font-style="italic">
+                  <text x="14" y="100">0</text>
+                  <text x="50" y="48">·</text>
+                  <text x="86" y="100">∞</text>
+                </g>
+                <!-- needle: 40% deflection — angle from -80 (left) to +80 (right). 40% = -80 + 160*0.40 = -16 deg -->
+                <g transform="translate(50, 92)">
+                  <line x1="0" y1="0" x2="0" y2="-44" stroke="#8b3a3a" stroke-width="0.9" transform="rotate(-16)"/>
+                  <circle cx="0" cy="0" r="3" fill="#8b6f3e" stroke="#3a2a1a" stroke-width="0.4"/>
+                </g>
+                <!-- center label -->
+                <text x="50" y="80" font-family="Playfair Display, serif" font-size="8" fill="#5a3a1a" text-anchor="middle" font-style="italic" font-weight="600">X</text>
+              </svg>
+            </div>
+            <div class="vu-label">Timeline</div>
+            <div class="vu-pct">40%</div>
+          </div>
+
+          <div class="vu-cell">
+            <div class="vu-meter">
+              <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+                <path d="M 12 92 A 38 38 0 0 1 88 92" stroke="#8b6f3e" stroke-width="0.6" fill="none"/>
+                <g stroke="#5a4020" stroke-width="0.5">
+                  <line x1="12" y1="92" x2="14" y2="86"/>
+                  <line x1="22" y1="74" x2="25" y2="69"/>
+                  <line x1="38" y1="60" x2="40" y2="56"/>
+                  <line x1="50" y1="54" x2="50" y2="50"/>
+                  <line x1="62" y1="60" x2="60" y2="56"/>
+                  <line x1="78" y1="74" x2="75" y2="69"/>
+                  <line x1="88" y1="92" x2="86" y2="86"/>
+                </g>
+                <path d="M 65 60 A 38 38 0 0 1 88 92" stroke="#8b3a3a" stroke-width="2" fill="none" opacity="0.85"/>
+                <g font-family="Playfair Display, serif" font-size="6" fill="#3a2a1a" text-anchor="middle" font-style="italic">
+                  <text x="14" y="100">0</text>
+                  <text x="86" y="100">∞</text>
+                </g>
+                <!-- 35% = -80 + 160*0.35 = -24 deg -->
+                <g transform="translate(50, 92)">
+                  <line x1="0" y1="0" x2="0" y2="-44" stroke="#8b3a3a" stroke-width="0.9" transform="rotate(-24)"/>
+                  <circle cx="0" cy="0" r="3" fill="#8b6f3e" stroke="#3a2a1a" stroke-width="0.4"/>
+                </g>
+                <text x="50" y="80" font-family="Playfair Display, serif" font-size="8" fill="#5a3a1a" text-anchor="middle" font-style="italic" font-weight="600">P</text>
+              </svg>
+            </div>
+            <div class="vu-label">Podcasts</div>
+            <div class="vu-pct">35%</div>
+          </div>
+
+          <div class="vu-cell">
+            <div class="vu-meter">
+              <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+                <path d="M 12 92 A 38 38 0 0 1 88 92" stroke="#8b6f3e" stroke-width="0.6" fill="none"/>
+                <g stroke="#5a4020" stroke-width="0.5">
+                  <line x1="12" y1="92" x2="14" y2="86"/>
+                  <line x1="22" y1="74" x2="25" y2="69"/>
+                  <line x1="38" y1="60" x2="40" y2="56"/>
+                  <line x1="50" y1="54" x2="50" y2="50"/>
+                  <line x1="62" y1="60" x2="60" y2="56"/>
+                  <line x1="78" y1="74" x2="75" y2="69"/>
+                  <line x1="88" y1="92" x2="86" y2="86"/>
+                </g>
+                <path d="M 65 60 A 38 38 0 0 1 88 92" stroke="#8b3a3a" stroke-width="2" fill="none" opacity="0.85"/>
+                <g font-family="Playfair Display, serif" font-size="6" fill="#3a2a1a" text-anchor="middle" font-style="italic">
+                  <text x="14" y="100">0</text>
+                  <text x="86" y="100">∞</text>
+                </g>
+                <!-- 25% = -80 + 160*0.25 = -40 deg -->
+                <g transform="translate(50, 92)">
+                  <line x1="0" y1="0" x2="0" y2="-44" stroke="#8b3a3a" stroke-width="0.9" transform="rotate(-40)"/>
+                  <circle cx="0" cy="0" r="3" fill="#8b6f3e" stroke="#3a2a1a" stroke-width="0.4"/>
+                </g>
+                <text x="50" y="80" font-family="Playfair Display, serif" font-size="8" fill="#5a3a1a" text-anchor="middle" font-style="italic" font-weight="600">N</text>
+              </svg>
+            </div>
+            <div class="vu-label">News</div>
+            <div class="vu-pct">25%</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- QUEUE PANEL -->
+      <div class="queue-panel">
+        <div class="panel-heading" style="color:#d4c08a;">Up Next · Schedule of Programmes</div>
+        <div class="queue-cards">
+
+          <div class="q-card">
+            <div class="row">
+              <div class="meta">
+                <span class="num">i.</span>
+                <span class="src podcast">Podcast</span>
+              </div>
+              <span class="len">4:00</span>
+            </div>
+            <div class="title">Lex Fridman × Mira Murati: what scares me about AI</div>
+          </div>
+
+          <div class="q-card">
+            <div class="row">
+              <div class="meta">
+                <span class="num">ii.</span>
+                <span class="src news">News</span>
+              </div>
+              <span class="len">2:00</span>
+            </div>
+            <div class="title">Markets close: tech rally continues</div>
+          </div>
+
+          <div class="q-card">
+            <div class="row">
+              <div class="meta">
+                <span class="num">iii.</span>
+                <span class="src x">X · Timeline</span>
+              </div>
+              <span class="len">3:00</span>
+            </div>
+            <div class="title">Naval Ravikant — five tweets on focus</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- VOLUME PANEL -->
+      <div class="volume-panel">
+        <div class="knob-cell">
+          <div class="knob">
+            <span class="tick" style="transform: rotate(60deg); transform-origin: 50% 32px;"></span>
+          </div>
+          <span class="knob-label">— Volume —</span>
+        </div>
+
+        <div class="vol-scale">
+          <div class="vol-arc">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            <i></i><i></i><i></i><i></i><i></i><i></i>
+          </div>
+          <div class="vol-meta">
+            <span class="vol-label">Loudness</span>
+            <span class="vol-num">VII / XV</span>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+  </div>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer class="footer-strip">
+    <div class="ticker">
+      <span class="accent">·  ON THE AIR  ·</span>
+      &nbsp;&nbsp;Wed, May 9, 1958 · For the listening pleasure of <em style="color:#f0e9d2;font-style:normal;">Adrian</em> · A bespoke broadcast assembled from your timeline, your podcasts, the day's news.
+    </div>
+    <div class="signature">
+      <em>Station One‑Nine</em> &nbsp;·&nbsp; A.M. 1090
+    </div>
+  </footer>
+
+</div>
+
+</body>
+</html>

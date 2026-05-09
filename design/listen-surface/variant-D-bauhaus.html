@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1280" />
+<title>Radio Typ 47 — Now Playing</title>
+<style>
+  /* ----------  RAMS / BAUHAUS RADIO  ---------- */
+  :root {
+    --panel:        #f0eee9;   /* aged cream-grey enamel */
+    --panel-deep:   #e6e3dc;   /* a half-step darker for the inner field */
+    --rule:         #1a1a1a;   /* charcoal - all rules and labels */
+    --ink:          #1a1a1a;
+    --ink-soft:     #4a4a48;
+    --ink-faint:    #8a8a86;
+    --red:          #e41a1c;   /* Braun signature red */
+    --yellow:       #f4c20d;   /* highlight */
+    --olive:        #5a6647;   /* alt state */
+    --hairline:     1px solid #1a1a1a;
+    --hairline-soft:1px solid #c8c5be;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: #d9d6cf;
+    font-family: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
+    font-feature-settings: "tnum" 1, "lnum" 1;
+  }
+
+  body {
+    min-height: 100vh;
+    padding: 56px 0 48px;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* ----------  THE PANEL  ---------- */
+  .panel {
+    width: 1180px;
+    background: var(--panel);
+    border: var(--hairline);
+    padding: 40px;
+    position: relative;
+  }
+
+  /* ----------  HEAD STRIP  ---------- */
+  .head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    padding-bottom: 24px;
+    border-bottom: var(--hairline);
+  }
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+  .brand-mark {
+    width: 22px; height: 22px;
+    background: var(--red);
+    transform: translateY(2px);
+  }
+  .brand-name {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+  }
+  .brand-sub {
+    font-size: 11px;
+    letter-spacing: 0.32em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+  }
+  .head-meta {
+    text-align: right;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    line-height: 1.7;
+  }
+  .head-meta b {
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  /* ----------  GRID  ---------- */
+  .stage {
+    display: grid;
+    grid-template-columns: 720px 1fr;
+    gap: 0;
+  }
+  .col-left   { padding: 36px 40px 36px 0; border-right: var(--hairline); }
+  .col-right  { padding: 36px 0 36px 40px; }
+
+  /* ----------  LABELS  ---------- */
+  .label {
+    font-size: 10px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .label-de { color: var(--ink-faint); }
+
+  /* ----------  NOW PLAYING  ---------- */
+  .now {
+    margin-bottom: 44px;
+  }
+  .source-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 22px;
+  }
+  .source-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px 6px;
+    background: var(--ink);
+    color: var(--panel);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+  }
+  .source-badge .dot {
+    width: 8px; height: 8px; background: var(--yellow);
+  }
+  .source-tag {
+    font-size: 10px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .now-title {
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1.18;
+    letter-spacing: -0.005em;
+    margin-bottom: 14px;
+    max-width: 640px;
+  }
+  .now-syn {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 580px;
+    letter-spacing: 0.005em;
+  }
+
+  /* ----------  TIME / TRANSPORT  ---------- */
+  .time-block {
+    margin-top: 36px;
+    padding-top: 28px;
+    border-top: var(--hairline);
+  }
+  .time-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .time-elapsed {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 86px;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 0.9;
+    font-feature-settings: "tnum" 1;
+    color: var(--ink);
+  }
+  .time-total {
+    font-size: 16px;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+    font-feature-settings: "tnum" 1;
+  }
+  .time-total b {
+    color: var(--ink);
+    font-weight: 700;
+  }
+  .time-segment {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+  .time-segment b { color: var(--ink); font-weight: 700; }
+
+  /* big primary progress bar (overall episode) */
+  .progress-overall {
+    height: 6px;
+    background: var(--panel-deep);
+    border: var(--hairline);
+    position: relative;
+  }
+  .progress-overall .fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 39.5%;            /* 8:42 / 22:00 */
+    background: var(--ink);
+  }
+  .progress-overall .tick {
+    position: absolute;
+    top: -4px; bottom: -4px;
+    width: 1px;
+    background: var(--ink-faint);
+  }
+
+  /* segment progress (within current item) */
+  .progress-seg {
+    margin-top: 26px;
+    height: 4px;
+    background: var(--panel-deep);
+    border: var(--hairline);
+    position: relative;
+  }
+  .progress-seg .fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 45.65%;           /* 1:24 / 3:08 */
+    background: var(--red);
+  }
+
+  /* ----------  TRANSPORT ROW  ---------- */
+  .transport {
+    margin-top: 38px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 24px;
+  }
+  .transport-side {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .transport-side.right { justify-content: flex-end; }
+
+  .ctrls {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .btn {
+    width: 64px; height: 64px;
+    background: var(--panel);
+    border: var(--hairline);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    position: relative;
+  }
+  .btn-play {
+    width: 84px; height: 84px;
+    background: var(--red);
+    border: var(--hairline);
+  }
+  .btn-play .pause {
+    width: 20px; height: 28px;
+    display: flex;
+    gap: 6px;
+  }
+  .btn-play .pause span {
+    flex: 1;
+    background: var(--panel);
+  }
+  .btn .skip {
+    display: flex; align-items: center; gap: 2px;
+  }
+  .btn .skip .tri {
+    width: 0; height: 0;
+    border-style: solid;
+    border-width: 8px 0 8px 12px;
+    border-color: transparent transparent transparent var(--ink);
+  }
+  .btn .skip .tri.flip {
+    border-width: 8px 12px 8px 0;
+    border-color: transparent var(--ink) transparent transparent;
+  }
+  .btn .skip .bar {
+    width: 2px; height: 18px; background: var(--ink);
+  }
+
+  /* ----------  RIGHT COLUMN: SOURCE MIX  ---------- */
+  .mix-block { margin-bottom: 38px; }
+  .mix-label-row {
+    display: grid;
+    grid-template-columns: 40fr 35fr 25fr;
+    margin-bottom: 8px;
+    gap: 1px;
+  }
+  .mix-label-row .item {
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+  }
+  .mix-label-row .item .pct {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    display: block;
+    margin-top: 4px;
+    color: var(--ink);
+    font-feature-settings: "tnum" 1;
+  }
+  .mix-bar {
+    display: grid;
+    grid-template-columns: 40fr 35fr 25fr;
+    height: 18px;
+    border: var(--hairline);
+  }
+  .mix-bar .seg-x   { background: var(--ink); }
+  .mix-bar .seg-pod { background: var(--yellow); }
+  .mix-bar .seg-news{ background: var(--olive); }
+
+  .mix-legend {
+    display: flex;
+    gap: 18px;
+    margin-top: 10px;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .mix-legend .sw {
+    display: inline-block;
+    width: 10px; height: 10px;
+    margin-right: 6px;
+    vertical-align: -1px;
+  }
+
+  /* ----------  UP NEXT  ---------- */
+  .up-next { margin-bottom: 40px; }
+  .up-list { border-top: var(--hairline); }
+  .up-row {
+    display: grid;
+    grid-template-columns: 24px 70px 1fr 56px;
+    gap: 16px;
+    align-items: center;
+    padding: 18px 0;
+    border-bottom: var(--hairline-soft);
+  }
+  .up-row:last-child { border-bottom: var(--hairline); }
+  .up-num {
+    font-size: 12px;
+    color: var(--ink-faint);
+    font-feature-settings: "tnum" 1;
+  }
+  .up-source {
+    font-size: 9px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ink);
+    border: var(--hairline);
+    padding: 4px 6px 3px;
+    text-align: center;
+    background: var(--panel);
+  }
+  .up-source.pod  { background: var(--yellow); }
+  .up-source.news { background: var(--olive); color: var(--panel); }
+  .up-source.x    { background: var(--ink); color: var(--panel); }
+  .up-title {
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--ink);
+    letter-spacing: 0.005em;
+  }
+  .up-len {
+    font-size: 13px;
+    color: var(--ink-soft);
+    text-align: right;
+    font-feature-settings: "tnum" 1;
+    letter-spacing: 0.04em;
+  }
+
+  /* ----------  VOLUME KNOB  ---------- */
+  .vol-block {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 28px;
+    align-items: center;
+    padding-top: 28px;
+    border-top: var(--hairline);
+  }
+  .knob-wrap {
+    width: 120px; height: 120px;
+    display: grid;
+    place-items: center;
+    position: relative;
+  }
+  .knob {
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 50% 38%,
+        #fafaf6 0%,
+        #e0ddd5 40%,
+        #c4c0b6 70%,
+        #9c988e 100%);
+    box-shadow:
+      inset 0 1px 1px rgba(255,255,255,.9),
+      inset 0 -1px 2px rgba(0,0,0,.18),
+      inset 0 0 0 1px #1a1a1a,
+      0 1px 0 #d8d4cb,
+      0 6px 14px rgba(0,0,0,.18);
+    position: relative;
+  }
+  .knob::before {
+    /* concentric brushed ring */
+    content: "";
+    position: absolute;
+    inset: 14px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 50% 40%,
+        #f4f1e9 0%,
+        #d8d4cb 60%,
+        #b6b2a8 100%);
+    box-shadow:
+      inset 0 0 0 1px rgba(0,0,0,.25),
+      inset 0 1px 0 rgba(255,255,255,.6);
+  }
+  .knob::after {
+    /* center cap with notch */
+    content: "";
+    position: absolute;
+    inset: 36px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 50% 38%,
+        #2a2a28 0%,
+        #1a1a1a 70%,
+        #0d0d0d 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.18),
+      inset 0 -1px 1px rgba(0,0,0,.6);
+  }
+  .knob-notch {
+    position: absolute;
+    width: 4px; height: 14px;
+    background: var(--red);
+    top: 8px; left: 50%;
+    transform: translateX(-50%) rotate(40deg);
+    transform-origin: 50% 52px;
+    z-index: 2;
+  }
+  .vol-info { line-height: 1.5; }
+  .vol-info .lbl {
+    font-size: 10px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .vol-info .lbl-de {
+    color: var(--ink-faint);
+    margin-bottom: 8px;
+  }
+  .vol-info .val {
+    font-size: 36px;
+    font-weight: 300;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    font-feature-settings: "tnum" 1;
+  }
+  .vol-info .val small {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin-left: 4px;
+  }
+  .vol-scale {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: repeat(11, 1fr);
+    gap: 0;
+    align-items: end;
+    height: 16px;
+  }
+  .vol-scale span {
+    background: var(--ink);
+    width: 1px;
+    height: 6px;
+    justify-self: start;
+  }
+  .vol-scale span:nth-child(odd) { height: 10px; }
+  .vol-scale span.lit { background: var(--red); height: 12px; width: 2px; }
+
+  /* ----------  FOOT  ---------- */
+  .foot {
+    border-top: var(--hairline);
+    padding-top: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .foot-mark {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .foot-mark .sq {
+    width: 8px; height: 8px; background: var(--red);
+  }
+  .serial {
+    font-feature-settings: "tnum" 1;
+    letter-spacing: 0.18em;
+  }
+
+</style>
+</head>
+<body>
+
+<main class="panel" role="main">
+
+  <!-- HEAD -->
+  <header class="head">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"></div>
+      <div>
+        <div class="brand-name">RADIO&nbsp;TYP&nbsp;47</div>
+        <div class="brand-sub">Personalrundfunk · Tagesausgabe</div>
+      </div>
+    </div>
+    <div class="head-meta">
+      <div>Hörer · <b>Adrian</b></div>
+      <div>Programm 09 · Mai · 2026</div>
+    </div>
+  </header>
+
+  <div class="stage">
+
+    <!-- LEFT COLUMN -->
+    <section class="col-left">
+
+      <!-- NOW PLAYING -->
+      <div class="now">
+        <div class="label">
+          <span>Wiedergabe · Now Playing</span>
+          <span class="label-de">01 / 04</span>
+        </div>
+
+        <div class="source-row">
+          <span class="source-badge"><span class="dot"></span>X · Timeline</span>
+          <span class="source-tag">Quelle 01 — Twitter / X</span>
+        </div>
+
+        <h1 class="now-title">Anthropic raised at a $x billion valuation.</h1>
+        <p class="now-syn">
+          Series F at the high end of expectations; new round signals continued
+          enterprise traction and a tightening field of frontier-model labs. Three
+          tweets summarised, with two follow-ons from your timeline.
+        </p>
+
+        <!-- TIME -->
+        <div class="time-block">
+          <div class="time-row">
+            <div class="time-elapsed">08:42</div>
+            <div class="time-total">
+              <span>Gesamtdauer / Total</span> &nbsp;·&nbsp; <b>22:00</b>
+            </div>
+          </div>
+
+          <div class="progress-overall" aria-label="Episode progress">
+            <span class="tick" style="left:14%"></span>
+            <span class="tick" style="left:28%"></span>
+            <span class="tick" style="left:42%"></span>
+            <span class="tick" style="left:56%"></span>
+            <span class="tick" style="left:70%"></span>
+            <span class="tick" style="left:84%"></span>
+            <div class="fill"></div>
+          </div>
+
+          <div class="time-segment" style="margin-top:24px">
+            <span>Segment · current</span>
+            <span><b>01:24</b> / 03:08</span>
+          </div>
+          <div class="progress-seg" aria-label="Segment progress">
+            <div class="fill"></div>
+          </div>
+        </div>
+
+        <!-- TRANSPORT -->
+        <div class="transport">
+          <div class="transport-side">Steuerung · Transport</div>
+
+          <div class="ctrls">
+            <button class="btn" aria-label="Skip back">
+              <span class="skip">
+                <span class="tri flip"></span>
+                <span class="bar"></span>
+              </span>
+            </button>
+            <button class="btn btn-play" aria-label="Pause" aria-pressed="true">
+              <span class="pause"><span></span><span></span></span>
+            </button>
+            <button class="btn" aria-label="Skip forward">
+              <span class="skip">
+                <span class="bar"></span>
+                <span class="tri"></span>
+              </span>
+            </button>
+          </div>
+
+          <div class="transport-side right">Wiedergabe aktiv</div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- RIGHT COLUMN -->
+    <aside class="col-right">
+
+      <!-- SOURCE MIX -->
+      <div class="mix-block">
+        <div class="label">
+          <span>Quellenverteilung · Source Mix</span>
+          <span class="label-de">heute</span>
+        </div>
+
+        <div class="mix-label-row">
+          <div class="item">X · Timeline <span class="pct">40%</span></div>
+          <div class="item" style="text-align:center">Podcasts <span class="pct">35%</span></div>
+          <div class="item" style="text-align:right">News <span class="pct">25%</span></div>
+        </div>
+
+        <div class="mix-bar" role="img" aria-label="Source mix: 40% X, 35% Podcasts, 25% News">
+          <div class="seg-x"></div>
+          <div class="seg-pod"></div>
+          <div class="seg-news"></div>
+        </div>
+
+        <div class="mix-legend">
+          <span><span class="sw" style="background:var(--ink)"></span>X</span>
+          <span><span class="sw" style="background:var(--yellow)"></span>Pod</span>
+          <span><span class="sw" style="background:var(--olive)"></span>News</span>
+        </div>
+      </div>
+
+      <!-- UP NEXT -->
+      <div class="up-next">
+        <div class="label">
+          <span>Folgt · Up Next</span>
+          <span class="label-de">3 Beiträge</span>
+        </div>
+
+        <div class="up-list">
+
+          <div class="up-row">
+            <div class="up-num">02</div>
+            <div class="up-source pod">Pod</div>
+            <div class="up-title">Lex Fridman × Mira Murati: what scares me about AI</div>
+            <div class="up-len">04:00</div>
+          </div>
+
+          <div class="up-row">
+            <div class="up-num">03</div>
+            <div class="up-source news">News</div>
+            <div class="up-title">Markets close: tech rally continues</div>
+            <div class="up-len">02:00</div>
+          </div>
+
+          <div class="up-row">
+            <div class="up-num">04</div>
+            <div class="up-source x">X</div>
+            <div class="up-title">Naval Ravikant: 5 tweets on focus</div>
+            <div class="up-len">03:00</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- VOLUME -->
+      <div class="vol-block">
+        <div class="knob-wrap" aria-label="Volume knob, 64 percent">
+          <div class="knob"></div>
+          <div class="knob-notch"></div>
+        </div>
+        <div class="vol-info">
+          <div class="lbl">Lautstärke</div>
+          <div class="lbl lbl-de">Volume</div>
+          <div class="val">64<small>/100</small></div>
+          <div class="vol-scale" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span class="lit"></span><span></span><span></span>
+            <span></span><span></span>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+
+  <!-- FOOT -->
+  <footer class="foot">
+    <div class="foot-mark">
+      <span class="sq"></span>
+      <span>Radio Typ 47 · 2026 · Made for you</span>
+    </div>
+    <div class="serial">Modell 47.4 · Serie 0009 · DE / EN</div>
+  </footer>
+
+</main>
+
+</body>
+</html>
