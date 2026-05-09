@@ -269,6 +269,17 @@ body {
   opacity: 0.6;
 }
 
+/* Static-sweep transition: a brief brightness/blur flash on the ticker
+   when the user changes station. Triggered by adding .ticker--sweep. */
+.ticker--sweep {
+  animation: sweep-flash 400ms ease-in-out;
+}
+@keyframes sweep-flash {
+  0%   { filter: brightness(1)   blur(0); }
+  45%  { filter: brightness(1.7) blur(1.5px); }
+  100% { filter: brightness(1)   blur(0); }
+}
+
 /* Status bar */
 .status {
   display: flex;
@@ -502,6 +513,92 @@ body {
     }
     positionMarker();
     window.addEventListener('resize', positionMarker);
+
+    // ───── Tuning ─────
+    function tuneTo(stationId) {
+      if (!STATIONS[stationId] || stationId === state.activeStationId) return;
+      state.activeStationId = stationId;
+
+      // Update status bar
+      const s = STATIONS[stationId];
+      document.getElementById('status-freq').textContent = s.freq.toFixed(1);
+      document.getElementById('status-name').textContent = s.label;
+
+      // Update active button
+      band.stations.querySelectorAll('.stop').forEach(el => {
+        el.classList.toggle('active', el.dataset.id === stationId);
+      });
+
+      // Slide the marker
+      positionMarker();
+
+      // Sweep + re-render ticker
+      const t = document.querySelector('.ticker');
+      t.classList.remove('ticker--sweep');
+      // Force reflow so the animation can re-trigger
+      void t.offsetWidth;
+      t.classList.add('ticker--sweep');
+      setTimeout(() => t.classList.remove('ticker--sweep'), 420);
+      renderTicker();
+    }
+
+    // Click on a station label
+    band.stations.addEventListener('click', (e) => {
+      const stop = e.target.closest('.stop');
+      if (!stop) return;
+      tuneTo(stop.dataset.id);
+    });
+
+    // Keyboard arrows — left / right step
+    window.addEventListener('keydown', (e) => {
+      const idx = STATION_ORDER.indexOf(state.activeStationId);
+      if (e.key === 'ArrowRight' && idx < STATION_ORDER.length - 1) {
+        tuneTo(STATION_ORDER[idx + 1]);
+        e.preventDefault();
+      } else if (e.key === 'ArrowLeft' && idx > 0) {
+        tuneTo(STATION_ORDER[idx - 1]);
+        e.preventDefault();
+      }
+    });
+
+    // Drag the marker — snaps to nearest station on release
+    (function setupDrag() {
+      let dragging = false;
+      let railRect = null;
+
+      function pickStation(clientX) {
+        const x = clientX - railRect.left;
+        const ratio = Math.max(0, Math.min(1, x / railRect.width));
+        const idx = Math.min(STATION_ORDER.length - 1, Math.max(0, Math.round(ratio * 6 - 0.5)));
+        return STATION_ORDER[idx];
+      }
+
+      band.marker.addEventListener('pointerdown', (e) => {
+        dragging = true;
+        railRect = band.rail.getBoundingClientRect();
+        band.marker.setPointerCapture(e.pointerId);
+        band.marker.style.transition = 'none';
+      });
+      band.marker.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        const x = e.clientX - railRect.left;
+        const pct = Math.max(0, Math.min(100, (x / railRect.width) * 100));
+        band.marker.style.left = pct + '%';
+      });
+      band.marker.addEventListener('pointerup', (e) => {
+        if (!dragging) return;
+        dragging = false;
+        band.marker.style.transition = '';
+        const target = pickStation(e.clientX);
+        tuneTo(target);
+        if (target === state.activeStationId) positionMarker(); // snap if already active
+      });
+      band.marker.addEventListener('pointercancel', () => {
+        dragging = false;
+        band.marker.style.transition = '';
+        positionMarker();
+      });
+    })();
   </script>
 </body>
 </html>
