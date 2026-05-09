@@ -76,11 +76,8 @@ body {
   margin: 0 auto;
 }
 
-/* Placeholders for components (filled in by later tasks) */
-.status,
-.ticker,
-.band,
-.meta {
+/* Shared placeholder (still used by ticker / band / meta until their tasks) */
+.ticker, .band, .meta {
   border: 1px dashed rgba(255,179,71,0.18);
   min-height: 32px;
   color: var(--crt-amber-dim);
@@ -91,20 +88,88 @@ body {
 }
 .ticker { min-height: 200px; }
 .band   { min-height: 110px; }
+
+/* Status bar */
+.status {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 10px 18px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, var(--plate) 0%, var(--plate-deep) 100%);
+  color: var(--label-ink);
+  box-shadow:
+    inset 0 1px 0 rgba(255,235,190,0.55),
+    inset 0 -1px 0 rgba(60,40,15,0.4),
+    inset 0 0 0 1px rgba(60,40,15,0.35),
+    0 6px 18px -6px rgba(0,0,0,0.6);
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.status .dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--rust);
+  box-shadow: 0 0 10px rgba(197,72,30,0.85);
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+.status .label-on-air { font-weight: 600; color: var(--rust-deep); }
+.status .station {
+  margin-left: auto;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.status .freq { font-weight: 600; }
+.status .name { color: var(--label-mid); }
+.status .clock {
+  color: var(--label-ink);
+  font-weight: 500;
+  letter-spacing: 0.16em;
+}
+.status .sep { opacity: 0.45; }
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
 </style>
 </head>
 <body>
   <div class="grain" aria-hidden="true"></div>
 
   <main class="console" aria-label="Console-7 broadcast">
-    <header class="status">[ status bar — task 2 ]</header>
+    <header class="status">
+      <span class="dot" aria-hidden="true"></span>
+      <span class="label-on-air">On Air</span>
+      <span class="sep">·</span>
+      <span class="station">
+        <span class="freq" id="status-freq">96.0</span>
+        <span class="name" id="status-name">TECH</span>
+        <span class="sep">·</span>
+        <span class="clock" id="status-clock">00:00 UTC</span>
+      </span>
+    </header>
     <section class="ticker">[ ticker — task 3 / 4 ]</section>
     <section class="band">[ tuning band — task 5 / 6 ]</section>
     <footer class="meta">[ meta strip — task 7 ]</footer>
   </main>
 
   <script>
-    // Filled in by later tasks.
+    // ───── State ─────
+    const state = {
+      activeStationId: 'tech',  // default tune-in
+    };
+
+    // ───── Clock ─────
+    function pad2(n) { return String(n).padStart(2, '0'); }
+    function tickClock() {
+      const d = new Date();
+      const text = `${pad2(d.getUTCHours())}:${pad2(d.getUTCMinutes())} UTC`;
+      document.getElementById('status-clock').textContent = text;
+    }
+    tickClock();
+    setInterval(tickClock, 1000);
   </script>
 </body>
 </html>
