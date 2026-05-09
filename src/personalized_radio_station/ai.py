@@ -35,13 +35,98 @@ def generate_text(messages: list[Message], config: AiConfig) -> str:
         kwargs["api_key"] = api_key
     if config.max_tokens:
         kwargs["max_tokens"] = config.max_tokens
+    if config.reasoning:
+        _add_reasoning_options(kwargs, config)
 
     response = completion(**kwargs)
-    content = response.choices[0].message.content
+    content = _response_content(response)
     if not content:
-        raise RuntimeError("LiteLLM returned an empty response.")
+        raise RuntimeError(_empty_response_message(response, config))
 
     return content
+
+
+def _add_reasoning_options(kwargs: dict[str, Any], config: AiConfig) -> None:
+    if config.model.startswith("openrouter/"):
+        kwargs["extra_body"] = {"reasoning": config.reasoning}
+        return
+
+    effort = config.reasoning.get("effort")
+    if effort:
+        kwargs["reasoning_effort"] = effort
+
+
+def _response_content(response: Any) -> str:
+    try:
+        message = response.choices[0].message
+    except (AttributeError, IndexError, TypeError):
+        return ""
+
+    content = _get_value(message, "content")
+    if isinstance(content, str):
+        return content.strip()
+    if isinstance(content, list):
+        parts = []
+        for part in content:
+            text = _get_value(part, "text")
+            if isinstance(text, str):
+                parts.append(text)
+                continue
+            if isinstance(part, str):
+                parts.append(part)
+        return "\n".join(parts).strip()
+
+    return ""
+
+
+def _empty_response_message(response: Any, config: AiConfig) -> str:
+    choice = _first_choice(response)
+    message = _get_value(choice, "message") if choice is not None else None
+    usage = _get_value(response, "usage")
+    finish_reason = _get_value(choice, "finish_reason") if choice is not None else None
+    prompt_tokens = _usage_value(usage, "prompt_tokens")
+    completion_tokens = _usage_value(usage, "completion_tokens")
+    total_tokens = _usage_value(usage, "total_tokens")
+    reasoning_present = any(
+        bool(_get_value(message, name))
+        for name in ("reasoning", "reasoning_content", "reasoning_details")
+    )
+
+    details = [
+        f"model={config.model}",
+        f"finish_reason={finish_reason or 'unknown'}",
+        f"prompt_tokens={prompt_tokens if prompt_tokens is not None else 'unknown'}",
+        f"completion_tokens={completion_tokens if completion_tokens is not None else 'unknown'}",
+        f"total_tokens={total_tokens if total_tokens is not None else 'unknown'}",
+        f"reasoning_present={reasoning_present}",
+    ]
+    return (
+        "LiteLLM returned an empty final response "
+        f"({', '.join(details)}). "
+        "Try increasing ai.max_tokens or lowering ai.reasoning.effort."
+    )
+
+
+def _first_choice(response: Any) -> Any:
+    choices = _get_value(response, "choices")
+    if not choices:
+        return None
+    try:
+        return choices[0]
+    except (IndexError, TypeError):
+        return None
+
+
+def _usage_value(usage: Any, key: str) -> Any:
+    return _get_value(usage, key) if usage is not None else None
+
+
+def _get_value(value: Any, key: str) -> Any:
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        return value.get(key)
+    return getattr(value, key, None)
 
 
 def _mock_completion(messages: list[Message]) -> str:

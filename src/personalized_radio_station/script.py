@@ -18,7 +18,7 @@ def generate_script(
             "role": "system",
             "content": (
                 "You are a radio producer writing spoken-word scripts. "
-                "Use only the provided news and weather context. "
+                "Ground every substantive claim in the provided news and weather context. "
                 "Return valid JSON only."
             ),
         },
@@ -90,8 +90,15 @@ def _build_prompt(
         "When target_word_count is provided, write approximately that many spoken "
         "words across all segment text and stay inside target_word_range. "
         "Keep it natural for TTS. Avoid markdown. Mention source names when useful, "
-        "but do not include raw URLs in the spoken text. If target_duration is "
-        "`unlimited`, prioritize useful coverage over fitting a fixed runtime.\n\n"
+        "but do not include raw URLs in the spoken text.\n"
+        "Grounding rules: every news claim must be supported by the provided news "
+        "titles, summaries, source names, or weather fields. You may add short "
+        "transitions, pacing phrases, and light radio texture, but do not add new "
+        "topics, examples, local businesses, recommendations, predictions, or "
+        "community color that are not present in the context. If the sources are "
+        "thin, keep the script brief instead of filling with speculation. If "
+        "target_duration is `unlimited`, prioritize useful source-backed coverage "
+        "over fitting a fixed runtime.\n\n"
         f"Context:\n{json.dumps(context, indent=2)}"
     )
 

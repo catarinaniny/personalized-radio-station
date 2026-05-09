@@ -39,17 +39,18 @@ Use `"unlimited"` for an open-ended episode:
 duration: "unlimited"
 ```
 
-By default, `config.example.yaml` uses OpenRouter through LiteLLM:
+By default, `config.example.yaml` uses OpenRouter's Nitro route for
+`openai/gpt-oss-20b` through LiteLLM:
 
 ```yaml
 ai:
-  model: "openrouter/openrouter/auto"
+  model: "openrouter/openai/gpt-oss-20b:nitro"
   api_key_env: "OPENROUTER_API_KEY"
+  max_tokens: 4000
+  reasoning:
+    effort: "low"
+    exclude: true
 ```
-
-That model string is a little funny on purpose: LiteLLM uses the first
-`openrouter/` as the provider prefix, and OpenRouter's Auto Router model ID is
-`openrouter/auto`.
 
 Add the default LLM and TTS keys to `.env`:
 
@@ -58,11 +59,16 @@ OPENROUTER_API_KEY=...
 ELEVENLABS_API_KEY=...
 ```
 
+OpenRouter's model ID is `openai/gpt-oss-20b:nitro`; the config includes the
+leading `openrouter/` so LiteLLM routes it through OpenRouter. The low reasoning
+setting keeps enough output budget available for the final JSON script.
+
 You can switch to a specific OpenRouter model by changing the model:
 
 ```yaml
 ai:
   model: "openrouter/meta-llama/llama-3.3-70b-instruct"
+  api_key_env: "OPENROUTER_API_KEY"
 ```
 
 Or switch providers entirely while keeping the same application code:
@@ -130,7 +136,7 @@ The CLI prints each stage as it runs:
 ```text
 [radio] Fetching Google News RSS: artificial intelligence, startups, music technology
 [radio] Fetching weather: Lisbon
-[radio] Creating script targeting 18 minutes with LiteLLM model: openrouter/openrouter/auto
+[radio] Creating script targeting 18 minutes with LiteLLM model: openrouter/openai/gpt-oss-20b:nitro
 [radio] Rendering TTS with elevenlabs: elevenlabs/eleven_multilingual_v2
 [radio] Audio: episodes/2026-05-09-120000/episode.mp3
 ```
@@ -150,6 +156,48 @@ episodes/
     episode.mp3
     audio/
 ```
+
+## Local API + File Frontend
+
+Run the local backend API:
+
+```bash
+uv run radio web
+```
+
+Then open the standalone test page directly from this repo:
+
+```text
+radio_test.html
+```
+
+The backend root at `http://127.0.0.1:8765` returns API status JSON. The UI is
+not served by the backend anymore; `radio_test.html` is one self-contained HTML
+file that can be opened with `file://`.
+
+The file page has Demo and Real modes plus a duration-minutes input. Demo is
+selected by default, creates an episode through `POST /api/episodes`, listens to
+`GET /api/episodes/{id}/events` with Server-Sent Events, and plays each
+generated audio segment through Web Audio as soon as that segment is ready. Demo
+mode writes normal episode artifacts under `episodes/{episode_id}/`, but does
+not call LLM, TTS, news, or weather APIs.
+
+The file page also shows a debug timing log from the event stream. Each status,
+script-ready, segment-ready, completion, or failure event includes
+`elapsed_seconds`, which helps identify whether startup time is source fetching,
+script generation, TTS, or audio playback scheduling.
+
+Real mode uses the configured `config.yaml` and `.env`:
+
+```bash
+uv run radio web --config config.yaml --env .env
+```
+
+When the frontend sends `"mode": "real"`, the server validates runtime
+requirements, fetches Google News RSS and Open-Meteo weather, generates the
+script with the configured LiteLLM model, renders TTS with the configured
+provider, emits `segment_ready` events as each TTS segment is written, and serves
+the final stitched episode audio when complete.
 
 ## Detached Runs
 

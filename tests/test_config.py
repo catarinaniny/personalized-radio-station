@@ -13,11 +13,13 @@ class ConfigTests(unittest.TestCase):
         self.assertIsNone(parse_duration("unlimited").minutes)
         self.assertEqual(parse_duration("unlimited").label, "unlimited")
 
-    def test_example_config_uses_openrouter_by_default(self) -> None:
+    def test_example_config_uses_openrouter_gpt_oss_nitro_by_default(self) -> None:
         config = load_config("config.example.yaml")
 
-        self.assertEqual(config.ai.model, "openrouter/openrouter/auto")
+        self.assertEqual(config.ai.model, "openrouter/openai/gpt-oss-20b:nitro")
         self.assertEqual(config.ai.api_key_env, "OPENROUTER_API_KEY")
+        self.assertEqual(config.ai.max_tokens, 4000)
+        self.assertEqual(config.ai.reasoning, {"effort": "low", "exclude": True})
         self.assertEqual(config.tts.provider, "elevenlabs")
         self.assertEqual(config.tts.model, "elevenlabs/eleven_multilingual_v2")
         self.assertEqual(config.tts.api_key_env, "ELEVENLABS_API_KEY")

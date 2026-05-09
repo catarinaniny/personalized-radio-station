@@ -27,6 +27,7 @@ class AiConfig:
     api_key_env: str | None = None
     temperature: float = 0.7
     max_tokens: int | None = None
+    reasoning: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -112,6 +113,7 @@ def load_config(path: str | Path) -> AppConfig:
             api_key_env=ai.get("api_key_env"),
             temperature=float(ai.get("temperature", 0.7)),
             max_tokens=_optional_int(ai.get("max_tokens")),
+            reasoning=dict(ai.get("reasoning", {})),
         ),
         tts=TtsConfig(
             enabled=_as_bool(tts.get("enabled", True)),

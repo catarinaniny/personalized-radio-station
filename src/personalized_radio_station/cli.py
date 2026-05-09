@@ -74,6 +74,19 @@ def _build_parser() -> ArgumentParser:
     )
     status.set_defaults(handler=_handle_status)
 
+    web = subparsers.add_parser("web", help="Run the local test API server.")
+    web.add_argument("--host", default="127.0.0.1", help="Host interface to bind.")
+    web.add_argument("--port", type=int, default=8765, help="Port to bind.")
+    web.add_argument("--config", type=Path, default=DEFAULT_CONFIG, help="Path to config YAML.")
+    web.add_argument("--env", type=Path, default=DEFAULT_ENV, help="Path to .env file.")
+    web.add_argument(
+        "--output-dir",
+        type=Path,
+        default=DEFAULT_OUTPUT_DIR,
+        help="Directory where API-generated episode artifacts are saved.",
+    )
+    web.set_defaults(handler=_handle_web)
+
     return parser
 
 
@@ -191,6 +204,18 @@ def _handle_status(args: Namespace) -> None:
     print(f"PID {pid}: {status}")
     print(f"Started: {state.get('started_at')}")
     print(f"Log: {state.get('log_file')}")
+
+
+def _handle_web(args: Namespace) -> None:
+    from .web_server import serve
+
+    serve(
+        host=args.host,
+        port=args.port,
+        output_dir=args.output_dir,
+        config_path=args.config,
+        env_path=args.env,
+    )
 
 
 def _missing_requirements(config_path: Path, include_tts: bool) -> list[str]:

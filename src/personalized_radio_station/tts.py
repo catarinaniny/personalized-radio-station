@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 import os
 import re
 import subprocess
@@ -17,7 +17,15 @@ class TtsResult:
     episode_file: Path | None
 
 
-def synthesize_episode(episode: dict[str, Any], config: AppConfig, episode_dir: Path) -> TtsResult:
+SegmentReadyCallback = Callable[[int, dict[str, Any], Path], None]
+
+
+def synthesize_episode(
+    episode: dict[str, Any],
+    config: AppConfig,
+    episode_dir: Path,
+    on_segment_ready: SegmentReadyCallback | None = None,
+) -> TtsResult:
     if not config.tts.enabled:
         return TtsResult(segment_files=[], episode_file=None)
 
@@ -48,6 +56,8 @@ def synthesize_episode(episode: dict[str, Any], config: AppConfig, episode_dir: 
 
         segment["audio_file"] = str(segment_path.relative_to(episode_dir))
         segment_files.append(segment_path)
+        if on_segment_ready:
+            on_segment_ready(index, segment, segment_path)
 
     episode_file = None
     if segment_files and all(path.suffix == ".wav" for path in segment_files):

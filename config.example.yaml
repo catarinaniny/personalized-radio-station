@@ -16,10 +16,13 @@ weather:
   longitude: -9.1393
 
 ai:
-  model: "openrouter/openrouter/auto"
+  model: "openrouter/openai/gpt-oss-20b:nitro"
   api_key_env: "OPENROUTER_API_KEY"
   temperature: 0.7
-  max_tokens: 1800
+  max_tokens: 4000
+  reasoning:
+    effort: "low"
+    exclude: true
 
 voices:
   intro: "host"

@@ -71,6 +71,8 @@ tts:
         self.assertIn('"target_word_count": 2790', prompt)
         self.assertIn('"min": 2567', prompt)
         self.assertIn('"max": 3013', prompt)
+        self.assertIn("every news claim must be supported by the provided news", prompt)
+        self.assertIn("do not add new topics, examples, local businesses", prompt)
 
     def test_generate_script_revises_once_when_word_count_is_outside_range(self) -> None:
         config = _config(

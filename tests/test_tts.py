@@ -47,10 +47,22 @@ tts:
                     {"type": "news", "voice": "anchor", "text": "A story happened."},
                 ],
             }
+            ready_segments = []
 
-            result = synthesize_episode(episode, config, episode_dir)
+            result = synthesize_episode(
+                episode,
+                config,
+                episode_dir,
+                on_segment_ready=lambda index, segment, path: ready_segments.append(
+                    (index, segment["type"], path.name)
+                ),
+            )
 
             self.assertEqual(len(result.segment_files), 2)
+            self.assertEqual(
+                ready_segments,
+                [(0, "intro", "00-intro.wav"), (1, "news", "01-news.wav")],
+            )
             self.assertTrue((episode_dir / "episode.wav").exists())
             self.assertEqual(episode["segments"][0]["audio_file"], "audio/00-intro.wav")
             self.assertEqual(episode["segments"][0]["voice"], "host")
