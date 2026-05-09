@@ -30,7 +30,10 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { background: var(--bg); color: var(--ink); }
+    /* html keeps the solid base color; body is transparent so the fixed
+       #dot-bg (z-index: -10) is what's actually visible behind content. */
+    html { background: var(--bg); color: var(--ink); }
+    body { background: transparent; color: var(--ink); }
     body {
       font-family: 'Geist', 'Inter', system-ui, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
       font-size: 16px;
@@ -61,9 +64,7 @@
       pointer-events: none;
       background-color: #000;
       background-repeat: repeat;
-      /* gentle vignette so dots fade slightly at top and bottom edges */
-      mask-image: linear-gradient(to bottom, transparent 0%, black 6%, black 86%, transparent 100%);
-      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 6%, black 86%, transparent 100%);
+      /* no mask — dots show full-strength edge-to-edge */
     }
 
     /* ========== FLOATING MINI-NAV ==========
@@ -3009,15 +3010,13 @@
     if (!el) return;
     const TILE = 200;
     const STEP = 20;          // grid spacing — 20px between dots, matching totalSize=20
-    const DOT  = 1.4;         // dot radius — matching dotSize ~3 in shader, /2 = 1.5
+    const DOT  = 2.2;         // dot radius — bumped to be clearly visible at 1× device pixels
     const c = document.createElement('canvas');
     c.width = TILE;
     c.height = TILE;
     const ctx = c.getContext('2d');
-    // Opacity bucket — most dots dim, a few bright. Mirrors the reference's
-    // [0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.8, 0.8, 0.8, 1.0] but scaled darker so
-    // the grid sits as a subtle texture instead of grabbing attention.
-    const opacities = [0.10, 0.10, 0.12, 0.14, 0.16, 0.20, 0.26, 0.36, 0.48, 0.62];
+    // Opacity bucket — bumped well above floor so dots are unambiguous on screen.
+    const opacities = [0.32, 0.32, 0.38, 0.46, 0.55, 0.65, 0.78, 0.88, 0.95, 1.00];
     for (let y = STEP / 2; y < TILE; y += STEP) {
       for (let x = STEP / 2; x < TILE; x += STEP) {
         const op = opacities[Math.floor(Math.random() * opacities.length)];
