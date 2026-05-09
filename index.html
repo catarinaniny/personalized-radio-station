@@ -76,15 +76,55 @@ body {
   margin: 0 auto;
 }
 
-/* Shared placeholder (still used by meta until their tasks) */
 .meta {
-  border: 1px dashed rgba(255,179,71,0.18);
-  min-height: 32px;
-  color: var(--crt-amber-dim);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 8px 18px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, var(--cream) 0%, var(--cream-deep) 100%);
+  color: var(--label-ink);
+  box-shadow:
+    inset 0 1px 0 rgba(255,235,190,0.55),
+    inset 0 -1px 0 rgba(60,40,15,0.4),
+    inset 0 0 0 1px rgba(60,40,15,0.35);
   font-size: 11px;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  padding: 8px 12px;
+}
+.meta .meta-item b { font-weight: 600; color: var(--label-ink); }
+.meta .meta-item .label { color: var(--label-mid); margin-right: 6px; }
+.meta .ambient {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: var(--label-ink);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 3px;
+}
+.meta .ambient:focus-visible {
+  outline: 2px solid var(--rust);
+  outline-offset: 2px;
+}
+.meta .ambient .led {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--cream-shadow);
+  box-shadow: inset 0 1px 1px rgba(0,0,0,0.4);
+  transition: background 180ms, box-shadow 180ms;
+}
+.meta .ambient.on .led {
+  background: var(--crt-amber);
+  box-shadow:
+    0 0 8px rgba(255,179,71,0.85),
+    inset 0 1px 0 rgba(255,235,190,0.6);
 }
 
 /* Tuning band */
@@ -360,7 +400,16 @@ body {
         <button type="button" class="stop" data-id="science">  <span class="freq">108.0</span> SCI</button>
       </div>
     </section>
-    <footer class="meta">[ meta strip — task 7 ]</footer>
+    <footer class="meta">
+      <span class="meta-item"><span class="label">Unit</span><b>SN-7042</b></span>
+      <span class="meta-item"><span class="label">Status</span><b>Live</b></span>
+      <span class="meta-item"><span class="label">Output</span><b>2.0 Stereo</b></span>
+      <button type="button" class="ambient on" id="ambient-toggle" aria-pressed="true">
+        <span class="led" aria-hidden="true"></span>
+        <span><span class="label">Ambient</span><b id="ambient-state">On</b></span>
+      </button>
+      <audio id="ambient-audio" src="ambient.mp3" loop preload="auto"></audio>
+    </footer>
   </main>
 
   <script>
@@ -599,6 +648,37 @@ body {
         positionMarker();
       });
     })();
+
+    // ───── Ambient audio ─────
+    const ambient = {
+      audio: document.getElementById('ambient-audio'),
+      btn:   document.getElementById('ambient-toggle'),
+      state: document.getElementById('ambient-state'),
+      on: true,
+    };
+
+    function setAmbient(on) {
+      ambient.on = on;
+      ambient.btn.classList.toggle('on', on);
+      ambient.btn.setAttribute('aria-pressed', String(on));
+      ambient.state.textContent = on ? 'On' : 'Off';
+      if (on) {
+        // Browsers may reject play() if there's no user gesture — that's fine,
+        // the splash in task 8 ensures we always have one before this runs.
+        const p = ambient.audio.play();
+        if (p && typeof p.catch === 'function') p.catch(() => { /* silent */ });
+      } else {
+        ambient.audio.pause();
+      }
+    }
+
+    ambient.btn.addEventListener('click', () => setAmbient(!ambient.on));
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'm' || e.key === 'M') {
+        setAmbient(!ambient.on);
+        e.preventDefault();
+      }
+    });
   </script>
 </body>
 </html>
