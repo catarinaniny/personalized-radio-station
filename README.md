@@ -99,26 +99,30 @@ Provider API keys are read from environment variables such as
 
 ## Local API + Frontend
 
-Run the app server:
+Run the API server:
 
 ```bash
 cd backend
 uv run python -m personalized_radio_station.web_server
 ```
 
-Then open the stitched Console-7 frontend:
+In a second terminal, run the frontend:
 
-```text
-http://127.0.0.1:8765
+```bash
+pnpm install
+pnpm dev:frontend
 ```
 
-The backend serves the Console-7 radio UI at `/` and keeps API status JSON at
-`/api`.
+Then open the Console-7 frontend:
 
-If you serve the frontend separately from `frontend/`, for example with
-`python -m http.server 8000`, still keep the app server running on
-`http://127.0.0.1:8765`. The frontend first tries its own origin for `/api`, then falls back to
-`http://127.0.0.1:8765` when it detects a static file server.
+```text
+http://127.0.0.1:5173
+```
+
+The frontend is static HTML/CSS/JS served by Vite. Tailwind runs through the
+official Vite plugin, so the HTML links `frontend/src/tailwind.css` instead of
+loading Tailwind from a browser CDN. Vite proxies `/api` to
+`http://127.0.0.1:8765`, keeping the API and frontend dev servers separate.
 
 The frontend can create saved vibes through `POST /api/vibes`, start real
 playback through `POST /api/episodes`, listen to `GET /api/episodes/{id}/events`
@@ -345,16 +349,19 @@ Treat the HTML as the **source of truth for visuals and interactions** — extra
 
 ```
 frontend/
-├── Console-7 Radio.html            ← entry HTML (loads React + radio.jsx via Babel)
-├── radio.jsx                       ← all React components + main app
-├── styles.css                      ← all device styling (~1080 lines)
-├── colors_and_type.css             ← design tokens (colors, fonts, radii, type scale)
+├── Console-7 Radio.html            ← static HTML entry
+├── src/tailwind.css                ← Tailwind v4 CSS entry
+├── vite.config.js                  ← frontend dev server + /api proxy
+├── radio.jsx                       ← legacy React prototype, no longer loaded
+├── styles.css                      ← legacy prototype styles
+├── colors_and_type.css             ← shared font-face + token definitions
 └── fonts/
     ├── geist-sans/                 ← Geist Sans (SIL OFL)
     └── plex-mono/                  ← IBM Plex Mono (SIL OFL)
 ```
 
-To preview locally: serve the folder from any static server (`python -m http.server`, `npx serve`, etc.) and open `Console-7 Radio.html`. It must be served over HTTP — opening the file directly will fail because of CORS on the font files.
+To preview locally, run the Python API on `127.0.0.1:8765`, then run
+`pnpm dev:frontend` and open `http://127.0.0.1:5173`.
 
 ---
 
@@ -662,7 +669,7 @@ Analyzer interval: 80ms. Each tick generates a new bell-curve-weighted random le
 ## Implementation notes for porting
 
 1. **Knob component:** the trickiest piece. Test drag, scroll, and keyboard (arrow keys) interactions; consider extracting into a reusable `<RotaryKnob>`. Use `Pointer Events`, not separate mouse/touch.
-2. **Analyzer:** the random-walk algorithm is in `radio.jsx` — keep the bell-curve weighting toward center columns or it looks uniformly noisy. Animation loop should use `requestAnimationFrame` in production (the prototype uses `setInterval` for simplicity).
+2. **Analyzer:** the current analyzer loop is inline in `Console-7 Radio.html`; keep the bell-curve weighting toward center columns or it looks uniformly noisy. Animation should use `requestAnimationFrame`.
 3. **Grille hinge:** requires `perspective` on a parent and `transform-origin: top` on the grille. The settings panel must already be rendered behind the grille, not appear after — otherwise the reveal doesn't work.
 4. **Display analyzer:** sits at `z-index: 0` inside `.display`; readout rows are `z-index: 2`; scanline overlay (`::before`) is `z-index: 3`. Keep this stack.
 5. **Responsive scaling:** the chassis is fixed at 920px. The `--device-scale` variable on `:root` is a CSS-only zoom; consider real responsive layout for production (collapse to a single-column at small viewports).
