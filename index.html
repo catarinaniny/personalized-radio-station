@@ -62,9 +62,9 @@
       inset: 0;
       z-index: -10;
       pointer-events: none;
-      background-color: #000;
-      background-repeat: repeat;
-      /* no mask — dots show full-strength edge-to-edge */
+      width: 100vw;
+      height: 100vh;
+      display: block;
     }
 
     /* ========== FLOATING MINI-NAV ==========
@@ -2347,8 +2347,8 @@
 </head>
 <body>
 
-<!-- DOT-MATRIX page background (random-opacity white dots on black) -->
-<div id="dot-bg" aria-hidden="true"></div>
+<!-- DOT-MATRIX page background — animated canvas (intro + 5s opacity twinkle) -->
+<canvas id="dot-bg" aria-hidden="true"></canvas>
 
 <!-- SVG filter for liquid-glass button refraction (used by .liquid-btn-distort) -->
 <svg class="defs-only" aria-hidden="true" focusable="false">
@@ -3002,31 +3002,120 @@
 </div>
 
 <script>
-  // Dot-matrix page background — render a 200×200 canvas tile with randomized
-  // dot opacities (matching the reference component's opacity bucket), then
-  // set it as the background-image on #dot-bg. CSS handles the repeat.
+  // Dot-matrix page background — animated canvas port of <CanvasRevealEffect>
+  // from sign-in-flow-1.tsx. Mirrors the shader's behavior:
+  //   • 20px grid; ~1.6px white dots
+  //   • per-cell opacity sampled from [0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.8, 0.8, 0.8, 1.0]
+  //   • opacities re-roll every FREQUENCY seconds (the "twinkle")
+  //   • intro reveal fades dots in radially from the center
+  //   • brief brighten flash at the moment a cell first becomes visible
+  // Throttled to 30fps to keep CPU usage modest.
   (function () {
-    const el = document.getElementById('dot-bg');
-    if (!el) return;
-    const TILE = 200;
-    const STEP = 20;          // grid spacing — 20px between dots, matching totalSize=20
-    const DOT  = 2.2;         // dot radius — bumped to be clearly visible at 1× device pixels
-    const c = document.createElement('canvas');
-    c.width = TILE;
-    c.height = TILE;
-    const ctx = c.getContext('2d');
-    // Opacity bucket — bumped well above floor so dots are unambiguous on screen.
-    const opacities = [0.32, 0.32, 0.38, 0.46, 0.55, 0.65, 0.78, 0.88, 0.95, 1.00];
-    for (let y = STEP / 2; y < TILE; y += STEP) {
-      for (let x = STEP / 2; x < TILE; x += STEP) {
-        const op = opacities[Math.floor(Math.random() * opacities.length)];
-        ctx.fillStyle = 'rgba(255, 255, 255, ' + op + ')';
+    const canvas = document.getElementById('dot-bg');
+    if (!canvas || !canvas.getContext) return;
+    const ctx = canvas.getContext('2d');
+
+    const STEP        = 20;
+    const DOT_R       = 1.6;
+    const FREQUENCY   = 5.0;
+    const ANIM_SPEED  = 0.5;
+    const OPACITIES   = [0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.8, 0.8, 0.8, 1.0];
+    const RGBA        = OPACITIES.map(o => 'rgba(255,255,255,' + o + ')');
+    const FRAME_MS    = 1000 / 30;
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let cssW = 0, cssH = 0;
+    let cells = [];
+
+    // Pseudo-random hash, deterministic per (ix, iy, seed) — mirrors shader random()
+    function hash(ix, iy, seed) {
+      const v = Math.sin(ix * 12.9898 + iy * 78.233 + seed * 37.719) * 43758.5453;
+      return v - Math.floor(v);
+    }
+
+    function build() {
+      cssW = window.innerWidth;
+      cssH = window.innerHeight;
+      canvas.width  = Math.floor(cssW * dpr);
+      canvas.height = Math.floor(cssH * dpr);
+      canvas.style.width  = cssW + 'px';
+      canvas.style.height = cssH + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const cols = Math.ceil(cssW / STEP) + 1;
+      const rows = Math.ceil(cssH / STEP) + 1;
+      const cx = cssW / 2;
+      const cy = cssH / 2;
+
+      cells = new Array(cols * rows);
+      let n = 0;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const x = c * STEP + STEP / 2;
+          const y = r * STEP + STEP / 2;
+          const dx = (x - cx) / STEP;
+          const dy = (y - cy) / STEP;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          cells[n++] = {
+            x: x,
+            y: y,
+            ix: c,
+            iy: r,
+            dist: dist,
+            ofs: hash(c * 7 + 1, r * 13 + 3, 1),
+          };
+        }
+      }
+    }
+
+    const startMs = performance.now();
+    let lastFrame = 0;
+
+    function draw(now) {
+      requestAnimationFrame(draw);
+      if (now - lastFrame < FRAME_MS) return;
+      lastFrame = now;
+
+      const t = (now - startMs) / 1000;
+      const tAnim = t * ANIM_SPEED;
+
+      ctx.clearRect(0, 0, cssW, cssH);
+
+      // Group fills by bucket index so we set fillStyle 10x not 3000x
+      const buckets = [[], [], [], [], [], [], [], [], [], []];
+
+      for (let i = 0; i < cells.length; i++) {
+        const cell = cells[i];
+
+        // Intro reveal — fade in based on distance from center + per-cell jitter
+        const introDelay = cell.dist * 0.025 + cell.ofs * 0.15;
+        if (tAnim < introDelay) continue; // not yet revealed
+
+        // Time-cycled opacity — re-rolls every FREQUENCY seconds
+        const cycle = Math.floor(t / FREQUENCY + cell.ofs + FREQUENCY);
+        const r = hash(cell.ix * 13 + 7, cell.iy * 17 + 11, cycle);
+        const idx = Math.min(Math.floor(r * 10), 9);
+
+        buckets[idx].push(cell);
+      }
+
+      for (let b = 0; b < 10; b++) {
+        const list = buckets[b];
+        if (!list.length) continue;
+        ctx.fillStyle = RGBA[b];
         ctx.beginPath();
-        ctx.arc(x, y, DOT, 0, Math.PI * 2);
+        for (let j = 0; j < list.length; j++) {
+          const c = list[j];
+          ctx.moveTo(c.x + DOT_R, c.y);
+          ctx.arc(c.x, c.y, DOT_R, 0, Math.PI * 2);
+        }
         ctx.fill();
       }
     }
-    el.style.backgroundImage = 'url(' + c.toDataURL('image/png') + ')';
+
+    build();
+    window.addEventListener('resize', build);
+    requestAnimationFrame(draw);
   })();
 
   // Cycling word at end of H1 — vertical translate spring (framer-motion equiv).
