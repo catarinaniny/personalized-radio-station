@@ -76,8 +76,8 @@ body {
   margin: 0 auto;
 }
 
-/* Shared placeholder (still used by band / meta until their tasks) */
-.band, .meta {
+/* Shared placeholder (still used by meta until their tasks) */
+.meta {
   border: 1px dashed rgba(255,179,71,0.18);
   min-height: 32px;
   color: var(--crt-amber-dim);
@@ -86,7 +86,113 @@ body {
   text-transform: uppercase;
   padding: 8px 12px;
 }
-.band { min-height: 110px; }
+
+/* Tuning band */
+.band {
+  position: relative;
+  border-radius: 6px;
+  padding: 22px 28px 18px;
+  background: linear-gradient(180deg, var(--plate) 0%, var(--plate-deep) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,235,190,0.55),
+    inset 0 -1px 0 rgba(60,40,15,0.4),
+    inset 0 0 0 1px rgba(60,40,15,0.35),
+    0 6px 18px -6px rgba(0,0,0,0.6);
+  user-select: none;
+}
+.band-rail {
+  position: relative;
+  height: 22px;
+  margin: 6px 0 14px;
+  border-radius: 11px;
+  background:
+    linear-gradient(180deg, var(--recess-deep) 0%, var(--recess) 100%);
+  box-shadow:
+    inset 0 1px 2px rgba(0,0,0,0.6),
+    inset 0 -1px 0 rgba(255,225,180,0.15);
+}
+/* Tick marks along the rail */
+.band-rail::before {
+  content: "";
+  position: absolute;
+  left: 1.5%; right: 1.5%; top: 50%;
+  height: 1px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255,225,180,0.18) 0 1px,
+    transparent 1px 24px
+  );
+  transform: translateY(-50%);
+}
+.band-marker {
+  position: absolute;
+  top: -4px;
+  width: 30px;
+  height: 30px;
+  margin-left: -15px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 30%, var(--crt-amber-hi) 0%, var(--crt-amber) 35%, var(--crt-amber-dim) 75%, #5a3210 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,235,190,0.7),
+    0 0 14px rgba(255,179,71,0.55),
+    0 0 28px rgba(255,140,40,0.35),
+    0 2px 6px rgba(0,0,0,0.5);
+  transition: left 220ms cubic-bezier(.6,.05,.3,1);
+  cursor: grab;
+  z-index: 2;
+}
+.band-marker:active { cursor: grabbing; }
+.band-marker::after {
+  content: "";
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 8px; height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: rgba(40,18,4,0.55);
+}
+
+.band-stations {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0;
+  text-align: center;
+  color: var(--label-ink);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.band-stations .stop {
+  position: relative;
+  padding-top: 10px;
+  cursor: pointer;
+  color: var(--label-mid);
+  transition: color 180ms ease;
+  font-family: inherit;
+  background: transparent;
+  border: 0;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  font-size: inherit;
+}
+.band-stations .stop:hover { color: var(--label-ink); }
+.band-stations .stop.active { color: var(--rust-deep); }
+.band-stations .stop:focus-visible {
+  outline: 2px solid var(--rust);
+  outline-offset: 2px;
+}
+.band-stations .stop .freq {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--label-ink);
+  letter-spacing: 0.1em;
+  margin-bottom: 2px;
+}
+.band-stations .stop.active .freq {
+  color: var(--rust-deep);
+}
 
 /* Ticker — amber CRT panel */
 .ticker {
@@ -227,7 +333,22 @@ body {
     <section class="ticker" aria-label="Now broadcasting">
       <div class="ticker-track" id="ticker-track"></div>
     </section>
-    <section class="band">[ tuning band — task 5 / 6 ]</section>
+    <section class="band" aria-label="Tuning band">
+      <div class="band-rail" id="band-rail">
+        <div class="band-marker" id="band-marker" role="slider"
+             tabindex="0"
+             aria-label="Tuning"
+             aria-valuemin="0" aria-valuemax="5" aria-valuenow="2"></div>
+      </div>
+      <div class="band-stations" id="band-stations">
+        <button type="button" class="stop" data-id="top">      <span class="freq">88.0</span>  TOP</button>
+        <button type="button" class="stop" data-id="world">    <span class="freq">92.0</span>  WORLD</button>
+        <button type="button" class="stop active" data-id="tech"><span class="freq">96.0</span>  TECH</button>
+        <button type="button" class="stop" data-id="business"> <span class="freq">100.0</span> BIZ</button>
+        <button type="button" class="stop" data-id="sports">   <span class="freq">104.0</span> SPORT</button>
+        <button type="button" class="stop" data-id="science">  <span class="freq">108.0</span> SCI</button>
+      </div>
+    </section>
     <footer class="meta">[ meta strip — task 7 ]</footer>
   </main>
 
@@ -364,6 +485,23 @@ body {
 
     renderTicker();
     requestAnimationFrame(tickerStep);
+
+    // ───── Tuning band — visual positioning only (interactions in task 6) ─────
+    const band = {
+      rail: document.getElementById('band-rail'),
+      marker: document.getElementById('band-marker'),
+      stations: document.getElementById('band-stations'),
+    };
+
+    function positionMarker() {
+      const idx = STATION_ORDER.indexOf(state.activeStationId);
+      // Six stations, six equal slots: align with the centers of the .stop columns
+      const pct = ((idx + 0.5) / 6) * 100;
+      band.marker.style.left = pct + '%';
+      band.marker.setAttribute('aria-valuenow', String(idx));
+    }
+    positionMarker();
+    window.addEventListener('resize', positionMarker);
   </script>
 </body>
 </html>
