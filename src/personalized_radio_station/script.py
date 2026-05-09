@@ -49,24 +49,37 @@ def _build_prompt(
     context = {
         "station_name": config.station_name,
         "style": config.style,
-        "target_minutes": config.episode_minutes,
+        "target_duration": config.duration.label,
+        "target_minutes": config.duration.minutes,
         "voices": config.voices,
+        "opening_style": "already_on_air_listener_just_tuned_in",
+        "voice_policy": (
+            f'Use the voice label "{config.tts.primary_voice}" for every segment.'
+            if config.tts.single_voice
+            else "Use the configured voice labels by segment."
+        ),
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "weather": weather.to_dict(),
         "news": [item.to_dict() for item in news_items],
     }
 
     return (
-        "Create a short personalized radio episode script.\n"
+        "Create a personalized radio episode script.\n"
         "Output JSON with this shape:\n"
         "{\n"
         '  "title": "Episode title",\n'
         '  "segments": [\n'
-        '    {"type": "intro|weather|news|outro", "voice": "host|anchor", "text": "..."}\n'
+        '    {"type": "intro|weather|news|outro", "voice": "host", "text": "..."}\n'
         "  ]\n"
         "}\n\n"
+        "The first segment must feel like the station was already playing and the "
+        "listener has just tuned in. Start mid-flow, as if the host is already "
+        "speaking, then smoothly move into the briefing. Do not begin with a formal "
+        "welcome, episode setup, or phrase like `Good morning, here is...`.\n"
+        "Use the same voice label for every segment when the voice_policy says so. "
         "Keep it natural for TTS. Avoid markdown. Mention source names when useful, "
-        "but do not include raw URLs in the spoken text.\n\n"
+        "but do not include raw URLs in the spoken text. If target_duration is "
+        "`unlimited`, prioritize useful coverage over fitting a fixed runtime.\n\n"
         f"Context:\n{json.dumps(context, indent=2)}"
     )
 

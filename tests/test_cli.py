@@ -65,6 +65,8 @@ class CliTests(unittest.TestCase):
                         str(env_path),
                         "--output-dir",
                         str(output_dir),
+                        "--duration",
+                        "18m",
                         "--runs-dir",
                         str(runs_dir),
                     ]
@@ -76,6 +78,8 @@ class CliTests(unittest.TestCase):
         self.assertEqual(state["pid"], 12345)
         self.assertIn("personalized_radio_station.cli", state["command"])
         self.assertIn("generate", state["command"])
+        self.assertIn("--duration", state["command"])
+        self.assertIn("18m", state["command"])
         self.assertTrue(state["log_file"].endswith(".log"))
         self.assertEqual(popen_mock.call_args.kwargs["start_new_session"], True)
 

@@ -102,6 +102,7 @@ tts:
                     config_path,
                     output_dir,
                     allow_mock=True,
+                    duration="unlimited",
                     log=logs.append,
                 )
 
@@ -112,7 +113,7 @@ tts:
             self.assertEqual(episode["audio_file"], "episode.wav")
             self.assertTrue((output_dir / "latest").is_symlink())
             self.assertTrue(any("Fetching Google News RSS" in log for log in logs))
-            self.assertTrue(any("Creating script" in log for log in logs))
+            self.assertTrue(any("targeting unlimited" in log for log in logs))
             self.assertTrue(any("Rendering TTS" in log for log in logs))
 
 

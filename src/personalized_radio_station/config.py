@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+import re
 
 
 @dataclass(frozen=True)
@@ -29,6 +30,16 @@ class AiConfig:
 
 
 @dataclass(frozen=True)
+class EpisodeDuration:
+    minutes: int | None
+    label: str
+
+    @property
+    def is_unlimited(self) -> bool:
+        return self.minutes is None
+
+
+@dataclass(frozen=True)
 class TtsVoiceConfig:
     voice: str
     instructions: str | None = None
@@ -45,6 +56,8 @@ class TtsConfig:
     response_format: str = "mp3"
     api_base: str | None = None
     api_key_env: str | None = "ELEVENLABS_API_KEY"
+    single_voice: bool = True
+    primary_voice: str = "host"
     piper_path: str = "piper"
     piper_model_path: str | None = None
     voices: dict[str, TtsVoiceConfig] = field(default_factory=dict)
@@ -54,12 +67,16 @@ class TtsConfig:
 class AppConfig:
     station_name: str
     style: str
-    episode_minutes: int
+    duration: EpisodeDuration
     news: NewsConfig
     weather: WeatherConfig
     ai: AiConfig
     tts: TtsConfig = field(default_factory=TtsConfig)
     voices: dict[str, str] = field(default_factory=dict)
+
+    @property
+    def episode_minutes(self) -> int | None:
+        return self.duration.minutes
 
 
 def load_config(path: str | Path) -> AppConfig:
@@ -76,7 +93,7 @@ def load_config(path: str | Path) -> AppConfig:
     return AppConfig(
         station_name=raw.get("station_name", "Personal Radio"),
         style=raw.get("style", "casual, concise morning radio"),
-        episode_minutes=int(raw.get("episode_minutes", 5)),
+        duration=parse_duration(raw.get("duration", raw.get("episode_minutes", 5))),
         news=NewsConfig(
             topics=list(news.get("topics", [])),
             language=news.get("language", "en-US"),
@@ -105,6 +122,8 @@ def load_config(path: str | Path) -> AppConfig:
             api_key_env=tts.get(
                 "api_key_env", _default_tts_api_key_env(tts_provider, tts_model)
             ),
+            single_voice=_as_bool(tts.get("single_voice", True)),
+            primary_voice=tts.get("primary_voice", "host"),
             piper_path=tts.get("piper_path", "piper"),
             piper_model_path=tts.get("piper_model_path"),
             voices=_load_tts_voices(tts.get("voices", {})),
@@ -117,6 +136,42 @@ def _optional_int(value: Any) -> int | None:
     if value is None:
         return None
     return int(value)
+
+
+def parse_duration(value: Any) -> EpisodeDuration:
+    if value is None:
+        return EpisodeDuration(minutes=5, label="5 minutes")
+    if isinstance(value, bool):
+        raise ValueError("Duration must be a minute count or `unlimited`.")
+    if isinstance(value, int):
+        return _duration_from_minutes(value)
+    if isinstance(value, float):
+        if not value.is_integer():
+            raise ValueError("Duration minutes must be a whole number.")
+        return _duration_from_minutes(int(value))
+
+    normalized = str(value).strip().lower()
+    if normalized in {"unlimited", "open", "open-ended", "none", "no limit"}:
+        return EpisodeDuration(minutes=None, label="unlimited")
+
+    minute_match = re.fullmatch(r"(\d+)\s*(m|min|mins|minute|minutes)?", normalized)
+    if minute_match:
+        return _duration_from_minutes(int(minute_match.group(1)))
+
+    hour_match = re.fullmatch(r"(\d+)\s*(h|hr|hrs|hour|hours)", normalized)
+    if hour_match:
+        return _duration_from_minutes(int(hour_match.group(1)) * 60)
+
+    raise ValueError(
+        "Duration must look like `18`, `18m`, `18 minutes`, `1 hour`, or `unlimited`."
+    )
+
+
+def _duration_from_minutes(minutes: int) -> EpisodeDuration:
+    if minutes <= 0:
+        raise ValueError("Duration must be greater than zero, or `unlimited`.")
+    unit = "minute" if minutes == 1 else "minutes"
+    return EpisodeDuration(minutes=minutes, label=f"{minutes} {unit}")
 
 
 def _load_tts_voices(raw: dict[str, Any]) -> dict[str, TtsVoiceConfig]:
@@ -157,7 +212,7 @@ def _default_tts_model(provider: str) -> str:
 
 def _default_tts_response_format(provider: str) -> str:
     if provider.lower() == "elevenlabs":
-        return "mp3_44100_128"
+        return "mp3"
     return "wav"
 
 

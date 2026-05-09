@@ -60,7 +60,10 @@ def _mock_completion(messages: list[Message]) -> str:
         {
             "type": "intro",
             "voice": "host",
-            "text": f"Welcome to {station_name}. Here is your personal briefing.",
+            "text": (
+                f"...and that is the thread running through this hour on {station_name}. "
+                "Let's bring the briefing into focus."
+            ),
         }
     ]
     if weather:
@@ -80,7 +83,7 @@ def _mock_completion(messages: list[Message]) -> str:
         segments.append(
             {
                 "type": "news",
-                "voice": "anchor",
+                "voice": "host",
                 "text": f"{source} reports: {item.get('title', 'Untitled story')}.",
             }
         )

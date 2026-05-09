@@ -9,7 +9,7 @@ import os
 import subprocess
 import sys
 
-from .config import load_config
+from .config import load_config, parse_duration
 from .env import load_env_file
 from .pipeline import generate_episode
 from .runtime import missing_runtime_requirements
@@ -81,6 +81,10 @@ def _add_common_options(parser: ArgumentParser) -> None:
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG, help="Path to config YAML.")
     parser.add_argument("--env", type=Path, default=DEFAULT_ENV, help="Path to .env file.")
     parser.add_argument(
+        "--duration",
+        help="Target duration, e.g. `18m`, `18 minutes`, `1 hour`, or `unlimited`.",
+    )
+    parser.add_argument(
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
@@ -90,6 +94,7 @@ def _add_common_options(parser: ArgumentParser) -> None:
 
 def _handle_check(args: Namespace) -> None:
     load_env_file(args.env)
+    _validate_duration(args.duration)
     config_path = _resolve_config_path(args.config)
     missing = _missing_requirements(config_path, include_tts=True)
     if missing:
@@ -106,6 +111,7 @@ def _handle_sources(args: Namespace) -> None:
 
 def _handle_generate(args: Namespace) -> None:
     load_env_file(args.env)
+    _validate_duration(args.duration)
     config_path = _resolve_config_path(args.config)
     missing = _missing_requirements(config_path, include_tts=True)
     if missing:
@@ -115,6 +121,7 @@ def _handle_generate(args: Namespace) -> None:
     episode_dir = generate_episode(
         config_path,
         args.output_dir,
+        duration=args.duration,
         log=_log,
     )
     _print_episode_summary(episode_dir)
@@ -122,6 +129,7 @@ def _handle_generate(args: Namespace) -> None:
 
 def _handle_start(args: Namespace) -> None:
     load_env_file(args.env)
+    _validate_duration(args.duration)
     config_path = _resolve_config_path(args.config)
     missing = _missing_requirements(config_path, include_tts=True)
     if missing:
@@ -145,6 +153,8 @@ def _handle_start(args: Namespace) -> None:
         "--output-dir",
         str(args.output_dir),
     ]
+    if args.duration:
+        command.extend(["--duration", args.duration])
     log_file = log_path.open("ab")
     process = subprocess.Popen(
         command,
@@ -192,6 +202,16 @@ def _print_missing(missing: list[str]) -> None:
     print("Missing runtime requirements:")
     for item in missing:
         print(f"- {item}")
+
+
+def _validate_duration(duration: str | None) -> None:
+    if duration is None:
+        return
+    try:
+        parse_duration(duration)
+    except ValueError as exc:
+        print(f"Invalid duration: {exc}")
+        raise SystemExit(2) from exc
 
 
 def _log(message: str) -> None:

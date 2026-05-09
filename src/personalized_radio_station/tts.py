@@ -32,7 +32,8 @@ def synthesize_episode(episode: dict[str, Any], config: AppConfig, episode_dir: 
             continue
 
         voice_name = _voice_name_for_segment(segment, config)
-        voice = config.tts.voices.get(voice_name) or next(iter(config.tts.voices.values()))
+        voice_name, voice = _resolve_voice(voice_name, config)
+        segment["voice"] = voice_name
         extension = _extension_for_provider(provider, config.tts.response_format)
         segment_path = audio_dir / f"{index:02d}-{_slug(segment.get('type', 'segment'))}.{extension}"
 
@@ -58,12 +59,24 @@ def synthesize_episode(episode: dict[str, Any], config: AppConfig, episode_dir: 
 
 
 def _voice_name_for_segment(segment: dict[str, Any], config: AppConfig) -> str:
+    if config.tts.single_voice:
+        return config.tts.primary_voice
+
     explicit_voice = segment.get("voice")
     if explicit_voice:
         return str(explicit_voice)
 
     segment_type = str(segment.get("type", "news"))
     return config.voices.get(segment_type, "host")
+
+
+def _resolve_voice(voice_name: str, config: AppConfig) -> tuple[str, TtsVoiceConfig]:
+    voice = config.tts.voices.get(voice_name)
+    if voice:
+        return voice_name, voice
+
+    fallback_name, fallback_voice = next(iter(config.tts.voices.items()))
+    return fallback_name, fallback_voice
 
 
 def _synthesize_mock(text: str, voice_name: str, output_path: Path) -> None:

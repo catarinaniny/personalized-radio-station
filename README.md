@@ -27,6 +27,18 @@ cp config.example.yaml config.yaml
 cp .env.example .env
 ```
 
+Set the target show length in `config.yaml`:
+
+```yaml
+duration: "5 minutes"
+```
+
+Use `"unlimited"` for an open-ended episode:
+
+```yaml
+duration: "unlimited"
+```
+
 By default, `config.example.yaml` uses OpenRouter through LiteLLM:
 
 ```yaml
@@ -106,15 +118,25 @@ After adding the keys to `.env`, run the whole pipeline in the foreground:
 uv run radio generate
 ```
 
+Override the target duration for one run:
+
+```bash
+uv run radio generate --duration 18m
+uv run radio generate --duration unlimited
+```
+
 The CLI prints each stage as it runs:
 
 ```text
 [radio] Fetching Google News RSS: artificial intelligence, startups, music technology
 [radio] Fetching weather: Lisbon
-[radio] Creating script with LiteLLM model: openrouter/openrouter/auto
+[radio] Creating script targeting 18 minutes with LiteLLM model: openrouter/openrouter/auto
 [radio] Rendering TTS with elevenlabs: elevenlabs/eleven_multilingual_v2
 [radio] Audio: episodes/2026-05-09-120000/episode.mp3
 ```
+
+The opening is intentionally written as if the station was already on air and
+you just tuned in. It should not start with a formal welcome.
 
 Outputs are saved under `episodes/`:
 
@@ -135,6 +157,12 @@ To start one full generation in the background:
 
 ```bash
 uv run radio start
+```
+
+Detached runs accept the same duration override:
+
+```bash
+uv run radio start --duration 18m
 ```
 
 The command validates credentials first, then detaches the generation process.
@@ -164,21 +192,24 @@ tts:
   model: "elevenlabs/eleven_multilingual_v2"
   response_format: "mp3"
   api_key_env: "ELEVENLABS_API_KEY"
+  single_voice: true
+  primary_voice: "host"
 ```
 
 Add `ELEVENLABS_API_KEY` to `.env`. This goes through LiteLLM's `speech()` API.
-Voice values can be common mapped names like `alloy`/`onyx`, or raw ElevenLabs
-voice IDs:
+By default every segment MP3 uses the same `primary_voice`, so stitched audio
+sounds like one person speaking continuously. Voice values can be common mapped
+names like `alloy`, or raw ElevenLabs voice IDs:
 
 ```yaml
 tts:
   enabled: true
   provider: "elevenlabs"
+  single_voice: true
+  primary_voice: "host"
   voices:
     host:
       voice: "alloy"
-    anchor:
-      voice: "onyx"
 ```
 
 The TTS interface is still provider-swappable. For OpenAI/Azure-style speech,

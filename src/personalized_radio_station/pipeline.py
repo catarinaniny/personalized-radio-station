@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from argparse import ArgumentParser
+from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 from typing import Callable
 import json
 
-from .config import load_config
+from .config import load_config, parse_duration
 from .env import load_env_file
 from .news import fetch_google_news
 from .runtime import assert_runtime_ready, missing_runtime_requirements
@@ -24,10 +25,13 @@ def generate_episode(
     output_dir: Path,
     skip_tts: bool = False,
     allow_mock: bool = False,
+    duration: str | None = None,
     log: Callable[[str], None] = _quiet_log,
 ) -> Path:
     log(f"Loading config: {config_path}")
     config = load_config(config_path)
+    if duration is not None:
+        config = replace(config, duration=parse_duration(duration))
     log("Checking runtime requirements")
     assert_runtime_ready(config, include_tts=not skip_tts, allow_mock=allow_mock)
 
@@ -44,7 +48,7 @@ def generate_episode(
         else f"Weather fetched: {weather.temperature_c}C in {weather.location}"
     )
 
-    log(f"Creating script with LiteLLM model: {config.ai.model}")
+    log(f"Creating script targeting {config.duration.label} with LiteLLM model: {config.ai.model}")
     episode = generate_script(news_items, weather, config)
     segment_count = len(episode.get("segments", []))
     log(f"Script created with {segment_count} segments")
@@ -111,6 +115,10 @@ def main() -> None:
         help="Path to a .env file with provider API keys.",
     )
     parser.add_argument(
+        "--duration",
+        help="Target duration, e.g. `18m`, `18 minutes`, `1 hour`, or `unlimited`.",
+    )
+    parser.add_argument(
         "--check",
         action="store_true",
         help="Validate config and runtime credentials without fetching sources.",
@@ -137,6 +145,7 @@ def main() -> None:
     episode_dir = generate_episode(
         config_path,
         args.output_dir,
+        duration=args.duration,
         log=lambda message: print(f"[radio] {message}", flush=True),
     )
     print(f"Generated episode: {episode_dir}")

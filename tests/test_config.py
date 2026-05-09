@@ -2,10 +2,17 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
-from personalized_radio_station.config import load_config
+from personalized_radio_station.config import load_config, parse_duration
 
 
 class ConfigTests(unittest.TestCase):
+    def test_parse_duration_values(self) -> None:
+        self.assertEqual(parse_duration("18 minutes").minutes, 18)
+        self.assertEqual(parse_duration("18m").label, "18 minutes")
+        self.assertEqual(parse_duration("1 hour").minutes, 60)
+        self.assertIsNone(parse_duration("unlimited").minutes)
+        self.assertEqual(parse_duration("unlimited").label, "unlimited")
+
     def test_example_config_uses_openrouter_by_default(self) -> None:
         config = load_config("config.example.yaml")
 
@@ -15,6 +22,9 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(config.tts.model, "elevenlabs/eleven_multilingual_v2")
         self.assertEqual(config.tts.api_key_env, "ELEVENLABS_API_KEY")
         self.assertTrue(config.tts.enabled)
+        self.assertTrue(config.tts.single_voice)
+        self.assertEqual(config.tts.primary_voice, "host")
+        self.assertEqual(config.duration.label, "5 minutes")
 
     def test_loads_ai_and_tts_config(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -23,7 +33,7 @@ class ConfigTests(unittest.TestCase):
                 """
 station_name: "Test Station"
 style: "brief"
-episode_minutes: 3
+duration: "unlimited"
 
 news:
   topics:
@@ -55,9 +65,11 @@ tts:
             config = load_config(config_path)
 
         self.assertEqual(config.station_name, "Test Station")
+        self.assertTrue(config.duration.is_unlimited)
         self.assertEqual(config.ai.api_key_env, "OPENROUTER_API_KEY")
         self.assertTrue(config.tts.enabled)
         self.assertEqual(config.tts.provider, "elevenlabs")
+        self.assertTrue(config.tts.single_voice)
         self.assertEqual(config.tts.voices["host"].voice, "alloy")
         self.assertEqual(config.tts.voices["host"].settings["stability"], 0.4)
 
